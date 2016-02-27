@@ -24,7 +24,6 @@
       (assoc-in [r2 (get matching-directions direction)] r1)))
 
 ; TODO one way connection
-; TODO maybe use id inside room definitions to avoid passing both kw and var around?
 
 ;;; ROOM DEFINITIONS
 

@@ -16,12 +16,15 @@
 (def bedroom {:name "Bedroom",
               :full-description "long description of bedroom"
               :short-description "short description of bedroom"
-              :items #{{:names ["bed"] :description "just a bed"}}})
+              :items #{{:names ["bed"] :description "just a bed"}}
+              :north :living
+              :visited true})
 
 (def living {:name "Bedroom",
-             :full-description "long description of bedroom"
-             :short-description "short description of bedroom"
-             :items #{{:names ["sofa"] :description "just a sofa"}}})
+             :full-description "long description of living room"
+             :short-description "short description of living room"
+             :items #{{:names ["sofa"] :description "just a sofa"}}
+             :south :bedroom})
 
 (def game-state {:current-room :bedroom
                  :room-map {:bedroom bedroom, :living living}
@@ -57,5 +60,39 @@
       (look game-state "")
       (is-output "short description of bedroom"))))
 
+
+(deftest go-verb
+  (with-redefs [say say-mock]
+    (let [new-state (go game-state "north")]
+      (testing "go to an unvisited room"
+        (is-output "long description of living room")
+        (is (= (:current-room new-state) :living))
+        (is (get-in new-state [:room-map :living :visited])))
+
+      (testing "go to an already visited room"
+        (let [newer-state (go new-state "south")]
+          (is-output "short description of bedroom")
+          (is (= (:current-room newer-state) :bedroom))
+          (is (get-in newer-state [:room-map :bedroom :visited])))))
+
+    (testing "go to a blocked direction"
+      (go game-state "west")
+      (is-output "Can't go in that direction"))
+
+    (testing "go to an invalid direction"
+      (go game-state nil)
+      (is-output "Go where?")
+      (go game-state "crazy")
+      (is-output "Go where?"))))
+
+
+(deftest take-verb
+  (with-redefs [say say-mock]
+    (testing "take an item from the room") ;puts it in inventory, takes out of room, says "Taken"
+    (testing "take an item that's not takable"); says I can't take that, still in room, not in inventory
+    (testing "take an item from inventory") ;says "already got it"
+    (testing "take an item from other room") ;i dont see that
+    (testing "take an invalid item");i dont see that
+    (testing "go to an invalid direction")))
 
 

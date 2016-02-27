@@ -38,7 +38,8 @@
 ;;; VERB HANDLER FUNCTIONS
 ;;; Every handler takes the game state and the command tokens, and returns the new game state
 
-; FIXME use clojures for inlined functions
+; TODO use closures for inlined functions
+; TODO list items in room when entering
 (defn go
   "Change the location if direction is valid"
   [game-state tokens]
@@ -48,14 +49,14 @@
     [game-state new-room]
     (let [room-spec (get-in game-state [:room-map new-room])]
       (if (:visited room-spec)
-        (say (:short-description :room-spec))
-        (say (:full-description :room-spec)))
+        (say (:short-description room-spec))
+        (say (:full-description room-spec)))
       (-> game-state
           (assoc :current-room new-room)
           (assoc-in [:room-map new-room :visited] true))))
 
   (if-let [dir (find-direction tokens)]
-    (if-let [new-room (get-in game-state [:current-room dir])]
+    (if-let [new-room (dir (current-room game-state))]
      (change-rooms game-state new-room)
      (say "Can't go in that direction" game-state))
     (say "Go where?" game-state)))
@@ -77,6 +78,7 @@
       (say "I don't see that." game-state))))
 
 
+; TODO if in inventory -> "I already got it."
 (defn take_
   [game-state token]
   (if-let [item (get-item-in (current-room game-state) token)]
@@ -109,7 +111,8 @@
                   (add-verb identity ["turn on"])
                   (add-verb identity ["turn off"])
                   (add-verb identity ["save"])
-                  (add-verb identity ["restore" "load"])))
+                  (add-verb identity ["restore" "load"])
+                  (add-verb identity ["help"])))
 
 ;keep a sorted version to extract the longest possible form first
 (def sorted-verbs (reverse (sort-by count (keys verb-map))))
