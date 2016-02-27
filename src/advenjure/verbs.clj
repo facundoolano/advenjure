@@ -1,12 +1,14 @@
+(ns advenjure.verbs
+  (:require [clojure.string :as str])
+  (:gen-class))
 
-(require ['clojure.string :as 'str])
 
 ;;; UTILITY functions
 
 (defn current-room
   "Get the current room spec from game state."
   [game-state]
-  (get-in state [:room-map (:current-room game-state)]))
+  (get-in game-state [:room-map (:current-room game-state)]))
 
 (defn find-direction
   "Try to match the string with a direction. Allows synonyms: 'n', 'nw', etc."
@@ -28,7 +30,7 @@
   (first (filter #(some #{item} (:names %)) item-set)))
 
 
-(def say
+(defn say
   ([speech] (say speech nil))
   ([speech game-state] (println speech) game-state))
 
@@ -41,7 +43,7 @@
   "Change the location if direction is valid"
   [game-state tokens]
 
-  (def change-rooms
+  (defn change-rooms
     "Change room, say description, set visited."
     [game-state new-room]
     (let [room-spec (get-in game-state [:room-map new-room])]
