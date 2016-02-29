@@ -84,7 +84,7 @@
 
   (defn change-rooms
     "Change room, say description, set visited."
-    [game-state new-room]
+    [new-room]
     (let [room-spec (get-in game-state [:room-map new-room])]
       (describe-room room-spec)
       (-> game-state
@@ -93,7 +93,7 @@
 
   (if-let [dir (find-direction tokens)]
     (if-let [new-room (dir (current-room game-state))]
-     (change-rooms game-state new-room)
+     (change-rooms new-room)
      (say "Can't go in that direction"))
     (say "Go where?")))
 
@@ -127,6 +127,8 @@
 
 
 ; TODO if in inventory -> "I already got it."
+; TODO "Taken."
+; TODO remove-in method
 (defn take_
   [game-state token]
   (if-let [item (get-item-in (current-room game-state) token)]
@@ -143,26 +145,25 @@
 ;;; BUILD VERB MAP
 (defn add-verb
   "Adds the given function as the handler for every verb in the list."
-  [verb-map handler verbs]
+  [verb-map verbs handler]
   (merge verb-map (zipmap verbs (repeat handler))))
 
 
-;TODO swap handler/verb list order in paramters
 (def verb-map (-> {}
-                  (add-verb go ["go"]) ;FIXME handle "n" "nw" as specific forms of go
-                  (add-verb look ["look"])
-                  (add-verb look-at ["look at" "describe"])
-                  (add-verb identity ["read"])
-                  (add-verb take_ ["take" "get" "pick" "pick up"])
-                  (add-verb identity ["inventory" "i"])
-                  (add-verb identity ["open"])
-                  (add-verb identity ["close"])
-                  (add-verb identity ["turn on"])
-                  (add-verb identity ["turn off"])
-                  (add-verb identity ["unlock"]) ; FIXME compound; FIXME open X with Y should work too
-                  (add-verb identity ["save"])
-                  (add-verb identity ["restore" "load"])
-                  (add-verb identity ["help"])))
+                  (add-verb ["go"] go) ;FIXME handle "n" "nw" as specific forms of go
+                  (add-verb ["look"] look)
+                  (add-verb ["look at" "describe"] look-at)
+                  (add-verb ["read"] identity)
+                  (add-verb ["take" "get" "pick" "pick up"] take_)
+                  (add-verb ["inventory" "i"] identity)
+                  (add-verb ["open"] identity)
+                  (add-verb ["close"] identity)
+                  (add-verb ["turn on"] identity)
+                  (add-verb ["turn off"] identity)
+                  (add-verb ["unlock"] identity) ; FIXME compound; FIXME open X with Y should work too
+                  (add-verb ["save"] identity)
+                  (add-verb ["restore" "load"] identity)
+                  (add-verb ["help"] identity)))
 
 ;keep a sorted version to extract the longest possible form first
 (def sorted-verbs (reverse (sort-by count (keys verb-map))))
