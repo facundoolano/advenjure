@@ -23,16 +23,56 @@
                  "northwest" :northwest, "nw" :northwest})
   (get mappings token))
 
-
 (defn get-item-in
-  "Get the spec for the item with the given name, if it's in the given set."
+  "Get the spec for the item with the given name, if it's in the given set,
+  or is contained by one of its items."
+  ; TODO probably a cleaner way to get this result
+  ; TODO allow multiple results --i.e. door --> "glass door" "wooden door"
   [item-set item]
-  (first (filter #(some #{item} (:names %)) item-set)))
+  (or (first (filter #(some #{item} (:names %)) item-set))
+      (first (map #(get-item-in (:items %) item)
+                  (filter #(:items %) item-set)))))
+
+(defn find-item
+    "Try to find the given item name either in the inventory or the current room."
+    [game-state token]
+    (or (get-item-in (:inventory game-state) token)
+        (get-item-in (:items (current-room game-state)) token)))
 
 
+; FIXME should remove that return game-state stuff
 (defn say
   ([speech] (say speech nil))
-  ([speech game-state] (println speech) game-state))
+  ([speech game-state] (println (str/capitalize speech)) game-state))
+
+
+; TODO this stuff should probably go to protocols of Room/Item records
+(defn iname [item] (first (:names item)))
+
+(defn list-print [item]
+  (def vowel? (set "aeiouAEIOU"))
+  (str
+    (if (vowel? (first (iname item))) "An " "A ")
+    (iname item)))
+
+
+(defn describe-container [container]
+  (if-let [items (:items container)]
+    (if (empty? items)
+      (say (str "The " (iname container) " is empty."))
+      (do
+        (say (str "The " (iname container) " contains:"))
+        (doseq [item (:items container)]
+          (say (list-print item))
+          (describe-container item))))))
+
+(defn describe-room [room]
+  (if (:visited room)
+    (say (:short-description room))
+    (say (:full-description room)))
+  (doseq [item (:items room)]
+    (say (str "There's a " (first (:names item)) " here."))
+    (describe-container item)))
 
 
 ;;; VERB HANDLER FUNCTIONS
@@ -48,9 +88,7 @@
     "Change room, say description, set visited."
     [game-state new-room]
     (let [room-spec (get-in game-state [:room-map new-room])]
-      (if (:visited room-spec)
-        (say (:short-description room-spec))
-        (say (:full-description room-spec)))
+      (describe-room room-spec)
       (-> game-state
           (assoc :current-room new-room)
           (assoc-in [:room-map new-room :visited] true))))
@@ -61,20 +99,32 @@
      (say "Can't go in that direction" game-state))
     (say "Go where?" game-state)))
 
+
 (defn look
-  "Look at item. If no item look at room."
+  "Look around (describe room). If tokens is defined, show error phrase."
   [game-state tokens]
-
-  (defn find-item
-    "Try to find the given item name either in the inventory or the current room."
-    [game-state token]
-    (or (get-item-in (:inventory game-state) token)
-        (get-item-in (:items (current-room game-state)) token)))
-
   (if (or (not tokens) (= tokens ""))
-    (say (:short-description (current-room game-state)) game-state)
+    (describe-room (current-room game-state))
+    (say "I understood as far as 'look'")))
+
+(defn look-at
+  "Look at item."
+  [game-state tokens]
+  (if (or (not tokens) (= tokens ""))
+    (say "Look at what?" game-state)
     (if-let [item (find-item game-state tokens)]
       (say (:description item) game-state)
+      (say "I don't see that." game-state))))
+
+(defn look-inside
+  "Look inside container."
+  [game-state tokens]
+  (if (or (not tokens) (= tokens ""))
+    (say "Look inside what?" game-state)
+    (if-let [item (find-item game-state tokens)]
+      (if (:items item)
+        (describe-container item)
+        (say (str "I can't look inside a " (iname item) ".")))
       (say "I don't see that." game-state))))
 
 
@@ -99,17 +149,19 @@
   (merge verb-map (zipmap verbs (repeat handler))))
 
 
-;FIXME handle "n" "nw" as specific forms of go
 ;TODO swap handler/verb list order in paramters
 (def verb-map (-> {}
-                  (add-verb go ["go"])
-                  (add-verb look ["look" "look at"])
+                  (add-verb go ["go"]) ;FIXME handle "n" "nw" as specific forms of go
+                  (add-verb look ["look"])
+                  (add-verb look-at ["look at" "describe"])
                   (add-verb identity ["read"])
                   (add-verb take_ ["take" "get" "pick" "pick up"])
+                  (add-verb identity ["inventory" "i"])
                   (add-verb identity ["open"])
                   (add-verb identity ["close"])
                   (add-verb identity ["turn on"])
                   (add-verb identity ["turn off"])
+                  (add-verb identity ["unlock"]) ; FIXME compound; FIXME open X with Y should work too
                   (add-verb identity ["save"])
                   (add-verb identity ["restore" "load"])
                   (add-verb identity ["help"])))

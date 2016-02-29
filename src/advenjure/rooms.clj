@@ -43,6 +43,13 @@
                        {:names ["reading lamp" "lamp"] :description "Nothing special about the lamp."}
                        magazine}})
 
+(def drawer {:names ["drawer" "drawers" "chest" "chest drawer" "chest drawers" "drawer chest" "drawers chest"]
+             :open false ; if it has open kw, means it responds to open/close. Also if it cotains stuff, need to open to take/put
+             :items #{} ; if it has items, means it can contain stuff.
+             :description "A chest drawer"})
+
+
+
 (def living {:name "Living Room"
              :full-description "The living room was as smelly as the bedroom, and although there was a window,
                                 it appeared to be nailed shut. There was a pretty good chance I'd choke to death
