@@ -7,8 +7,7 @@
 
 (defn say-mock
   "Save the speech lines to output, separated by '\n'"
-  ([speech] (say-mock speech nil))
-  ([speech game-state] (reset! output (clojure.string/join "\n" [@output speech])) game-state))
+  ([speech] (reset! output (clojure.string/join "\n" [@output speech]))))
 
 (defn is-output
   "Compare the last n output lines with the given."

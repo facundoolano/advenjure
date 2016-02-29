@@ -40,10 +40,8 @@
         (get-item-in (:items (current-room game-state)) token)))
 
 
-; FIXME should remove that return game-state stuff
 (defn say
-  ([speech] (say speech nil))
-  ([speech game-state] (println (str/capitalize speech)) game-state))
+  ([speech] (println (str/capitalize speech))))
 
 
 ; TODO this stuff should probably go to protocols of Room/Item records
@@ -76,7 +74,7 @@
 
 
 ;;; VERB HANDLER FUNCTIONS
-;;; Every handler takes the game state and the command tokens, and returns the new game state
+;;; Every handler takes the game state and the command tokens. If game state changes returns the new state, otherwise nil
 
 ; TODO use closures for inlined functions
 ; TODO list items in room when entering
@@ -96,8 +94,8 @@
   (if-let [dir (find-direction tokens)]
     (if-let [new-room (dir (current-room game-state))]
      (change-rooms game-state new-room)
-     (say "Can't go in that direction" game-state))
-    (say "Go where?" game-state)))
+     (say "Can't go in that direction"))
+    (say "Go where?")))
 
 
 (defn look
@@ -111,21 +109,21 @@
   "Look at item."
   [game-state tokens]
   (if (or (not tokens) (= tokens ""))
-    (say "Look at what?" game-state)
+    (say "Look at what?")
     (if-let [item (find-item game-state tokens)]
-      (say (:description item) game-state)
-      (say "I don't see that." game-state))))
+      (say (:description item))
+      (say "I don't see that."))))
 
 (defn look-inside
   "Look inside container."
   [game-state tokens]
   (if (or (not tokens) (= tokens ""))
-    (say "Look inside what?" game-state)
+    (say "Look inside what?")
     (if-let [item (find-item game-state tokens)]
       (if (:items item)
         (describe-container item)
         (say (str "I can't look inside a " (iname item) ".")))
-      (say "I don't see that." game-state))))
+      (say "I don't see that."))))
 
 
 ; TODO if in inventory -> "I already got it."
@@ -138,7 +136,7 @@
       (-> game-state
           (assoc :inventory (conj inventory item))
           (assoc-in [:room-map room-kw :items] (disj (:items room) item))))
-    (say "I don't see that." game-state)))
+    (say "I don't see that.")))
 
 
 
@@ -186,5 +184,5 @@
         [verb tokens] (find-verb clean)
         handler (get verb-map verb)]
    (if handler
-     (handler game-state tokens)
-     (say "I don't know how to do that." game-state))))
+     (or (handler game-state tokens) game-state)
+     (say "I don't know how to do that."))))
