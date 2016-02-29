@@ -100,7 +100,11 @@
       (is-output "it's a key"))
 
     (testing "look at closed container item"
-      (is false))
+      (let [coin {:names ["coin"] :description "a nickle"}
+            sack {:names ["sack"] :items #{coin} :closed true}
+            new-state (assoc game-state :inventory #{sack})]
+       (look-at new-state "coin")
+       (is-output "I don't see that.")))
 
     (testing "look at missing item"
       (look-at game-state "sofa")
@@ -131,7 +135,11 @@
         (is-output ["The bottle contains:" "An amount of water"])))
 
     (testing "look in closed container"
-      (is false))
+      (let [coin {:names ["coin"] :description "a nickle"}
+            sack {:names ["sack"] :items #{coin} :closed true}
+            new-state (assoc game-state :inventory #{sack})]
+        (look-inside new-state "sack")
+        (is-output "The sack is closed.")))
 
     (testing "look inside non-container"
       (look-inside game-state "bed")

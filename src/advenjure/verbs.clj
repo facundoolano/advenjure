@@ -31,7 +31,7 @@
   [item-set item]
   (or (first (filter #(some #{item} (:names %)) item-set))
       (first (map #(get-item-in (:items %) item)
-                  (filter #(:items %) item-set)))))
+                  (filter #(and (not (:closed %)) (:items %)) item-set)))))
 
 (defn find-item
     "Try to find the given item name either in the inventory or the current room."
@@ -53,16 +53,16 @@
     (if (vowel? (first (iname item))) "An " "A ")
     (iname item)))
 
-
 (defn describe-container [container]
   (if-let [items (:items container)]
-    (if (empty? items)
-      (say (str "The " (iname container) " is empty."))
-      (do
-        (say (str "The " (iname container) " contains:"))
-        (doseq [item (:items container)]
-          (say (list-print item))
-          (describe-container item))))))
+    (cond
+      (:closed container) (say (str "The " (iname container) " is closed."))
+      (empty? items) (say (str "The " (iname container) " is empty."))
+      :else (do
+              (say (str "The " (iname container) " contains:"))
+              (doseq [item items]
+                (say (list-print item))
+                (describe-container item))))))
 
 (defn describe-room [room]
   (if (:visited room)
