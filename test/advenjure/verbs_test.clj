@@ -29,16 +29,16 @@
              :open true :items #{{:names ["key"] :description "it's a key" :take true}}})
 
 (def bedroom {:name "Bedroom",
-              :full-description "long description of bedroom"
-              :short-description "short description of bedroom"
+              :initial-description "long description of bedroom"
+              :description "short description of bedroom"
               :items #{{:names ["bed"] :description "just a bed"}
                        drawer}
               :north :living
               :visited true})
 
 (def living {:name "Bedroom",
-             :full-description "long description of living room"
-             :short-description "short description of living room"
+             :initial-description "long description of living room"
+             :description "short description of living room"
              :items #{{:names ["sofa"] :description "just a sofa"}}
              :south :bedroom})
 

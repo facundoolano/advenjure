@@ -68,8 +68,8 @@
 
 (defn describe-room [room]
   (if (:visited room)
-    (say (:short-description room))
-    (say (:full-description room)))
+    (say (:description room))
+    (say (:initial-description room)))
   (doseq [item (:items room)]
     (say (str "There's a " (first (:names item)) " here."))
     (describe-container item)))

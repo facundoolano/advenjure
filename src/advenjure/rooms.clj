@@ -36,9 +36,9 @@
 
 
 (def bedroom {:name "Bedroom"
-              :full-description "I woke up in a smelling little bedroom,
+              :intial-description "I woke up in a smelling little bedroom,
                                 without windows or any furniture other than the bed I was laying in and a reading lamp."
-              :short-description "A smelling bedroom. There was an unmade bed near the corner and a lamp by the bed."
+              :description "A smelling bedroom. There was an unmade bed near the corner and a lamp by the bed."
               :items #{{:names ["bed"] :description "It was the bed I slept in."}
                        {:names ["reading lamp" "lamp"] :description "Nothing special about the lamp."}
                        magazine}})
@@ -51,10 +51,10 @@
 
 
 (def living {:name "Living Room"
-             :full-description "The living room was as smelly as the bedroom, and although there was a window,
+             :intial-description "The living room was as smelly as the bedroom, and although there was a window,
                                 it appeared to be nailed shut. There was a pretty good chance I'd choke to death
                                 if I didn't leave the place soon."
-             :short-description "A living room with a nailed shut window."})
+             :description "A living room with a nailed shut window."})
 
 
 
