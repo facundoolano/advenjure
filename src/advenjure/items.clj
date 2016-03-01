@@ -1,4 +1,5 @@
-(ns advenjure.items)
+(ns advenjure.items
+  (:require [clojure.string :as string]))
 
 
 (defn iname [item] (first (:names item)))
@@ -12,14 +13,16 @@
       (if (vowel? (first (iname item))) "An " "A ")
       (iname item)))
 
-  (clojure.string/join "\n"
-                       (for [item items]
-                         (str (print-item item) (describe-container item)))))
+  (string/join "\n"
+               (for [item items]
+                 (str (print-item item) (describe-container item ". ")))))
 
-(defn describe-container [container]
-  (if-let [items (:items container)]
+(defn describe-container
+  ([container] (describe-container container ""))
+  ([container prefix]
+   (if-let [items (:items container)]
     (cond
-      (:closed container) (str "The " (iname container) " is closed.")
-      (empty? items) (str "The " (iname container) " is empty.")
-      :else (str "The " (iname container)
-                 " contains:\n" (print-list items)))))
+      (:closed container) (str prefix "The " (iname container) " is closed.")
+      (empty? items) (str prefix "The " (iname container) " is empty.")
+      :else (str prefix "The " (iname container)
+                 " contains:\n" (print-list items))))))

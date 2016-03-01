@@ -1,5 +1,6 @@
 (ns advenjure.rooms
-  (:require [advenjure.items :refer [iname describe-container]]))
+  (:require [advenjure.items :refer [iname describe-container]]
+            [clojure.string :as string]))
 
 (defrecord Room [name description])
 
@@ -21,10 +22,11 @@
   (let [room-descr (if (:visited room)
                     (:description room)
                     (:initial-description room))
-        item-descr (clojure.string/join "\n"
-                    (for [item (:items room)]
-                      (str "There's a " (first (:names item)) " here. "
-                        (describe-container item))))]
+        item-descr (string/join "\n"
+                                (for [item (:items room)]
+                                  (str (str "There's a " (iname item) " here.")
+                                       (describe-container item " "))))]
+
     (str room-descr "\n" item-descr)))
 
 
