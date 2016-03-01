@@ -1,3 +1,33 @@
+(ns advenjure.rooms
+  (:require [advenjure.items :refer [iname describe-container]]))
+
+(defrecord Room [name description])
+
+(defn make [name description & extras]
+  (map->Room (merge {:name name :description description}
+                    {:intial-description description ;default args, can be overriden by extras
+                     :items #{} :item-descriptions {} :visited false}
+                    (apply hash-map extras))))
+
+(defn add-item
+  ([room item]
+   (assoc room :items (conj (:items room) item)))
+  ([room item description]
+   (-> room
+       (assoc :items (conj (:items room) item))
+       (assoc-in [:item-descriptions (name item)] description))))
+
+(defn describe [room]
+  (let [room-descr (if (:visited room)
+                    (:description room)
+                    (:initial-description room))
+        item-descr (clojure.string/join "\n"
+                    (for [item (:items room)]
+                      (str "There's a " (first (:names item)) " here. "
+                        (describe-container item))))]
+    (str room-descr "\n" item-descr)))
+
+
 ; ROOM MAP BUILDING
 (defn add-room [room-map k room]
   "Add the given room to the room-map under the k key."
@@ -27,7 +57,7 @@
 
 ;;; ROOM DEFINITIONS
 
-;FIXME decide on tiempo verbal
+; TODO convert to records
 
 (def magazine {:names ["sports magazine" "magazine"]
                :description "The cover reads 'Sports Almanac 1950-2000'"
@@ -41,13 +71,15 @@
               :description "A smelling bedroom. There was an unmade bed near the corner and a lamp by the bed."
               :items #{{:names ["bed"] :description "It was the bed I slept in."}
                        {:names ["reading lamp" "lamp"] :description "Nothing special about the lamp."}
-                       magazine}})
+                       magazine}
+              :item-descriptions {"bed" "" ;empty means skip it while describing, already contained in room description
+                                  "magazine" "Laying by the bed was a sports magazine."}}) ; use this when describing the room instead of "there's a X here"
+
 
 (def drawer {:names ["drawer" "drawers" "chest" "chest drawer" "chest drawers" "drawer chest" "drawers chest"]
-             :open false ; if it has open kw, means it responds to open/close. Also if it cotains stuff, need to open to take/put
-             :items #{} ; if it has items, means it can contain stuff.
+             :closed true ; if it has closed kw, means it responds to open/close.
+             :items #{} ; if it has items set, means it can contain stuff.
              :description "A chest drawer"})
-
 
 
 (def living {:name "Living Room"
@@ -55,8 +87,6 @@
                                 it appeared to be nailed shut. There was a pretty good chance I'd choke to death
                                 if I didn't leave the place soon."
              :description "A living room with a nailed shut window."})
-
-
 
 
 ;;; BUILD THE ACTUAL MAP

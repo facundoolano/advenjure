@@ -1,6 +1,7 @@
 (ns advenjure.verbs
-  (:require [clojure.string :as str])
-  (:gen-class))
+  (:require [clojure.string :as str]
+            [advenjure.items :refer [iname describe-container]]
+            [advenjure.rooms :as rooms]))
 
 
 ;;; UTILITY functions
@@ -44,40 +45,9 @@
   ([speech] (println (str/capitalize speech))))
 
 
-; TODO this stuff should probably go to protocols of Room/Item records
-(defn iname [item] (first (:names item)))
-
-(defn list-print [item]
-  (def vowel? (set "aeiouAEIOU"))
-  (str
-    (if (vowel? (first (iname item))) "An " "A ")
-    (iname item)))
-
-(defn describe-container [container]
-  (if-let [items (:items container)]
-    (cond
-      (:closed container) (say (str "The " (iname container) " is closed."))
-      (empty? items) (say (str "The " (iname container) " is empty."))
-      :else (do
-              (say (str "The " (iname container) " contains:"))
-              (doseq [item items]
-                (say (list-print item))
-                (describe-container item))))))
-
-(defn describe-room [room]
-  (if (:visited room)
-    (say (:description room))
-    (say (:initial-description room)))
-  (doseq [item (:items room)]
-    (say (str "There's a " (first (:names item)) " here."))
-    (describe-container item)))
-
-
 ;;; VERB HANDLER FUNCTIONS
 ;;; Every handler takes the game state and the command tokens. If game state changes returns the new state, otherwise nil
 
-; TODO use closures for inlined functions
-; TODO list items in room when entering
 (defn go
   "Change the location if direction is valid"
   [game-state tokens]
@@ -86,7 +56,7 @@
     "Change room, say description, set visited."
     [new-room]
     (let [room-spec (get-in game-state [:room-map new-room])]
-      (describe-room room-spec)
+      (say (rooms/describe room-spec))
       (-> game-state
           (assoc :current-room new-room)
           (assoc-in [:room-map new-room :visited] true))))
@@ -102,7 +72,7 @@
   "Look around (describe room). If tokens is defined, show error phrase."
   [game-state tokens]
   (if (or (not tokens) (= tokens ""))
-    (describe-room (current-room game-state))
+    (say (rooms/describe (current-room game-state)))
     (say "I understood as far as 'look'")))
 
 (defn look-at
@@ -121,7 +91,7 @@
     (say "Look inside what?")
     (if-let [item (find-item game-state tokens)]
       (if (:items item)
-        (describe-container item)
+        (say (describe-container item))
         (say (str "I can't look inside a " (iname item) ".")))
       (say "I don't see that."))))
 
@@ -153,13 +123,14 @@
                   (add-verb ["go"] go) ;FIXME handle "n" "nw" as specific forms of go
                   (add-verb ["look"] look)
                   (add-verb ["look at" "describe"] look-at)
-                  (add-verb ["read"] identity)
                   (add-verb ["take" "get" "pick" "pick up"] take_)
                   (add-verb ["inventory" "i"] identity)
+                  (add-verb ["read"] identity)
                   (add-verb ["open"] identity)
                   (add-verb ["close"] identity)
                   (add-verb ["turn on"] identity)
                   (add-verb ["turn off"] identity)
+                  (add-verb ["put"] identity)
                   (add-verb ["unlock"] identity) ; FIXME compound; FIXME open X with Y should work too
                   (add-verb ["save"] identity)
                   (add-verb ["restore" "load"] identity)

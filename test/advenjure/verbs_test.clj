@@ -60,15 +60,13 @@
     (testing "look at room"
       (look game-state nil)
       (is-output ["short description of bedroom"
-                  "There's a bed here."
-                  "There's a drawer here."
-                  "The drawer contains:"
+                  "There's a bed here. "
+                  "There's a drawer here. The drawer contains:"
                   "A key"])
       (look game-state "")
       (is-output ["short description of bedroom"
-                  "There's a bed here."
-                  "There's a drawer here."
-                  "The drawer contains:"
+                  "There's a bed here. "
+                  "There's a drawer here. The drawer contains:"
                   "A key"]))
 
     (testing "invalid look command"
@@ -151,16 +149,15 @@
     (let [new-state (go game-state "north")]
       (testing "go to an unvisited room"
         (is-output ["long description of living room"
-                    "There's a sofa here."])
+                    "There's a sofa here. "])
         (is (= (:current-room new-state) :living))
         (is (get-in new-state [:room-map :living :visited])))
 
       (testing "go to an already visited room"
         (let [newer-state (go new-state "south")]
           (is-output ["short description of bedroom"
-                      "There's a bed here."
-                      "There's a drawer here."
-                      "The drawer contains:"
+                      "There's a bed here. "
+                      "There's a drawer here. The drawer contains:"
                       "A key"])
           (is (= (:current-room newer-state) :bedroom))
           (is (get-in newer-state [:room-map :bedroom :visited])))))
