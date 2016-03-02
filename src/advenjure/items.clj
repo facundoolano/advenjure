@@ -2,22 +2,38 @@
   (:require [clojure.string :as string]))
 
 
-(defn iname [item] (first (:names item)))
+(defrecord Item [names description])
+
+(defn make
+  ([names description & extras]
+    (map->Item (merge {:names names :description description}
+                      (apply hash-map extras))))
+  ([a-name]
+   (make [a-name] "There's nothing special about it.")))
+
+(defn iname
+  "Get the first name of the item."
+  [item] (first (:names item)))
 
 (declare describe-container)
 
-(defn print-list [items]
-  (defn print-item [item]
+(defn print-list-item [item]
     (def vowel? (set "aeiouAEIOU"))
     (str
-      (if (vowel? (first (iname item))) "An " "A ")
+      (if (vowel? (first (iname item))) "an " "a ")
       (iname item)))
 
+(defn print-list [items]
   (string/join "\n"
                (for [item items]
-                 (str (print-item item) (describe-container item ". ")))))
+                 (str (string/capitalize (print-list-item item))
+                      (describe-container item ". ")))))
 
 (defn describe-container
+  "Recursively lists the contents of the item. If a prefix is given, it will be
+  appended to the resulting string.
+  If the item is empty or closed, the message will say so.
+  If the item is not a container, returns nil."
   ([container] (describe-container container ""))
   ([container prefix]
    (if-let [items (:items container)]

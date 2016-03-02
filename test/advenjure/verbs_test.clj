@@ -1,6 +1,8 @@
 (ns advenjure.verbs-test
   (:require [clojure.test :refer :all]
-            [advenjure.verbs :refer :all]))
+            [advenjure.verbs :refer :all]
+            [advenjure.rooms :as room]
+            [advenjure.items :as it]))
 
 ;;;;; mock println
 (def output (atom nil))
@@ -24,28 +26,25 @@
                       (f)))
 
 ;;;;;; some test data
-(def drawer {:names ["drawer"] :description "it's an open drawer."
-             :open true :items #{{:names ["key"] :description "it's a key" :take true}}})
+(def drawer (it/make ["drawer"] "it's an open drawer." :closed false
+                     :items #{(it/make ["key"] "it's a key" :take true)}))
 
-(def bedroom {:name "Bedroom",
+(def bedroom (room/make "Bedroom" "short description of bedroom"
               :initial-description "long description of bedroom"
-              :description "short description of bedroom"
-              :items #{{:names ["bed"] :description "just a bed"}
-                       drawer}
+              :items #{(it/make ["bed"] "just a bed") drawer}
               :north :living
-              :visited true})
+              :visited true))
 
-(def living {:name "Bedroom",
+(def living (room/make "Bedroom" "short description of living room"
              :initial-description "long description of living room"
-             :description "short description of living room"
-             :items #{{:names ["sofa"] :description "just a sofa"}}
-             :south :bedroom})
+             :items #{(it/make ["sofa"] "just a sofa")}
+             :south :bedroom))
 
 (def game-state {:current-room :bedroom
                  :room-map {:bedroom bedroom, :living living}
-                 :inventory #{{:names ["magazine" "sports magazine"]
-                               :description "The cover reads 'Sports Almanac 1950-2000'"
-                               :take true}}})
+                 :inventory #{(it/make ["magazine" "sports magazine"]
+                               "The cover reads 'Sports Almanac 1950-2000'"
+                               :take true)}})
 
 ;;;;;;; da tests
 
@@ -119,25 +118,12 @@
       (look-inside game-state "drawer")
       (is-output ["The drawer contains:" "A key"]))
 
-    (testing "look in empty container"
-      (let [sack {:names ["sack"] :items #{}}
-            new-state (assoc game-state :inventory #{sack})]
-        (look-inside new-state "sack")
-        (is-output "The sack is empty.")))
-
     (testing "look in container inside container"
       (let [bottle {:names ["bottle"] :items #{{:names ["amount of water"]}}}
             sack {:names ["sack"] :items #{bottle}}
             new-state (assoc game-state :inventory #{sack})]
         (look-inside new-state "bottle")
         (is-output ["The bottle contains:" "An amount of water"])))
-
-    (testing "look in closed container"
-      (let [coin {:names ["coin"] :description "a nickle"}
-            sack {:names ["sack"] :items #{coin} :closed true}
-            new-state (assoc game-state :inventory #{sack})]
-        (look-inside new-state "sack")
-        (is-output "The sack is closed.")))
 
     (testing "look inside non-container"
       (look-inside game-state "bed")
