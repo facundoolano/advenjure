@@ -1,6 +1,7 @@
 (ns advenjure.verbs
   (:require [clojure.string :as str]
-            [advenjure.items :refer [iname describe-container]]
+            [clojure.set :as clset]
+            [advenjure.items :refer [iname describe-container get-from remove-from]]
             [advenjure.rooms :as rooms]))
 
 
@@ -24,21 +25,12 @@
                  "northwest" :northwest, "nw" :northwest})
   (get mappings token))
 
-(defn get-item-in
-  "Get the spec for the item with the given name, if it's in the given set,
-  or is contained by one of its items."
-  ; TODO probably a cleaner way to get this result
-  ; TODO allow multiple results --i.e. door --> "glass door" "wooden door"
-  [item-set item]
-  (or (first (filter #(some #{item} (:names %)) item-set))
-      (first (map #(get-item-in (:items %) item)
-                  (filter #(and (not (:closed %)) (:items %)) item-set)))))
 
 (defn find-item
     "Try to find the given item name either in the inventory or the current room."
     [game-state token]
-    (or (get-item-in (:inventory game-state) token)
-        (get-item-in (:items (current-room game-state)) token)))
+    (or (get-from (:inventory game-state) token)
+        (get-from (:items (current-room game-state)) token)))
 
 
 (defn say
@@ -96,19 +88,24 @@
       (say "I don't see that."))))
 
 
-; TODO if in inventory -> "I already got it."
-; TODO "Taken."
-; TODO remove-in method
 (defn take_
+  "Try to take an item from the current room or from a container object in the inventory.
+  Won't allow taking an object already in the inventory (i.e. not in a container)."
   [game-state token]
-  (if-let [item (get-item-in (current-room game-state) token)]
-    (let [room-kw (:current-room game-state)
-          room (current-room game-state)
-          inventory (:inventory game-state)]
-      (-> game-state
-          (assoc :inventory (conj inventory item))
-          (assoc-in [:room-map room-kw :items] (disj (:items room) item))))
-    (say "I don't see that.")))
+  (let [room (current-room game-state)
+        inventory (:inventory game-state)
+        all-items (clset/union (:items room) inventory)
+        item (get-from all-items token)]
+    (cond
+      (nil? item) (say "I don't see that.")
+      (contains? inventory item) (say "I already got that.")
+      (not (:take item)) (say "I can't take that.")
+      :else (let [room-kw (:current-room game-state)]
+              (say "Taken.")
+              (-> game-state
+                  (assoc :inventory (conj (remove-from inventory item) item))
+                  (assoc-in [:room-map room-kw :items]
+                            (remove-from (:items room) item)))))))
 
 
 

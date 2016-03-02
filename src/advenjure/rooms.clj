@@ -35,13 +35,13 @@
         custom-descr (string/join " " (vals custom-items)) ; string of custom descriptions
         custom-prefix (if (not-empty custom-descr) " ") ; put a space between room and custom descriptions if any
         remain-items (filter #(nil? (get (:item-descriptions room) (iname %))) (:items room)) ; get room items with no custom description
-        item-descr (string/join "\n"
-                                (for [item remain-items]
-                                  (str "There's " (print-list-item item) " here."
-                                       (describe-container item " "))))]
+        item-descr (reduce #(str %1 "\nThere's " (print-list-item %2) " here."
+                                 (describe-container %2 " "))
+                            ""
+                            remain-items)]
 
     (if (not-empty item-descr)
-      (str room-descr custom-prefix custom-descr "\n" item-descr)
+      (str room-descr custom-prefix custom-descr item-descr)
       (str room-descr custom-prefix custom-descr))))
 
 

@@ -9,7 +9,7 @@
 
 (defn say-mock
   "Save the speech lines to output, separated by '\n'"
-  ([speech] (reset! output (clojure.string/join "\n" [@output speech]))))
+  ([speech] (reset! output (clojure.string/join "\n" [@output speech])) nil))
 
 (defn is-output
   "Compare the last n output lines with the given."
@@ -28,10 +28,10 @@
 ;;;;;; some test data
 (def drawer (it/make ["drawer"] "it's an open drawer." :closed false
                      :items #{(it/make ["key"] "it's a key" :take true)}))
-
+(def sock (it/make ["sock"] "a sock" :take true))
 (def bedroom (room/make "Bedroom" "short description of bedroom"
               :initial-description "long description of bedroom"
-              :items #{(it/make ["bed"] "just a bed") drawer}
+              :items #{(it/make ["bed"] "just a bed") drawer sock}
               :north :living
               :visited true))
 
@@ -60,11 +60,14 @@
       (look game-state nil)
       (is-output ["short description of bedroom"
                   "There's a bed here."
+                  "There's a sock here."
                   "There's a drawer here. The drawer contains:"
                   "A key"])
+
       (look game-state "")
       (is-output ["short description of bedroom"
                   "There's a bed here."
+                  "There's a sock here."
                   "There's a drawer here. The drawer contains:"
                   "A key"]))
 
@@ -143,6 +146,7 @@
         (let [newer-state (go new-state "south")]
           (is-output ["short description of bedroom"
                       "There's a bed here."
+                      "There's a sock here."
                       "There's a drawer here. The drawer contains:"
                       "A key"])
           (is (= (:current-room newer-state) :bedroom))
@@ -161,15 +165,57 @@
 
 (deftest take-verb
   (with-redefs [say say-mock]
-    (testing "take an item from the room") ;puts it in inventory, takes out of room, says "Taken"
-    (testing "take an item that's not takable"); says I can't take that, still in room, not in inventory
-    (testing "take an item from inventory") ;says "already got it"
-    (testing "take an item from other room") ;i dont see that
-    (testing "take an invalid item");i dont see that
-    (testing "take item in room container")
-    (testing "take item in inv container")
-    (testing "take item in open container")
-    (testing "take item in closed container")))
+    (testing "take an item from the room"
+      (let [new-state (take_ game-state "sock")]
+        (is (it/get-from (:inventory new-state) "sock"))
+        (is (not (it/get-from (:items (current-room new-state)) "sock")))
+        (is-output "Taken.")))
+
+    (testing "take an item that's not takable"
+      (let [new-state (take_ game-state "bed")]
+        (is (nil? new-state))
+        (is-output "I can't take that.")))
+
+    (testing "take an item from inventory"
+      (let [new-state (take_ game-state "magazine")]
+        (is (nil? new-state))
+        (is-output "I already got that.")))
+
+    (testing "take an invalid item"
+      (let [new-state (take_ game-state "microwave")]
+        (is (nil? new-state))
+        (is-output "I don't see that.")))
+
+    (testing "take an item from other room"
+      (let [new-state (assoc game-state :current-room :living)
+            newer-state (take_ new-state "sock")]
+        (is (nil? newer-state))
+        (is-output "I don't see that.")))
+
+    (testing "take item in room container"
+      (let [new-state (take_ game-state "key")]
+        (is (it/get-from (:inventory new-state) "key"))
+        (is (not (it/get-from (:items (current-room new-state)) "key")))
+        (is-output "Taken.")))
+
+    (testing "take item in inv container"
+      (let [coin {:names ["coin"] :description "a nickle" :take true}
+            sack {:names ["sack"] :items #{coin}}
+            new-state (assoc game-state :inventory #{sack})
+            newer-state (take_ new-state "coin")
+            inv (:inventory newer-state)
+            new-sack (it/get-from inv "sack")]
+        (is (contains? inv coin))
+        (is (not (contains? (:items new-sack) coin)))
+        (is-output "Taken.")))
+
+    (testing "take item in closed container"
+      (let [coin {:names ["coin"] :description "a nickle" :take true}
+            sack {:names ["sack"] :items #{coin} :closed true}
+            new-state (assoc game-state :inventory #{sack})
+            newer-state (take_ new-state "coin")]
+        (is (nil? newer-state))
+        (is-output "I don't see that.")))))
 
 
 
