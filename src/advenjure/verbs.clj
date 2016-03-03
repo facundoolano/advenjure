@@ -139,12 +139,13 @@
 (defn find-verb
   "Return [verb remaining] if there's a proper verb at the beginning of text."
   [text]
-  (defn split-verb [verb]
-    (let [[head tokens] (str/split text (re-pattern verb))]
-      (if (= head "") ;found verb in text
-        [verb (and tokens (str/trim tokens))])))
+  (defn match-verb [verb]
+    (let [[head & tokens :as full] (re-find (re-pattern verb) text)]
+      (cond
+        (and (not (nil? full)) (not (coll? full))) [verb '()] ;single match, no params
+        (not-empty head) [verb tokens]))) ; match with params
 
-  (some split-verb sorted-verbs))
+  (some match-verb sorted-verbs))
 
 (defn process-input
   "Take an input comand, find the verb in it and execute its action handler."
