@@ -12,18 +12,20 @@
   [game-state]
   (get-in game-state [:room-map (:current-room game-state)]))
 
+(def direction-mappings {"north" :north, "n" :north
+                         "northeast" :northeast, "ne" :northeast
+                         "east" :east, "e" :east
+                         "southeast" :southeast, "se" :southeast
+                         "south" :south, "s" :south
+                         "southwest" :southwest, "sw" :southwest
+                         "west" :west, "w" :west
+                         "northwest" :northwest, "nw" :northwest})
+
+; TODO remove this
 (defn find-direction
   "Try to match the string with a direction. Allows synonyms: 'n', 'nw', etc."
   [token]
-  (def mappings {"north" :north, "n" :north
-                 "northeast" :northeast, "ne" :northeast
-                 "east" :east, "e" :east
-                 "southeast" :southeast, "se" :southeast
-                 "south" :south, "s" :south
-                 "southwest" :southwest, "sw" :southwest
-                 "west" :west, "w" :west
-                 "northwest" :northwest, "nw" :northwest})
-  (get mappings token))
+  (get direction-mappings token))
 
 
 (defn find-item
@@ -142,8 +144,18 @@
   [verb-map verbs handler]
   (merge verb-map (zipmap verbs (repeat handler))))
 
+(defn add-go-shortcuts
+  "Allow commands like 'north' and 'n' instead of 'go north'"
+  [vmap]
+  (loop [new-map vmap
+         [dir & remain] (keys direction-mappings)]
+    (if (nil? dir)
+      new-map
+      (let [regexp (str "^" dir "$")]
+        (recur (add-verb new-map [regexp] #(go % dir)) remain)))))
 
 (def verb-map (-> {}
+                  add-go-shortcuts
                   (add-verb ["^go (.*)"] go)
                   (add-verb ["^look$" "^look around$"] look)
                   (add-verb ["^look at (.*)" "^describe (.*)"] look-at)

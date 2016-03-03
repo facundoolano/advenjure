@@ -362,5 +362,14 @@
       (let [new-state (process-input game-state "take sock")]
         (is-output "Taken.")
         (is (contains? (:inventory new-state) sock))
-        (is (not (contains? (:items (current-room new-state)) sock)))))))
+        (is (not (contains? (:items (current-room new-state)) sock)))))
+
+    (testing "go shortcuts"
+      (process-input game-state "north")
+      (is-output ["long description of living room"
+                  "There's a sofa here."])
+      (process-input game-state "n")
+      (is-output ["long description of living room"
+                  "There's a sofa here."]))))
+
 
