@@ -57,24 +57,12 @@
   (with-redefs [say say-mock]
 
     (testing "look at room"
-      (look game-state nil)
+      (look game-state)
       (is-output ["short description of bedroom"
                   "There's a bed here."
                   "There's a sock here."
                   "There's a drawer here. The drawer contains:"
-                  "A key"])
-
-      (look game-state "")
-      (is-output ["short description of bedroom"
-                  "There's a bed here."
-                  "There's a sock here."
-                  "There's a drawer here. The drawer contains:"
-                  "A key"]))
-
-    (testing "invalid look command"
-      (look game-state "bed")
-      (is-output "I understood as far as 'look'"))))
-
+                  "A key"]))))
 
 (deftest look-at-verb
   (with-redefs [say say-mock]
@@ -258,3 +246,37 @@
       (let [[verb tokens] (find-verb "unlock door with key")]
         (is (= verb "^unlock (.*) with (.*)"))
         (is (= tokens (list "door" "key")))))))
+
+(deftest process-input-test
+  (with-redefs [say say-mock]
+
+    (testing "unknown command"
+      (let [new-state (process-input game-state "dance around")]
+        (is-output "I don't know how to do that.")
+        (is (= new-state game-state))))
+
+    (testing "look verb"
+      (let [new-state (process-input game-state "look ")]
+        (is-output ["short description of bedroom"
+                    "There's a bed here."
+                    "There's a sock here."
+                    "There's a drawer here. The drawer contains:"
+                    "A key"])
+        (is (= new-state game-state))))
+
+    (testing "invalid look with parameters"
+      (let [new-state (process-input game-state "look something")]
+        (is-output "I don't know how to do that.")
+        (is (= new-state game-state))))
+
+    (testing "look at item"
+      (let [new-state (process-input game-state "look at bed")]
+        (is-output "just a bed")
+        (is (= new-state game-state))))
+
+    (testing "take item"
+      (let [new-state (process-input game-state "take sock")]
+        (is-output "Taken.")
+        (is (contains? (:inventory new-state) sock))
+        (is (not (contains? (:items (current-room new-state)) sock)))))))
+

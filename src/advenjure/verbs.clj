@@ -42,7 +42,7 @@
 
 (defn go
   "Change the location if direction is valid"
-  [game-state tokens]
+  [game-state direction]
 
   (defn change-rooms
     "Change room, say description, set visited."
@@ -53,7 +53,7 @@
           (assoc :current-room new-room)
           (assoc-in [:room-map new-room :visited] true))))
 
-  (if-let [dir (find-direction tokens)]
+  (if-let [dir (find-direction direction)]
     (if-let [new-room (dir (current-room game-state))]
      (change-rooms new-room)
      (say "Can't go in that direction"))
@@ -62,26 +62,24 @@
 
 (defn look
   "Look around (describe room). If tokens is defined, show error phrase."
-  [game-state tokens]
-  (if (or (not tokens) (= tokens ""))
-    (say (rooms/describe (current-room game-state)))
-    (say "I understood as far as 'look'")))
+  [game-state]
+  (say (rooms/describe (current-room game-state))))
 
 (defn look-at
   "Look at item."
-  [game-state tokens]
-  (if (or (not tokens) (= tokens ""))
+  [game-state item]
+  (if (empty? item)
     (say "Look at what?")
-    (if-let [item (find-item game-state tokens)]
-      (say (:description item))
+    (if-let [item-spec (find-item game-state item)]
+      (say (:description item-spec))
       (say "I don't see that."))))
 
 (defn look-inside
   "Look inside container."
-  [game-state tokens]
-  (if (or (not tokens) (= tokens ""))
+  [game-state container]
+  (if (empty? container)
     (say "Look inside what?")
-    (if-let [item (find-item game-state tokens)]
+    (if-let [item (find-item game-state container)]
       (if (:items item)
         (say (describe-container item))
         (say (str "I can't look inside a " (iname item) ".")))
@@ -91,11 +89,11 @@
 (defn take_
   "Try to take an item from the current room or from a container object in the inventory.
   Won't allow taking an object already in the inventory (i.e. not in a container)."
-  [game-state token]
+  [game-state item-name]
   (let [room (current-room game-state)
         inventory (:inventory game-state)
         all-items (clset/union (:items room) inventory)
-        item (get-from all-items token)]
+        item (get-from all-items item-name)]
     (cond
       (nil? item) (say "I don't see that.")
       (contains? inventory item) (say "I already got that.")
@@ -117,21 +115,21 @@
 
 
 (def verb-map (-> {}
-                  (add-verb ["go"] go) ;FIXME handle "n" "nw" as specific forms of go
-                  (add-verb ["look"] look)
-                  (add-verb ["look at" "describe"] look-at)
-                  (add-verb ["take" "get" "pick" "pick up"] take_)
-                  (add-verb ["inventory" "i"] identity)
-                  (add-verb ["read"] identity)
-                  (add-verb ["open"] identity)
-                  (add-verb ["close"] identity)
-                  (add-verb ["turn on"] identity)
-                  (add-verb ["turn off"] identity)
-                  (add-verb ["put"] identity)
-                  (add-verb ["unlock"] identity) ; FIXME compound; FIXME open X with Y should work too
-                  (add-verb ["save"] identity)
-                  (add-verb ["restore" "load"] identity)
-                  (add-verb ["help"] identity)))
+                  (add-verb ["^go (.*)"] go)
+                  (add-verb ["^look$" "^look around$"] look)
+                  (add-verb ["^look at (.*)" "^describe (.*)"] look-at)
+                  (add-verb ["^take (.*)" "^get (.*)" "^pick (.*)" "^pick up (.*)"] take_)
+                  (add-verb ["^inventory$" "^i$"] identity)
+                  (add-verb ["^read (.*)"] identity)
+                  (add-verb ["^open (.*)"] identity)
+                  (add-verb ["^close (.*)"] identity)
+                  (add-verb ["^turn on (.*)" "^turn (.*) on"] identity)
+                  (add-verb ["^turn off (.*)" "^turn (.*) off"] identity)
+                  (add-verb ["^put (.*) in (.*)" "^put (.*) inside (.*)"] identity)
+                  (add-verb ["^unlock (.*) with (.*)"] identity) ; FIXME compound; FIXME open X with Y should work too
+                  (add-verb ["^save$"] identity)
+                  (add-verb ["^restore$" "^load$"] identity)
+                  (add-verb ["^help$"] identity)))
 
 ;keep a sorted version to extract the longest possible form first
 (def sorted-verbs (reverse (sort-by count (keys verb-map))))
@@ -154,5 +152,5 @@
         [verb tokens] (find-verb clean)
         handler (get verb-map verb)]
    (if handler
-     (or (handler game-state tokens) game-state)
-     (say "I don't know how to do that."))))
+     (or (apply handler game-state tokens) game-state)
+     (do (say "I don't know how to do that.") game-state))))
