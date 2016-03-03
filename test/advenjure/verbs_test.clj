@@ -174,6 +174,11 @@
         (is (nil? new-state))
         (is-output "I don't see that.")))
 
+    (testing "take with no parameter"
+      (let [new-state (take_ game-state "")]
+        (is (nil? new-state))
+        (is-output "Take what?")))
+
     (testing "take an item from other room"
       (let [new-state (assoc game-state :current-room :living)
             newer-state (take_ new-state "sock")]
@@ -204,6 +209,85 @@
             newer-state (take_ new-state "coin")]
         (is (nil? newer-state))
         (is-output "I don't see that.")))))
+
+(deftest open-verb
+  (with-redefs [say say-mock]
+    (testing "open a closed item"
+      (let [sack {:names ["sack"] :items #{} :closed true}
+            new-state (assoc game-state :inventory #{sack})
+            newer-state (open new-state "sack")
+            new-sack (it/get-from (:inventory newer-state) "sack")]
+        (is-output "Opened.")
+        (is (not (:closed new-sack)))))
+
+    (testing "open an already open item"
+      (let [sack {:names ["sack"] :items #{} :closed false}
+            new-state (assoc game-state :inventory #{sack})
+            newer-state (open new-state "sack")]
+        (is-output "It's already open.")
+        (is (nil? newer-state))))
+
+    (testing "open a non openable item"
+      (let [sack {:names ["sack"] :items #{}}
+            new-state (assoc game-state :inventory #{sack})
+            newer-state (open new-state "sack")]
+        (is-output "I can't open that.")
+        (is (nil? newer-state))))
+
+    (testing "open a missing item"
+      (let [new-state (open game-state "sack")]
+        (is-output "I don't see that.")
+        (is (nil? new-state))))
+
+    (testing "open a container inside a container"
+      (let [bottle {:names ["bottle"] :closed true :items #{{:names ["amount of water"]}}}
+            sack {:names ["sack"] :items #{bottle}}
+            new-state (assoc game-state :inventory #{sack})
+            newer-state (open new-state "bottle")
+            new-sack (it/get-from (:inventory newer-state) "sack")
+            new-bottle (it/get-from (:items new-sack) "bottle")]
+        (is-output "Opened.")
+        (is (not (:closed new-bottle)))))))
+
+
+(deftest close-verb
+  (with-redefs [say say-mock]
+    (testing "close an open item"
+      (let [sack {:names ["sack"] :items #{} :closed false}
+            new-state (assoc game-state :inventory #{sack})
+            newer-state (close new-state "sack")
+            new-sack (it/get-from (:inventory newer-state) "sack")]
+        (is-output "Closed.")
+        (is (:closed new-sack))))
+
+    (testing "close an already closed item"
+      (let [sack {:names ["sack"] :items #{} :closed true}
+            new-state (assoc game-state :inventory #{sack})
+            newer-state (close new-state "sack")]
+        (is-output "It's already closed.")
+        (is (nil? newer-state))))
+
+    (testing "close a non openable item"
+      (let [sack {:names ["sack"] :items #{}}
+            new-state (assoc game-state :inventory #{sack})
+            newer-state (close new-state "sack")]
+        (is-output "I can't close that.")
+        (is (nil? newer-state))))
+
+    (testing "close a missing item"
+      (let [new-state (close game-state "sack")]
+        (is-output "I don't see that.")
+        (is (nil? new-state))))
+
+    (testing "close a container inside a container"
+      (let [bottle {:names ["bottle"] :closed false :items #{{:names ["amount of water"]}}}
+            sack {:names ["sack"] :items #{bottle}}
+            new-state (assoc game-state :inventory #{sack})
+            newer-state (close new-state "bottle")
+            new-sack (it/get-from (:inventory newer-state) "sack")
+            new-bottle (it/get-from (:items new-sack) "bottle")]
+        (is-output "Closed.")
+        (is (:closed new-bottle))))))
 
 
 (def test-map (-> {}

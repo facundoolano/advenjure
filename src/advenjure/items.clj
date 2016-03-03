@@ -65,3 +65,16 @@
                            item))
               item-set))))
 
+(defn replace-from
+  "Look for the old-item in the given set, remove it and put the new-item in the same place.
+  Return the new state of the set."
+  [item-set old-item new-item]
+  ; TODO try to avoid copy paste the method above
+  (if (contains? item-set old-item)
+    (conj (disj item-set old-item) new-item)
+    (set (map (fn [item] (if-let [inner (:items item)]
+                           (assoc item :items (replace-from inner old-item new-item))
+                           item))
+              item-set))))
+
+
