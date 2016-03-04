@@ -2,6 +2,7 @@
   (:require [clojure.string :as str]
             [clojure.set :as clset]
             [advenjure.items :refer [iname describe-container get-from remove-from replace-from]]
+            [clojure.test :refer [function?]]
             [advenjure.rooms :as rooms]))
 
 
@@ -52,6 +53,7 @@
 (defn say
   ([speech] (println (str/capitalize speech))))
 
+; FIXME remove this, replaced by function below
 (defn item-or-message
   [game-state item]
   (if-let [item-spec (find-item game-state item)]
@@ -61,6 +63,29 @@
 ;;; VERB HANDLER FUNCTIONS
 ;;; Every handler takes the game state and the command tokens.
 ;;; If game state changes returns the new state, otherwise nil
+
+(defn noop [& args])
+
+; TODO maybe a similar one for compund handlers?
+(defn make-item-handler
+  "TODO EXPLAIN"
+  ; this one uses a noop handler, solely based on post/preconditions (i.e. read)
+  ([verb-name verb-kw] (make-item-handler verb-name verb-kw noop))
+  ([verb-name verb-kw handler &
+     {:keys [kw-required] :or {kw-required true}}]
+   (fn
+     ([game-state] (say (str verb-name " what?")))
+     ([game-state item-name]
+      (let [item (find-item game-state item-name)
+            verb-spec (verb-kw item)
+            ; if function -> execute to get precond result:
+            value (if (function? verb-spec) (verb-spec game-state) verb-spec)]
+        (cond
+          (nil? item) (say "I don't see that.")
+          (string? value) (say value)
+          (and kw-required (nil? value)) (say (str "I can't " verb-name " that."))
+          :else (handler game-state item)))))))
+
 
 (defn go
   "Change the location if direction is valid"
@@ -86,58 +111,55 @@
   [game-state]
   (say (rooms/describe (current-room game-state))))
 
-(defn look-at
-  "Look at item."
-  ([game-state] (say "Look at what?"))
-  ([game-state item]
-   (if-let [item-spec (item-or-message game-state item)]
-     (say (:description item-spec)))))
+(def look-at
+  (make-item-handler
+    "look at" :look-at
+    (fn [game-state item] (say (:description item)))
+    :kw-required false))
 
-(defn look-inside
-  "Look inside container."
-  ([game-state] (say "Look inside what?"))
-  ([game-state container]
-   (if-let [item (item-or-message game-state container)]
-     (if (:items item)
+(def look-inside
+  (make-item-handler
+    "look inside" :look-in
+    (fn [game-state item]
+      (if (:items item)
        (say (describe-container item))
-       (say (str "I can't look inside a " (iname item) "."))))))
+       (say (str "I can't look inside a " (iname item) "."))))
+    :kw-required false))
 
-(defn take_
-  "Try to take an item from the current room or from a container object in the inventory.
-  Won't allow taking an object already in the inventory (i.e. not in a container)."
-  ([game-state] (say "Take what?"))
-  ([game-state item-name]
-   (if-let [item (item-or-message game-state item-name)]
-     (cond
-       (contains? (:inventory game-state) item) (say "I already got that.")
-       (not (:take item)) (say "I can't take that.")
-       :else (let [new-state (remove-item game-state item)
-                   new-inventory (conj (:inventory new-state) item)]
-               (say "Taken.")
-               (assoc new-state :inventory new-inventory))))))
+(def take_
+  (make-item-handler
+    "take" :take
+    (fn [game-state item]
+      "Try to take an item from the current room or from a container object in the inventory.
+      Won't allow taking an object already in the inventory (i.e. not in a container)."
+      (if (contains? (:inventory game-state) item)
+        (say "I already got that.")
+        (let [new-state (remove-item game-state item)
+              new-inventory (conj (:inventory new-state) item)]
+          (say "Taken.")
+          (assoc new-state :inventory new-inventory))))))
 
-(defn open
-  ([game-state] (say "Open what?"))
-  ([game-state item-name]
-   (if-let [item (item-or-message game-state item-name)]
-     (cond
-       (nil? (:closed item)) (say "I can't open that.")
-       (not (:closed item)) (say "It's already open.")
-       (:locked item) (say "It's locked.")
-       :else (let [open-item (assoc item :closed false)]
-               (say "Opened.")
-               (replace-item game-state item open-item))))))
+(def open
+  (make-item-handler
+    "open" :closed
+    (fn [game-state item]
+      (cond
+        (not (:closed item)) (say "It's already open.")
+        (:locked item) (say "It's locked.")
+        :else (let [open-item (assoc item :closed false)]
+                (say "Opened.")
+                (replace-item game-state item open-item))))))
 
-(defn close
-  ([game-state] (say "Close what?"))
-  ([game-state item-name]
-   (if-let [item (item-or-message game-state item-name)]
-     (cond
-       (nil? (:closed item)) (say "I can't close that.")
-       (:closed item) (say "It's already closed.")
-       :else (let [closed-item (assoc item :closed true)]
-               (say "Closed.")
-               (replace-item game-state item closed-item))))))
+(def close
+  (make-item-handler
+    "close" :closed
+    (fn [game-state item]
+      (if (:closed item)
+        (say "It's already closed.")
+        (let [closed-item (assoc item :closed true)]
+             (say "Closed.")
+             (replace-item game-state item closed-item))))))
+
 
 (defn unlock
   ([game-state] (say "Unlock what?"))
@@ -177,7 +199,7 @@
                   (add-verb ["^look$" "^look around$"] look)
                   (add-verb ["^look at (.*)" "^look at$" "^describe (.*)" "^describe$"] look-at)
                   (add-verb ["^take (.*)" "^take$" "^get (.*)" "^get$"
-                             "^pick (.*)" "^pick$" "^pick up (.*)" "^pick up$"] take_)
+                             "^pick (.*)" "^pick$" "^pick up (.*)" "^pick (.*) up$" "^pick up$"] take_)
                   (add-verb ["^inventory$" "^i$"] identity)
                   (add-verb ["^read (.*)" "^read$"] identity)
                   (add-verb ["^open (.*)" "^open$"] open)

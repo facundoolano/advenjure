@@ -19,7 +19,8 @@
                   (seq expected))
          lines (count as-seq)
          results (take-last lines (clojure.string/split-lines @output))]
-     (is (= results as-seq)))))
+     (is (= (map clojure.string/capitalize results) ;just ignore case man
+            (map clojure.string/capitalize as-seq))))))
 
 (use-fixtures :each (fn [f]
                       (reset! output nil)
@@ -343,8 +344,6 @@
           (is-output "That doesn't work.")
           (is (nil? newer-state)))))))
 
-
-
 (def test-map (-> {}
                   (add-verb ["^take (.*)" "^get (.*)"] #(str "take"))
                   (add-verb ["^north$"] #(str "go north"))
@@ -442,3 +441,11 @@
         (is-output "Unlock chest with what?")))))
 
 
+(deftest pre-post-conditions
+  (with-redefs [say say-mock]
+    (testing "Override can't take message")
+    (testing "Override look at description")
+    (testing "precondition returns false")
+    (testing "precondition returns error message")
+    (testing "precondition returns true")
+    (testing "postcondition replace object")))
