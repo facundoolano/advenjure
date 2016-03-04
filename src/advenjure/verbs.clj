@@ -35,6 +35,27 @@
         (get-from (:items (current-room game-state)) token)))
 
 
+(defn remove-item
+  [game-state item]
+  (let [room-kw (:current-room game-state)
+        room (current-room game-state)
+        inventory (:inventory game-state)]
+    (-> game-state
+        (assoc :inventory (remove-from inventory item))
+        (assoc-in [:room-map room-kw :items]
+                  (remove-from (:items room) item)))))
+
+(defn replace-item
+  [game-state old-item new-item]
+  (let [room-kw (:current-room game-state)
+        room (current-room game-state)
+        inventory (:inventory game-state)]
+    (-> game-state
+        (assoc :inventory (replace-from inventory old-item new-item))
+        (assoc-in [:room-map room-kw :items]
+                  (replace-from (:items room) old-item new-item)))))
+
+
 (defn say
   ([speech] (println (str/capitalize speech))))
 
@@ -47,7 +68,8 @@
       (say "I don't see that."))))
 
 ;;; VERB HANDLER FUNCTIONS
-;;; Every handler takes the game state and the command tokens. If game state changes returns the new state, otherwise nil
+;;; Every handler takes the game state and the command tokens.
+;;; If game state changes returns the new state, otherwise nil
 
 (defn go
   "Change the location if direction is valid"
@@ -93,17 +115,13 @@
   Won't allow taking an object already in the inventory (i.e. not in a container)."
   [game-state item-name]
   (if-let [item (item-or-message game-state item-name "Take")]
-    (let [inventory (:inventory game-state)]
-      (cond
-        (contains? inventory item) (say "I already got that.")
-        (not (:take item)) (say "I can't take that.")
-        :else (let [room-kw (:current-room game-state)
-                    room (current-room game-state)]
-                (say "Taken.")
-                (-> game-state
-                    (assoc :inventory (conj (remove-from inventory item) item))
-                    (assoc-in [:room-map room-kw :items]
-                              (remove-from (:items room) item))))))))
+    (cond
+      (contains? (:inventory game-state) item) (say "I already got that.")
+      (not (:take item)) (say "I can't take that.")
+      :else (let [new-state (remove-item game-state item)
+                  new-inventory (conj (:inventory new-state) item)]
+              (say "Taken.")
+              (assoc new-state :inventory new-inventory)))))
 
 
 (defn open [game-state item-name]
@@ -111,31 +129,36 @@
     (cond
       (nil? (:closed item)) (say "I can't open that.")
       (not (:closed item)) (say "It's already open.")
-      :else (let [room-kw (:current-room game-state)
-                  room (current-room game-state)
-                  inventory (:inventory game-state)
-                  open-item (assoc item :closed false)]
+      (:locked item) (say "It's locked.")
+      :else (let [open-item (assoc item :closed false)]
               (say "Opened.")
-              (-> game-state
-                    (assoc :inventory (replace-from inventory item open-item))
-                    (assoc-in [:room-map room-kw :items]
-                              (replace-from (:items room) item open-item)))))))
+              (replace-item game-state item open-item)))))
 
 (defn close [game-state item-name]
-  ; kind of copypasta, but well
   (if-let [item (item-or-message game-state item-name "Close")]
     (cond
       (nil? (:closed item)) (say "I can't close that.")
       (:closed item) (say "It's already closed.")
-      :else (let [room-kw (:current-room game-state)
-                  room (current-room game-state)
-                  inventory (:inventory game-state)
-                  closed-item (assoc item :closed true)]
+      :else (let [closed-item (assoc item :closed true)]
               (say "Closed.")
-              (-> game-state
-                    (assoc :inventory (replace-from inventory item closed-item))
-                    (assoc-in [:room-map room-kw :items]
-                              (replace-from (:items room) item closed-item)))))))
+              (replace-item game-state item closed-item)))))
+
+
+(defn unlock
+  ([game-state] (say "Unlock what?"))
+  ([game-state locked] (say (str "Unlock " locked " with what?")))
+  ([game-state locked-name key-name]
+   (if-let [locked (item-or-message game-state locked-name "Unlock")]
+     (if-let [key-item (item-or-message game-state key-name
+                                        (str "Unlock " locked-name "with"))]
+       (cond
+         (not (:locked locked)) (say "It's not locked.")
+         (not (= locked (:unlocks key-item))) (say "That doesn't work.")
+         :else (let [unlocked (assoc locked :locked false)]
+                 (say "Unlocked.")
+                 (-> game-state
+                     (remove-item key-item)
+                     (replace-item locked unlocked))))))))
 
 
 ;;; BUILD VERB MAP
@@ -167,7 +190,7 @@
                   (add-verb ["^turn on (.*)" "^turn (.*) on"] identity)
                   (add-verb ["^turn off (.*)" "^turn (.*) off"] identity)
                   (add-verb ["^put (.*) in (.*)" "^put (.*) inside (.*)"] identity)
-                  (add-verb ["^unlock (.*) with (.*)"] identity) ; FIXME compound; FIXME open X with Y should work too
+                  (add-verb ["^unlock (.*) with (.*)" "^unlock (.*)" "^unlock$"] unlock) ;FIXME open X with Y should work too
                   (add-verb ["^save$"] identity)
                   (add-verb ["^restore$" "^load$"] identity)
                   (add-verb ["^help$"] identity)))

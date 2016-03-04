@@ -289,6 +289,61 @@
         (is-output "Closed.")
         (is (:closed new-bottle))))))
 
+(deftest unlock-verb
+  (with-redefs [say say-mock]
+    (let [chest (it/make ["chest"] "a treasure chest" :closed true :locked true)
+          ckey (it/make ["key"] "the chest key" :unlocks chest)
+          other-key (it/make ["other key"] "another key" :unlocks drawer)
+          inventory (conj #{} chest ckey other-key)
+          new-state (assoc game-state :inventory inventory)]
+
+      (testing "open a locked item"
+        (let [newer-state (open new-state "chest")]
+          (is-output "It's locked.")
+          (is (nil? newer-state))))
+
+      (testing "unlock a locked item"
+        (let [newer-state (unlock new-state "chest" "key")
+              new-chest (it/get-from (:inventory newer-state) "chest")]
+          (is-output "Unlocked.")
+          (is (not (:locked new-chest)))
+          (is (nil? (it/get-from (:inventory newer-state) "key"))) ; ASSUMING THE KEY IS DESTROYED AFTER USING
+          (open newer-state "chest")
+          (is-output "Opened.")))
+
+      (testing "unlock an already unlocked item"
+        (let [newer-state (unlock new-state "chest" "key")
+              new-chest (it/get-from (:inventory newer-state) "chest")
+              last-state (unlock newer-state "chest" "other key")]
+          (is-output "It's not locked.")
+          (is (nil? last-state))))
+
+      (testing "unlock what?"
+        (let [newer-state (unlock new-state)]
+          (is-output "Unlock what?")
+          (is (nil? newer-state))))
+
+      (testing "unlock with what?"
+        (let [newer-state (unlock new-state "chest")]
+          (is-output "Unlock chest with what?")
+          (is (nil? newer-state))))
+
+      (testing "unlock a non lockable item"
+        (let [newer-state (unlock new-state "drawer" "key")]
+          (is-output "It's not locked.")
+          (is (nil? newer-state))))
+
+      (testing "unlock with item that doesn't unlock"
+        (let [newer-state (unlock new-state "chest" "sock")]
+          (is-output "That doesn't work.")
+          (is (nil? newer-state))))
+
+      (testing "unlock with item that unlocks another thing"
+        (let [newer-state (unlock new-state "chest" "other key")]
+          (is-output "That doesn't work.")
+          (is (nil? newer-state)))))))
+
+
 
 (def test-map (-> {}
                   (add-verb ["^take (.*)" "^get (.*)"] #(str "take"))
@@ -370,6 +425,20 @@
                   "There's a sofa here."])
       (process-input game-state "n")
       (is-output ["long description of living room"
-                  "There's a sofa here."]))))
+                  "There's a sofa here."]))
+
+    (let [chest (it/make ["chest"] "a treasure chest" :closed true :locked true)
+          ckey (it/make ["key"] "the chest key" :unlocks chest)
+          inventory (conj #{} chest ckey)
+          new-state (assoc game-state :inventory inventory)]
+      (testing "unlock with item"
+        (process-input new-state "unlock chest with key")
+        (is-output "Unlocked."))
+
+      (testing "unlock with no item specified"
+        (process-input new-state "unlock")
+        (is-output "Unlock what?")
+        (process-input new-state "unlock chest")
+        (is-output "Unlock chest with what?")))))
 
 
