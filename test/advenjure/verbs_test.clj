@@ -175,7 +175,7 @@
         (is-output "I don't see that.")))
 
     (testing "take with no parameter"
-      (let [new-state (take_ game-state "")]
+      (let [new-state (take_ game-state)]
         (is (nil? new-state))
         (is-output "Take what?")))
 

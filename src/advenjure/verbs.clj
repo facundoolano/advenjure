@@ -21,13 +21,6 @@
                          "west" :west, "w" :west
                          "northwest" :northwest, "nw" :northwest})
 
-; TODO remove this
-(defn find-direction
-  "Try to match the string with a direction. Allows synonyms: 'n', 'nw', etc."
-  [token]
-  (get direction-mappings token))
-
-
 (defn find-item
     "Try to find the given item name either in the inventory or the current room."
     [game-state token]
@@ -60,12 +53,10 @@
   ([speech] (println (str/capitalize speech))))
 
 (defn item-or-message
-  [game-state item verb-name]
-  (if (empty? item)
-    (say (str verb-name " what?"))
-    (if-let [item-spec (find-item game-state item)]
-      item-spec
-      (say "I don't see that."))))
+  [game-state item]
+  (if-let [item-spec (find-item game-state item)]
+    item-spec
+    (say "I don't see that.")))
 
 ;;; VERB HANDLER FUNCTIONS
 ;;; Every handler takes the game state and the command tokens.
@@ -73,23 +64,22 @@
 
 (defn go
   "Change the location if direction is valid"
-  [game-state direction]
+  ([game-state] (say "Go where?"))
+  ([game-state direction]
+   (defn change-rooms
+     "Change room, say description, set visited."
+     [new-room]
+     (let [room-spec (get-in game-state [:room-map new-room])]
+       (say (rooms/describe room-spec))
+       (-> game-state
+           (assoc :current-room new-room)
+           (assoc-in [:room-map new-room :visited] true))))
 
-  (defn change-rooms
-    "Change room, say description, set visited."
-    [new-room]
-    (let [room-spec (get-in game-state [:room-map new-room])]
-      (say (rooms/describe room-spec))
-      (-> game-state
-          (assoc :current-room new-room)
-          (assoc-in [:room-map new-room :visited] true))))
-
-  (if-let [dir (find-direction direction)]
-    (if-let [new-room (dir (current-room game-state))]
-     (change-rooms new-room)
-     (say "Can't go in that direction"))
-    (say "Go where?")))
-
+   (if-let [dir (get direction-mappings direction)]
+     (if-let [new-room (dir (current-room game-state))]
+       (change-rooms new-room)
+       (say "Can't go in that direction"))
+     (say "Go where?"))))
 
 (defn look
   "Look around (describe room). If tokens is defined, show error phrase."
@@ -98,59 +88,63 @@
 
 (defn look-at
   "Look at item."
-  [game-state item]
-  (if-let [item-spec (item-or-message game-state item "Look at")]
-    (say (:description item-spec))))
+  ([game-state] (say "Look at what?"))
+  ([game-state item]
+   (if-let [item-spec (item-or-message game-state item)]
+     (say (:description item-spec)))))
 
 (defn look-inside
   "Look inside container."
-  [game-state container]
-  (if-let [item (item-or-message game-state container "Look inside")]
-    (if (:items item)
-      (say (describe-container item))
-      (say (str "I can't look inside a " (iname item) ".")))))
+  ([game-state] (say "Look inside what?"))
+  ([game-state container]
+   (if-let [item (item-or-message game-state container)]
+     (if (:items item)
+       (say (describe-container item))
+       (say (str "I can't look inside a " (iname item) "."))))))
 
 (defn take_
   "Try to take an item from the current room or from a container object in the inventory.
   Won't allow taking an object already in the inventory (i.e. not in a container)."
-  [game-state item-name]
-  (if-let [item (item-or-message game-state item-name "Take")]
-    (cond
-      (contains? (:inventory game-state) item) (say "I already got that.")
-      (not (:take item)) (say "I can't take that.")
-      :else (let [new-state (remove-item game-state item)
-                  new-inventory (conj (:inventory new-state) item)]
-              (say "Taken.")
-              (assoc new-state :inventory new-inventory)))))
+  ([game-state] (say "Take what?"))
+  ([game-state item-name]
+   (if-let [item (item-or-message game-state item-name)]
+     (cond
+       (contains? (:inventory game-state) item) (say "I already got that.")
+       (not (:take item)) (say "I can't take that.")
+       :else (let [new-state (remove-item game-state item)
+                   new-inventory (conj (:inventory new-state) item)]
+               (say "Taken.")
+               (assoc new-state :inventory new-inventory))))))
 
+(defn open
+  ([game-state] (say "Open what?"))
+  ([game-state item-name]
+   (if-let [item (item-or-message game-state item-name)]
+     (cond
+       (nil? (:closed item)) (say "I can't open that.")
+       (not (:closed item)) (say "It's already open.")
+       (:locked item) (say "It's locked.")
+       :else (let [open-item (assoc item :closed false)]
+               (say "Opened.")
+               (replace-item game-state item open-item))))))
 
-(defn open [game-state item-name]
-  (if-let [item (item-or-message game-state item-name "Open")]
-    (cond
-      (nil? (:closed item)) (say "I can't open that.")
-      (not (:closed item)) (say "It's already open.")
-      (:locked item) (say "It's locked.")
-      :else (let [open-item (assoc item :closed false)]
-              (say "Opened.")
-              (replace-item game-state item open-item)))))
-
-(defn close [game-state item-name]
-  (if-let [item (item-or-message game-state item-name "Close")]
-    (cond
-      (nil? (:closed item)) (say "I can't close that.")
-      (:closed item) (say "It's already closed.")
-      :else (let [closed-item (assoc item :closed true)]
-              (say "Closed.")
-              (replace-item game-state item closed-item)))))
-
+(defn close
+  ([game-state] (say "Close what?"))
+  ([game-state item-name]
+   (if-let [item (item-or-message game-state item-name)]
+     (cond
+       (nil? (:closed item)) (say "I can't close that.")
+       (:closed item) (say "It's already closed.")
+       :else (let [closed-item (assoc item :closed true)]
+               (say "Closed.")
+               (replace-item game-state item closed-item))))))
 
 (defn unlock
   ([game-state] (say "Unlock what?"))
   ([game-state locked] (say (str "Unlock " locked " with what?")))
   ([game-state locked-name key-name]
-   (if-let [locked (item-or-message game-state locked-name "Unlock")]
-     (if-let [key-item (item-or-message game-state key-name
-                                        (str "Unlock " locked-name "with"))]
+   (if-let [locked (item-or-message game-state locked-name)]
+     (if-let [key-item (item-or-message game-state key-name)]
        (cond
          (not (:locked locked)) (say "It's not locked.")
          (not (= locked (:unlocks key-item))) (say "That doesn't work.")
@@ -179,18 +173,21 @@
 
 (def verb-map (-> {}
                   add-go-shortcuts
-                  (add-verb ["^go (.*)"] go)
+                  (add-verb ["^go (.*)" "^go$"] go)
                   (add-verb ["^look$" "^look around$"] look)
-                  (add-verb ["^look at (.*)" "^describe (.*)"] look-at)
-                  (add-verb ["^take (.*)" "^get (.*)" "^pick (.*)" "^pick up (.*)"] take_)
+                  (add-verb ["^look at (.*)" "^look at$" "^describe (.*)" "^describe$"] look-at)
+                  (add-verb ["^take (.*)" "^take$" "^get (.*)" "^get$"
+                             "^pick (.*)" "^pick$" "^pick up (.*)" "^pick up$"] take_)
                   (add-verb ["^inventory$" "^i$"] identity)
-                  (add-verb ["^read (.*)"] identity)
-                  (add-verb ["^open (.*)"] open)
-                  (add-verb ["^close (.*)"] close)
-                  (add-verb ["^turn on (.*)" "^turn (.*) on"] identity)
-                  (add-verb ["^turn off (.*)" "^turn (.*) off"] identity)
-                  (add-verb ["^put (.*) in (.*)" "^put (.*) inside (.*)"] identity)
-                  (add-verb ["^unlock (.*) with (.*)" "^unlock (.*)" "^unlock$"] unlock) ;FIXME open X with Y should work too
+                  (add-verb ["^read (.*)" "^read$"] identity)
+                  (add-verb ["^open (.*)" "^open$"] open)
+                  (add-verb ["^close (.*)" "^close$"] close)
+                  (add-verb ["^turn on (.*)" "^turn on$" "^turn (.*) on"] identity)
+                  (add-verb ["^turn off (.*)" "^turn off$" "^turn (.*) off"] identity)
+                  (add-verb ["^put (.*) in (.*)" "^put$" "^put (.*)$" "^put (.*) in$"
+                             "^put (.*) inside (.*)" "^put (.*) inside$"] identity)
+                  (add-verb ["^unlock (.*) with (.*)" "^unlock (.*)"
+                             "^unlock (.*) with$" "^unlock$"] unlock) ;FIXME open X with Y should work too
                   (add-verb ["^save$"] identity)
                   (add-verb ["^restore$" "^load$"] identity)
                   (add-verb ["^help$"] identity)))
