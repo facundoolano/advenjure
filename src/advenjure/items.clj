@@ -4,10 +4,18 @@
 
 (defrecord Item [names description])
 
+(defn open-defaults
+  "If either closed, close or open keywords are in the item, set the defaults
+  for an openable item."
+  [item]
+  (if (or (:open item) (:close item) (contains? item :closed))
+    {:open true :close true :closed true}))
+
 (defn make
-  ([names description & extras]
-    (map->Item (merge {:names names :description description}
-                      (apply hash-map extras))))
+  ([names description & {:as extras}]
+   (map->Item (merge {:names names :description description}
+                     (open-defaults extras)
+                     extras)))
   ([a-name]
    (make [a-name] "There's nothing special about it.")))
 

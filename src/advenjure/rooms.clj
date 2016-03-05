@@ -4,10 +4,10 @@
 
 (defrecord Room [name description])
 
-(defn make [name description & extras]
+(defn make [name description & {:as extras}]
   (map->Room (merge {:name name :description description}
                     {:items #{} :item-descriptions {} :visited false} ;default args, can be overriden by extras
-                    (apply hash-map extras))))
+                    extras)))
 
 (defn add-item
   "Add the item to the room with an optional custom description.

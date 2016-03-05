@@ -75,6 +75,7 @@
         (cond
           (nil? item) (say "I don't see that.")
           (string? value) (say value)
+          (false? value) (say (str "I can't " verb-name " that."))
           (and kw-required (nil? value)) (say (str "I can't " verb-name " that."))
           :else (handler game-state item)))))))
 
@@ -157,7 +158,7 @@
 
 (def open
   (make-item-handler
-    "open" :closed
+    "open" :open
     (fn [game-state item]
       (cond
         (not (:closed item)) (say "It's already open.")
@@ -168,7 +169,7 @@
 
 (def close
   (make-item-handler
-    "close" :closed
+    "close" :close
     (fn [game-state item]
       (if (:closed item)
         (say "It's already closed.")
