@@ -331,7 +331,7 @@
 
       (testing "unlock a non lockable item"
         (let [newer-state (unlock new-state "drawer" "key")]
-          (is-output "It's not locked.")
+          (is-output "I can't unlock that.")
           (is (nil? newer-state))))
 
       (testing "unlock with item that doesn't unlock"
@@ -448,4 +448,6 @@
     (testing "precondition returns false")
     (testing "precondition returns error message")
     (testing "precondition returns true")
+    (testing "precondition for compound verb")
+    (testing "precondition for room action (go)")
     (testing "postcondition replace object")))

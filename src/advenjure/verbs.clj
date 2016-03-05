@@ -53,22 +53,14 @@
 (defn say
   ([speech] (println (str/capitalize speech))))
 
-; FIXME remove this, replaced by function below
-(defn item-or-message
-  [game-state item]
-  (if-let [item-spec (find-item game-state item)]
-    item-spec
-    (say "I don't see that.")))
-
-;;; VERB HANDLER FUNCTIONS
-;;; Every handler takes the game state and the command tokens.
-;;; If game state changes returns the new state, otherwise nil
-
+;;;; FUNCTIONS TO BUILD VERB HANDLERS
+; there's some uglyness here, but it enables simple definitions for the verb handlers
 (defn noop [& args])
 
-; TODO maybe a similar one for compund handlers?
 (defn make-item-handler
-  "TODO EXPLAIN"
+  "Takes the verb name, the kw to look up at the item at the handler function,
+  wraps the function with the common logic such as trying to find the item,
+  executing pre/post conditions, etc."
   ; this one uses a noop handler, solely based on post/preconditions (i.e. read)
   ([verb-name verb-kw] (make-item-handler verb-name verb-kw noop))
   ([verb-name verb-kw handler &
@@ -86,7 +78,31 @@
           (and kw-required (nil? value)) (say (str "I can't " verb-name " that."))
           :else (handler game-state item)))))))
 
+(defn make-compound-item-handler
+  ; some copy pasta, but doesn't seem worth to refactor
+  "The same as above but adapted to compund verbs."
+  ([verb-name verb-kw] (make-item-handler verb-name verb-kw noop))
+  ([verb-name verb-kw handler &
+     {:keys [kw-required] :or {kw-required true}}]
+   (fn
+     ([game-state] (say (str verb-name " what?")))
+     ([game-state item1] (say (str verb-name " " item1 " with what?")))
+     ([game-state item1-name item2-name]
+      (let [item1 (find-item game-state item1-name)
+            item2 (find-item game-state item2-name)
+            verb-spec (verb-kw item1)
+            ; if function -> execute to get precond result:
+            value (if (function? verb-spec) (verb-spec game-state item2) verb-spec)]
+        (cond
+          (or (nil? item1) (nil? item2)) (say "I don't see that.")
+          (string? value) (say value)
+          (and kw-required (nil? value)) (say (str "I can't " verb-name " that."))
+          :else (handler game-state item1 item2)))))))
 
+
+;;; VERB HANDLER DEFINITIONS
+
+; FIXME add pre/post condition support for go
 (defn go
   "Change the location if direction is valid"
   ([game-state] (say "Go where?"))
@@ -160,21 +176,18 @@
              (say "Closed.")
              (replace-item game-state item closed-item))))))
 
-
-(defn unlock
-  ([game-state] (say "Unlock what?"))
-  ([game-state locked] (say (str "Unlock " locked " with what?")))
-  ([game-state locked-name key-name]
-   (if-let [locked (item-or-message game-state locked-name)]
-     (if-let [key-item (item-or-message game-state key-name)]
-       (cond
-         (not (:locked locked)) (say "It's not locked.")
-         (not (= locked (:unlocks key-item))) (say "That doesn't work.")
-         :else (let [unlocked (assoc locked :locked false)]
-                 (say "Unlocked.")
-                 (-> game-state
-                     (remove-item key-item)
-                     (replace-item locked unlocked))))))))
+(def unlock
+  (make-compound-item-handler
+    "unlock" :locked
+    (fn [game-state locked key-item]
+      (cond
+        (not (:locked locked)) (say "It's not locked.")
+        (not (= locked (:unlocks key-item))) (say "That doesn't work.")
+        :else (let [unlocked (assoc locked :locked false)]
+                (say "Unlocked.")
+                (-> game-state
+                    (remove-item key-item)
+                    (replace-item locked unlocked)))))))
 
 
 ;;; BUILD VERB MAP
