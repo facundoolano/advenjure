@@ -57,6 +57,13 @@
 ; there's some uglyness here, but it enables simple definitions for the verb handlers
 (defn noop [& args])
 
+(defn eval-condition
+  "If the condition is a function return it's value, otherwise return unchanged."
+  [condition & args]
+  (if (function? condition)
+    (apply condition args)
+    condition))
+
 (defn make-item-handler
   "Takes the verb name, the kw to look up at the item at the handler function,
   wraps the function with the common logic such as trying to find the item,
@@ -69,9 +76,7 @@
      ([game-state] (say (str verb-name " what?")))
      ([game-state item-name]
       (let [item (find-item game-state item-name)
-            verb-spec (verb-kw item)
-            ; if function -> execute to get precond result:
-            value (if (function? verb-spec) (verb-spec game-state) verb-spec)]
+            value (eval-condition (verb-kw item) game-state)]
         (cond
           (nil? item) (say "I don't see that.")
           (string? value) (say value)
@@ -91,12 +96,11 @@
      ([game-state item1-name item2-name]
       (let [item1 (find-item game-state item1-name)
             item2 (find-item game-state item2-name)
-            verb-spec (verb-kw item1)
-            ; if function -> execute to get precond result:
-            value (if (function? verb-spec) (verb-spec game-state item2) verb-spec)]
+            value (eval-condition (verb-kw item1) game-state item2)]
         (cond
           (or (nil? item1) (nil? item2)) (say "I don't see that.")
           (string? value) (say value)
+          (false? value) (say (str "I can't " verb-name " that."))
           (and kw-required (nil? value)) (say (str "I can't " verb-name " that."))
           :else (handler game-state item1 item2)))))))
 
@@ -118,9 +122,12 @@
            (assoc-in [:room-map new-room :visited] true))))
 
    (if-let [dir (get direction-mappings direction)]
-     (if-let [new-room (dir (current-room game-state))]
-       (change-rooms new-room)
-       (say "Can't go in that direction"))
+     (let [dir-condition (dir (current-room game-state))
+           dir-value (eval-condition dir-condition game-state)]
+       (cond
+         (string? dir-value) (say dir-value)
+         (not dir-value) (say "Can't go in that direction")
+         :else (change-rooms dir-value)))
      (say "Go where?"))))
 
 (defn look
@@ -179,7 +186,7 @@
 
 (def unlock
   (make-compound-item-handler
-    "unlock" :locked
+    "unlock" :unlock
     (fn [game-state locked key-item]
       (cond
         (not (:locked locked)) (say "It's not locked.")

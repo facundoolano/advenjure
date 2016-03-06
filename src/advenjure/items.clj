@@ -11,10 +11,16 @@
   (if (or (:open item) (:close item) (contains? item :closed))
     {:open true :close true :closed true}))
 
+(defn unlock-defaults
+  [item]
+  (if (or (:unlock item) (contains? item :locked))
+    {:unlock true :locked true}))
+
 (defn make
   ([names description & {:as extras}]
    (map->Item (merge {:names names :description description}
                      (open-defaults extras)
+                     (unlock-defaults extras)
                      extras)))
   ([a-name]
    (make [a-name] "There's nothing special about it.")))

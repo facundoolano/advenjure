@@ -491,8 +491,37 @@
         (take_ newer-state "other sock")
         (is-output "Taken.")))
 
-    (testing "precondition for compound verb")
+    (testing "precondition for compound verb"
+      (let [beer (it/make ["beer"] "a beer")
+            chest (it/make ["chest"] "a treasure chest" :closed true :locked true
+                           :unlock (fn [gs the-key]
+                                     (or (contains? (:inventory gs) beer)
+                                         "Only if I have a beer.")))
+            ckey (it/make ["key"] "the chest key" :unlocks chest)
+            new-state (assoc game-state :inventory #{chest ckey})]
+        (unlock new-state "chest" "key")
+        (is-output "Only if I have a beer.")
+        (let [newer-state (assoc new-state :inventory #{chest ckey beer})]
+          (unlock newer-state "chest" "key")
+          (is-output "Unlocked."))))
 
-    (testing "precondition for go")
+    (testing "override message for go"
+      (let [new-bedroom (assoc bedroom :south "No way I'm going south.")
+            new-state (assoc-in game-state [:room-map :bedroom] new-bedroom)
+            newer-state (go new-state "south")]
+        (is (nil? newer-state))
+        (is-output "No way I'm going south.")))
+
+    (testing "precondition for go"
+      (let [wallet (it/make "wallet")
+            new-bedroom (assoc bedroom :north #(if (contains? (:inventory %) wallet)
+                                                 :living
+                                                 "Can't leave without my wallet."))
+            new-state (assoc-in game-state [:room-map :bedroom] new-bedroom)]
+        (go new-state "north")
+        (is-output "Can't leave without my wallet.")
+        (let [newer-state (assoc new-state :inventory #{wallet})
+              last-state (go newer-state "north")]
+          (is (= :living (:current-room last-state))))))
 
     (testing "postcondition replace object")))
