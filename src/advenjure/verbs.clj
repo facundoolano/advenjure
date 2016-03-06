@@ -57,12 +57,22 @@
 ; there's some uglyness here, but it enables simple definitions for the verb handlers
 (defn noop [& args])
 
-(defn eval-condition
+; TODO check if map
+(defn eval-precondition
   "If the condition is a function return it's value, otherwise return unchanged."
   [condition & args]
-  (if (function? condition)
-    (apply condition args)
-    condition))
+  (let [condition (or (:pre condition) condition)]
+    (if (function? condition)
+      (apply condition args)
+      condition)))
+
+(defn eval-postcondition
+  "If there's a postcondition defined, evaluate it and return new game-state.
+  Otherwise return the game-state unchanged."
+  [condition old-state new-state]
+  (if (function? (:post condition))
+    (or ((:post condition) old-state new-state) new-state)
+    new-state))
 
 (defn make-item-handler
   "Takes the verb name, the kw to look up at the item at the handler function,
@@ -76,13 +86,16 @@
      ([game-state] (say (str verb-name " what?")))
      ([game-state item-name]
       (let [item (find-item game-state item-name)
-            value (eval-condition (verb-kw item) game-state)]
+            conditions (verb-kw item)
+            value (eval-precondition conditions game-state)]
         (cond
           (nil? item) (say "I don't see that.")
           (string? value) (say value)
           (false? value) (say (str "I can't " verb-name " that."))
           (and kw-required (nil? value)) (say (str "I can't " verb-name " that."))
-          :else (handler game-state item)))))))
+          :else (let [new-state (handler game-state item)]
+                  (eval-postcondition conditions game-state new-state))))))))
+
 
 (defn make-compound-item-handler
   ; some copy pasta, but doesn't seem worth to refactor
@@ -96,18 +109,20 @@
      ([game-state item1-name item2-name]
       (let [item1 (find-item game-state item1-name)
             item2 (find-item game-state item2-name)
-            value (eval-condition (verb-kw item1) game-state item2)]
+            conditions (verb-kw item1)
+            value (eval-precondition conditions game-state item2)]
         (cond
           (or (nil? item1) (nil? item2)) (say "I don't see that.")
           (string? value) (say value)
           (false? value) (say (str "I can't " verb-name " that."))
           (and kw-required (nil? value)) (say (str "I can't " verb-name " that."))
-          :else (handler game-state item1 item2)))))))
+          :else (let [new-state (handler game-state item1 item2)]
+                  (eval-postcondition conditions game-state new-state))))))))
+
 
 
 ;;; VERB HANDLER DEFINITIONS
 
-; FIXME add pre/post condition support for go
 (defn go
   "Change the location if direction is valid"
   ([game-state] (say "Go where?"))
@@ -123,11 +138,13 @@
 
    (if-let [dir (get direction-mappings direction)]
      (let [dir-condition (dir (current-room game-state))
-           dir-value (eval-condition dir-condition game-state)]
+           dir-value (eval-precondition dir-condition game-state)]
        (cond
          (string? dir-value) (say dir-value)
          (not dir-value) (say "Can't go in that direction")
-         :else (change-rooms dir-value)))
+         :else (let [new-state (change-rooms dir-value)]
+                 (eval-postcondition dir-condition game-state new-state))))
+
      (say "Go where?"))))
 
 (defn look
