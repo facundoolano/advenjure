@@ -214,6 +214,8 @@
                     (remove-item key-item)
                     (replace-item locked unlocked)))))))
 
+;;; NOOP verbs
+(def read_ (make-item-handler "read" :read noop))
 
 ;;; BUILD VERB MAP
 (defn add-verb
@@ -239,7 +241,7 @@
                   (add-verb ["^take (.*)" "^take$" "^get (.*)" "^get$"
                              "^pick (.*)" "^pick$" "^pick up (.*)" "^pick (.*) up$" "^pick up$"] take_)
                   (add-verb ["^inventory$" "^i$"] identity)
-                  (add-verb ["^read (.*)" "^read$"] identity)
+                  (add-verb ["^read (.*)" "^read$"] read_)
                   (add-verb ["^open (.*)" "^open$"] open)
                   (add-verb ["^close (.*)" "^close$"] close)
                   (add-verb ["^turn on (.*)" "^turn on$" "^turn (.*) on"] identity)

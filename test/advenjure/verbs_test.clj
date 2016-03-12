@@ -32,7 +32,8 @@
 (def sock (it/make ["sock"] "a sock" :take true))
 (def magazine (it/make ["magazine" "sports magazine"]
                        "The cover reads 'Sports Almanac 1950-2000'"
-                       :take true))
+                       :take true
+                       :read "Tells the results of every major sports event till the end of the century."))
 (def bedroom (room/make "Bedroom" "short description of bedroom"
               :initial-description "long description of bedroom"
               :items #{(it/make ["bed"] "just a bed") drawer sock}
@@ -346,6 +347,19 @@
         (let [newer-state (unlock new-state "chest" "other key")]
           (is-output "That doesn't work.")
           (is (nil? newer-state)))))))
+
+(deftest read-verb
+  (with-redefs [say say-mock]
+    (testing "Read a readble item"
+      (let [new-state (read_ game-state "magazine")]
+        (is-output "Tells the results of every major sports event till the end of the century.")
+        (is (nil? new-state))))
+
+    (testing "Read a non readble item"
+      (let [new-state (read_ game-state "sock")]
+        (is-output "I can't read that.")
+        (is (nil? new-state))))))
+
 
 (def test-map (-> {}
                   (add-verb ["^take (.*)" "^get (.*)"] #(str "take"))
