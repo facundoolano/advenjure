@@ -1,7 +1,7 @@
 (ns advenjure.verbs
   (:require [clojure.string :as str]
             [clojure.set :as clset]
-            [advenjure.items :refer [iname describe-container get-from remove-from replace-from]]
+            [advenjure.items :refer :all]
             [clojure.test :refer [function?]]
             [advenjure.rooms :as rooms]))
 
@@ -152,6 +152,13 @@
   [game-state]
   (say (rooms/describe (current-room game-state))))
 
+(defn inventory
+  "Describe the inventory contents."
+  [game-state]
+  (if (empty? (:inventory game-state))
+    (say "I'm not carrying anything.")
+    (say (str "I'm carrying:\n" (print-list (:inventory game-state))))))
+
 (def look-at
   (make-item-handler
     "look at" :look-at
@@ -240,7 +247,7 @@
                   (add-verb ["^look at (.*)" "^look at$" "^describe (.*)" "^describe$"] look-at)
                   (add-verb ["^take (.*)" "^take$" "^get (.*)" "^get$"
                              "^pick (.*)" "^pick$" "^pick up (.*)" "^pick (.*) up$" "^pick up$"] take_)
-                  (add-verb ["^inventory$" "^i$"] identity)
+                  (add-verb ["^inventory$" "^i$"] inventory)
                   (add-verb ["^read (.*)" "^read$"] read_)
                   (add-verb ["^open (.*)" "^open$"] open)
                   (add-verb ["^close (.*)" "^close$"] close)

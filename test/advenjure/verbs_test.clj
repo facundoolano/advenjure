@@ -360,6 +360,29 @@
         (is-output "I can't read that.")
         (is (nil? new-state))))))
 
+(deftest inventory-verb
+  (with-redefs [say say-mock]
+    (testing "list inventory contents"
+      (let [new-state (inventory game-state)]
+        (is-output ["I'm carrying:" "A magazine"])
+        (is (nil? new-state))))
+
+    (testing "empty inventory"
+      (let [new-state (assoc game-state :inventory #{})
+            newer-state (inventory new-state)]
+        (is-output "I'm not carrying anything.")
+        (is (nil? newer-state))))
+
+    (testing "list inventory with container"
+        (let [bottle {:names ["bottle"] :items #{{:names ["amount of water"]}}}
+              sack {:names ["sack"] :items #{bottle}}
+              new-state (assoc game-state :inventory #{sack})]
+          (inventory new-state)
+          (is-output ["I'm carrying:"
+                      "A sack. The sack contains:"
+                      "A bottle. The bottle contains:"
+                      "An amount of water"])))))
+
 
 (def test-map (-> {}
                   (add-verb ["^take (.*)" "^get (.*)"] #(str "take"))
