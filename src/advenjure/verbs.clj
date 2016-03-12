@@ -214,8 +214,8 @@
                     (remove-item key-item)
                     (replace-item locked unlocked)))))))
 
-;;; NOOP verbs
-(def read_ (make-item-handler "read" :read noop))
+;;; NOOP VERBS (rely entirely in pre/post conditions)
+(def read_ (make-item-handler "read" :read))
 
 ;;; BUILD VERB MAP
 (defn add-verb
