@@ -1,4 +1,4 @@
-(ns advenjure.core
+(ns advenjure.example
   (:require [advenjure.items :as item]
             [advenjure.rooms :as room]
             [advenjure.utils :as utils]
