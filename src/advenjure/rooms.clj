@@ -17,7 +17,7 @@
   ([room item description]
    (-> room
        (assoc :items (conj (:items room) item))
-       (assoc-in [:item-descriptions (name item)] description))))
+       (assoc-in [:item-descriptions (iname item)] description))))
 
 (defn describe
   "Describes the room.
@@ -46,12 +46,6 @@
 
 
 ; ROOM MAP BUILDING
-(defn add-room [room-map k room]
-  "Add the given room to the room-map under the k key."
-  (def defaults {:visited false
-                 :items {}})
-  (assoc room-map k (merge room defaults)))
-
 (def matching-directions {:north :south
                           :northeast :southwest
                           :east :west
@@ -63,11 +57,19 @@
                           :up :down
                           :down :up})
 
-; TODO one way connection
-
-(defn connect-rooms [room-map r1 direction r2]
+(defn connect
   "Connect r1 with r2 in the given direction and make the corresponding
   connection in r2."
+  [room-map r1 direction r2]
   (-> room-map
       (assoc-in [r1 direction] r2)
       (assoc-in [r2 (get matching-directions direction)] r1)))
+
+(defn one-way-connect
+  "Connect r1 with r2 without the corresponding connection in r2. Note that
+  direction can be a condition function or string to make a conditional
+  connection."
+  [room-map r1 direction r2]
+  (assoc-in [r1 direction] r2))
+
+

@@ -7,7 +7,7 @@
 
 
 ;;; UTILITY functions
-
+;;FIXME should this be somewhere else?
 (defn current-room
   "Get the current room spec from game state."
   [game-state]
@@ -49,9 +49,18 @@
         (assoc-in [:room-map room-kw :items]
                   (replace-from (:items room) old-item new-item)))))
 
-
 (defn say
-  ([speech] (println (str/capitalize speech))))
+  ([speech] (println (str (str/capitalize (first speech))
+                          (subs speech 1)))))
+
+(defn change-rooms
+  "Change room, say description, set visited."
+  [game-state new-room]
+  (let [room-spec (get-in game-state [:room-map new-room])]
+    (say (rooms/describe room-spec))
+    (-> game-state
+        (assoc :current-room new-room)
+        (assoc-in [:room-map new-room :visited] true))))
 
 ;;;; FUNCTIONS TO BUILD VERB HANDLERS
 ; there's some uglyness here, but it enables simple definitions for the verb handlers
@@ -122,27 +131,17 @@
 
 
 ;;; VERB HANDLER DEFINITIONS
-
 (defn go
   "Change the location if direction is valid"
   ([game-state] (say "Go where?"))
   ([game-state direction]
-   (defn change-rooms
-     "Change room, say description, set visited."
-     [new-room]
-     (let [room-spec (get-in game-state [:room-map new-room])]
-       (say (rooms/describe room-spec))
-       (-> game-state
-           (assoc :current-room new-room)
-           (assoc-in [:room-map new-room :visited] true))))
-
    (if-let [dir (get direction-mappings direction)]
      (let [dir-condition (dir (current-room game-state))
            dir-value (eval-precondition dir-condition game-state)]
        (cond
          (string? dir-value) (say dir-value)
          (not dir-value) (say "Can't go in that direction")
-         :else (let [new-state (change-rooms dir-value)]
+         :else (let [new-state (change-rooms game-state dir-value)]
                  (eval-postcondition dir-condition game-state new-state))))
 
      (say "Go where?"))))
@@ -259,6 +258,7 @@
                              "^unlock (.*) with$" "^unlock$"] unlock) ;FIXME open X with Y should work too
                   (add-verb ["^save$"] identity)
                   (add-verb ["^restore$" "^load$"] identity)
+                  (add-verb ["^exit$"] identity)
                   (add-verb ["^help$"] identity)))
 
 ;keep a sorted version to extract the longest possible form first
