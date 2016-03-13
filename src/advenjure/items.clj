@@ -22,8 +22,9 @@
                      (open-defaults extras)
                      (unlock-defaults extras)
                      extras)))
-  ([a-name]
-   (make [a-name] "There's nothing special about it.")))
+  ([names]
+   (let [names (if (string? names) [names] names)]
+    (make names "There's nothing special about it."))))
 
 (defn iname
   "Get the first name of the item."
