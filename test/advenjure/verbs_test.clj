@@ -1,30 +1,10 @@
 (ns advenjure.verbs-test
   (:require [clojure.test :refer :all]
+            [advenjure.test-utils :refer :all]
             [advenjure.verbs :refer :all]
+            [advenjure.utils :refer :all]
             [advenjure.rooms :as room]
             [advenjure.items :as it]))
-
-;;;;; mock println
-(def output (atom nil))
-
-(defn say-mock
-  "Save the speech lines to output, separated by '\n'"
-  ([speech] (reset! output (clojure.string/join "\n" [@output speech])) nil))
-
-(defn is-output
-  "Compare the last n output lines with the given."
-  ([expected]
-   (let [as-seq (if (string? expected)
-                  (list expected)
-                  (seq expected))
-         lines (count as-seq)
-         results (take-last lines (clojure.string/split-lines @output))]
-     (is (= (map clojure.string/capitalize results) ;just ignore case man
-            (map clojure.string/capitalize as-seq))))))
-
-(use-fixtures :each (fn [f]
-                      (reset! output nil)
-                      (f)))
 
 ;;;;;; some test data
 (def drawer (it/make ["drawer"] "it's an open drawer." :closed false
@@ -382,103 +362,6 @@
                       "A sack. The sack contains:"
                       "A bottle. The bottle contains:"
                       "An amount of water"])))))
-
-
-(def test-map (-> {}
-                  (add-verb ["^take (.*)" "^get (.*)"] #(str "take"))
-                  (add-verb ["^north$"] #(str "go north"))
-                  (add-verb ["^unlock (.*) with (.*)"] #(str "unlock"))))
-(def sorted-test (reverse (sort-by count (keys test-map))))
-
-
-(deftest verb-match-test
-  (with-redefs [verb-map test-map
-                sorted-verbs sorted-test]
-
-    (testing "simple verb match"
-      (let [[verb tokens] (find-verb "take magazine")]
-        (is (= verb "^take (.*)"))
-        (is (= tokens (list "magazine")))))
-
-    (testing "simple synonym match"
-      (let [[verb tokens] (find-verb "get magazine")]
-        (is (= verb "^get (.*)"))
-        (is (= tokens (list "magazine")))))
-
-    (testing "initial garbage mismatch"
-      (let [[verb tokens] (find-verb "lalala get magazine")]
-        (is (nil? verb))
-        (is (nil? tokens))))
-
-    (testing "no parameter match"
-      (let [[verb tokens] (find-verb "north")]
-        (is (= verb "^north$"))
-        (is (= tokens (list)))))
-
-    (testing "no parameter mismatch"
-      (let [[verb tokens] (find-verb "north go now")]
-        (is (nil? verb))
-        (is (nil? tokens))))
-
-    (testing "compound verb match"
-      (let [[verb tokens] (find-verb "unlock door with key")]
-        (is (= verb "^unlock (.*) with (.*)"))
-        (is (= tokens (list "door" "key")))))))
-
-(deftest process-input-test
-  (with-redefs [say say-mock]
-
-    (testing "unknown command"
-      (let [new-state (process-input game-state "dance around")]
-        (is-output "I don't know how to do that.")
-        (is (= new-state game-state))))
-
-    (testing "look verb"
-      (let [new-state (process-input game-state "look ")]
-        (is-output ["short description of bedroom"
-                    "There's a bed here."
-                    "There's a sock here."
-                    "There's a drawer here. The drawer contains:"
-                    "A key"])
-        (is (= new-state game-state))))
-
-    (testing "invalid look with parameters"
-      (let [new-state (process-input game-state "look something")]
-        (is-output "I don't know how to do that.")
-        (is (= new-state game-state))))
-
-    (testing "look at item"
-      (let [new-state (process-input game-state "look at bed")]
-        (is-output "just a bed")
-        (is (= new-state game-state))))
-
-    (testing "take item"
-      (let [new-state (process-input game-state "take sock")]
-        (is-output "Taken.")
-        (is (contains? (:inventory new-state) sock))
-        (is (not (contains? (:items (current-room new-state)) sock)))))
-
-    (testing "go shortcuts"
-      (process-input game-state "north")
-      (is-output ["long description of living room"
-                  "There's a sofa here."])
-      (process-input game-state "n")
-      (is-output ["long description of living room"
-                  "There's a sofa here."]))
-
-    (let [chest (it/make ["chest"] "a treasure chest" :closed true :locked true)
-          ckey (it/make ["key"] "the chest key" :unlocks chest)
-          inventory (conj #{} chest ckey)
-          new-state (assoc game-state :inventory inventory)]
-      (testing "unlock with item"
-        (process-input new-state "unlock chest with key")
-        (is-output "Unlocked."))
-
-      (testing "unlock with no item specified"
-        (process-input new-state "unlock")
-        (is-output "Unlock what?")
-        (process-input new-state "unlock chest")
-        (is-output "Unlock chest with what?")))))
 
 
 (deftest pre-post-conditions

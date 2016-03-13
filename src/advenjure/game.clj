@@ -1,6 +1,7 @@
 (ns advenjure.game
   (:require [advenjure.rooms :as room]
-            [advenjure.verbs :as verb])) ;;FIXME shouldn't require much of this stuff
+            [advenjure.utils :as utils]
+            [advenjure.verb-map :refer [find-verb verb-map]]))
 
 
 (defn make
@@ -14,14 +15,24 @@
   ([prefix]
    (do (print prefix) (flush) (read-line))))
 
+(defn process-input
+  "Take an input comand, find the verb in it and execute its action handler."
+  [game-state input]
+  (let [clean (clojure.string/trim (clojure.string/lower-case input))
+        [verb tokens] (find-verb clean)
+        handler (get verb-map verb)]
+   (if handler
+     (or (apply handler game-state tokens) game-state)
+     (do (utils/say "I don't know how to do that.") game-state))))
+
 (defn run
   "Run the game loop. Requires a finished? function to decide when to terminate the loop."
   ([game-state finished?] (run game-state finished? ""))
   ([game-state finished? initial-msg]
-   (verb/say initial-msg)
-   (loop [state (verb/change-rooms game-state (:current-room game-state))]
+   (utils/say initial-msg)
+   (loop [state (utils/change-rooms game-state (:current-room game-state))]
      (let [input (get-input)
-           new-state (verb/process-input state input)]
+           new-state (process-input state input)]
        (if-not (finished? new-state)
          (recur new-state))))
-   (verb/say "\nThe End.")))
+   (utils/say "\nThe End.")))
