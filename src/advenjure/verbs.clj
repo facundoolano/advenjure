@@ -70,7 +70,6 @@
           :else (let [new-state (handler game-state item1 item2)]
                   (eval-postcondition conditions game-state new-state))))))))
 
-
 ;;; VERB HANDLER DEFINITIONS
 (defn go
   "Change the location if direction is valid"
@@ -184,3 +183,9 @@
 
 ;;; NOOP VERBS (rely entirely in pre/post conditions)
 (def read_ (make-item-handler "read" :read))
+
+;; SAY VERBS
+(defn make-say-verb [speech]
+  (fn [gs] (say speech)))
+
+(def stand (make-say-verb "I'm standing up already"))

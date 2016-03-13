@@ -38,7 +38,8 @@
                   (add-verb ["^save$"] save)
                   (add-verb ["^restore$" "^load$"] restore)
                   (add-verb ["^exit$"] exit)
-                  (add-verb ["^help$"] identity)))
+                  (add-verb ["^help$"] identity)
+                  (add-verb ["^get up$" "^stand up$" "^stand$"] stand)))
 
 ;keep a sorted version to extract the longest possible form first
 (def sorted-verbs (reverse (sort-by count (keys verb-map))))
