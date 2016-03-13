@@ -14,7 +14,7 @@
 (defn unlock-defaults
   [item]
   (if (or (:unlock item) (contains? item :locked))
-    {:unlock true :locked true}))
+    {:unlock true :locked true :close true :closed true :open true}))
 
 (defn make
   ([names description & {:as extras}]

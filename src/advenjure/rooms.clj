@@ -67,9 +67,8 @@
 
 (defn one-way-connect
   "Connect r1 with r2 without the corresponding connection in r2. Note that
-  direction can be a condition function or string to make a conditional
-  connection."
+  r2 can be a condition function or string to make a conditional connection."
   [room-map r1 direction r2]
-  (assoc-in [r1 direction] r2))
+  (assoc-in room-map [r1 direction] r2))
 
 

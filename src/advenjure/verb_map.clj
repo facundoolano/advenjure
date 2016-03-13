@@ -20,8 +20,9 @@
 (def verb-map (-> {}
                   add-go-shortcuts
                   (add-verb ["^go (.*)" "^talk (.*)" "^go$"] go)
-                  (add-verb ["^look$" "^look around$"] look)
+                  (add-verb ["^look$" "^look around$" "^l$"] look)
                   (add-verb ["^look at (.*)" "^look at$" "^describe (.*)" "^describe$"] look-at)
+                  (add-verb ["^look in (.*)" "^look in$" "^look inside (.*)" "^look inside$"] look-inside)
                   (add-verb ["^take (.*)" "^take$" "^get (.*)" "^get$"
                              "^pick (.*)" "^pick$" "^pick up (.*)" "^pick (.*) up$" "^pick up$"] take_)
                   (add-verb ["^inventory$" "^i$"] inventory)
