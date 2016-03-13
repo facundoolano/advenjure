@@ -9,7 +9,6 @@
 ; there's some uglyness here, but it enables simple definitions for the verb handlers
 (defn noop [& args])
 
-; TODO check if map
 (defn eval-precondition
   "If the condition is a function return it's value, otherwise return unchanged."
   [condition & args]
@@ -72,7 +71,6 @@
                   (eval-postcondition conditions game-state new-state))))))))
 
 
-
 ;;; VERB HANDLER DEFINITIONS
 (defn go
   "Change the location if direction is valid"
@@ -100,6 +98,27 @@
   (if (empty? (:inventory game-state))
     (say "I'm not carrying anything.")
     (say (str "I'm carrying:\n" (print-list (:inventory game-state))))))
+
+(defn save
+  "Save the current game state to a file."
+  [game-state]
+  (spit "saved.game" game-state)
+  (say "Done."))
+
+(defn restore
+  "Restore a previous game state from file."
+  [game-state]
+  (try
+    (let [loaded-state (read-string (slurp "saved.game"))]
+      (say (rooms/describe (current-room loaded-state)))
+      loaded-state)
+    (catch java.io.FileNotFoundException e (say "No saved game found."))))
+
+(defn exit
+  "Close the game."
+  [game-state]
+  (say "Bye!")
+  (System/exit 0))
 
 (def look-at
   (make-item-handler

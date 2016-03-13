@@ -19,7 +19,7 @@
 
 (def verb-map (-> {}
                   add-go-shortcuts
-                  (add-verb ["^go (.*)" "^go$"] go)
+                  (add-verb ["^go (.*)" "^talk (.*)" "^go$"] go)
                   (add-verb ["^look$" "^look around$"] look)
                   (add-verb ["^look at (.*)" "^look at$" "^describe (.*)" "^describe$"] look-at)
                   (add-verb ["^take (.*)" "^take$" "^get (.*)" "^get$"
@@ -34,9 +34,9 @@
                              "^put (.*) inside (.*)" "^put (.*) inside$"] identity)
                   (add-verb ["^unlock (.*) with (.*)" "^unlock (.*)"
                              "^unlock (.*) with$" "^unlock$"] unlock) ;FIXME open X with Y should work too
-                  (add-verb ["^save$"] identity)
-                  (add-verb ["^restore$" "^load$"] identity)
-                  (add-verb ["^exit$"] identity)
+                  (add-verb ["^save$"] save)
+                  (add-verb ["^restore$" "^load$"] restore)
+                  (add-verb ["^exit$"] exit)
                   (add-verb ["^help$"] identity)))
 
 ;keep a sorted version to extract the longest possible form first
