@@ -1,6 +1,6 @@
 # advenjure
 
-Just a toy project to learn Clojure.
+A text adventure engine I wrote to learn Clojure (and because it's fun!).
 
 ## Usage
 1. Clone the repository.
