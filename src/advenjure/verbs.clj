@@ -189,3 +189,15 @@
   (fn [gs] (say speech)))
 
 (def stand (make-say-verb "I'm standing up already"))
+(def help (make-say-verb (clojure.string/join "\n    " ["You're playing a text adventure game. You control the character by entering commands. Some available commands are:"
+                                                        "GO <direction>: move in the given compass direction. For example: \"GO NORTH\". \"NORTH\" and \"N\" will work too."
+                                                        "TAKE <item>: add an item to your inventory."
+                                                        "INVENTORY: list your inventory contents. \"I\" will work too."
+                                                        "LOOK: look around."
+                                                        "LOOK AT <item>: look at some specific item."
+                                                        "LOOK IN <item>: look inside some container item."
+                                                        "UNLOCK <item> WITH <item>: unlock some item using another one. For example: UNLOCK door WITH key."
+                                                        "OPEN, CLOSE, READ, TURN ON, PUT IN, EAT, DRINK, KILL, etc. may work on some objects, just try."
+                                                        "SAVE: save your current progress."
+                                                        "RESTORE: restore a previously saved game."
+                                                        "EXIT: close the game."])))
