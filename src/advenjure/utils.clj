@@ -17,11 +17,10 @@
                          "northwest" :northwest, "nw" :northwest})
 
 (defn find-item
-    "Try to find the given item name either in the inventory or the current room."
-    [game-state token]
-    (or (get-from (:inventory game-state) token)
-        (get-from (:items (current-room game-state)) token)))
-
+  "Try to find the given item name either in the inventory or the current room."
+  [game-state token]
+  (or (get-from (:inventory game-state) token)
+      (get-from (:items (current-room game-state)) token)))
 
 (defn remove-item
   [game-state item]

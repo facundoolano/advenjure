@@ -44,13 +44,13 @@
 ;keep a sorted version to extract the longest possible form first
 (def sorted-verbs (reverse (sort-by count (keys verb-map))))
 
+(defn match-verb [text verb]
+  (let [[head & tokens :as full] (re-find (re-pattern verb) text)]
+    (cond
+      (and (not (nil? full)) (not (coll? full))) [verb '()] ;single match, no params
+      (not-empty head) [verb tokens]))) ; match with params
+
 (defn find-verb
   "Return [verb tokens] if there's a proper verb at the beginning of text."
   [text]
-  (defn match-verb [verb]
-    (let [[head & tokens :as full] (re-find (re-pattern verb) text)]
-      (cond
-        (and (not (nil? full)) (not (coll? full))) [verb '()] ;single match, no params
-        (not-empty head) [verb tokens]))) ; match with params
-
-  (some match-verb sorted-verbs))
+  (some (partial match-verb text) sorted-verbs))

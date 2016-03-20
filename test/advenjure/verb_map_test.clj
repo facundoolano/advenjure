@@ -2,13 +2,11 @@
   (:require [clojure.test :refer :all]
             [advenjure.verb-map :refer :all]))
 
-
 (def test-map (-> {}
                   (add-verb ["^take (.*)" "^get (.*)"] #(str "take"))
                   (add-verb ["^north$"] #(str "go north"))
                   (add-verb ["^unlock (.*) with (.*)"] #(str "unlock"))))
 (def sorted-test (reverse (sort-by count (keys test-map))))
-
 
 (deftest verb-match-test
   (with-redefs [verb-map test-map

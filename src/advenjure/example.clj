@@ -39,7 +39,6 @@
                 (room/add-item door "")
                 (room/add-item (item/make ["window"] "It's nailed shut." :closed true :open "It's nailed shut.") "")))
 
-
 (def outside (room/make "Outside" "I found myself in a beautiful garden and was able to breath again. A new adventure began, an adventure that is out of the scope of this example game."))
 
 (defn can-leave? [gs]

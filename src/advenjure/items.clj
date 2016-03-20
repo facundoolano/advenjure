@@ -1,7 +1,6 @@
 (ns advenjure.items
   (:require [clojure.string :as string]))
 
-
 (defrecord Item [names description])
 
 (defn open-defaults
@@ -24,7 +23,7 @@
                      extras)))
   ([names]
    (let [names (if (string? names) [names] names)]
-    (make names "There's nothing special about it."))))
+     (make names "There's nothing special about it."))))
 
 (defn iname
   "Get the first name of the item."
@@ -33,10 +32,10 @@
 (declare describe-container)
 
 (defn print-list-item [item]
-    (def vowel? (set "aeiouAEIOU"))
+  (let [vowel? (set "aeiouAEIOU")]
     (str
-      (if (vowel? (first (iname item))) "an " "a ")
-      (iname item)))
+     (if (vowel? (first (iname item))) "an " "a ")
+     (iname item))))
 
 (defn print-list [items]
   (string/join "\n"
@@ -52,11 +51,11 @@
   ([container] (describe-container container ""))
   ([container prefix]
    (if-let [items (:items container)]
-    (cond
-      (:closed container) (str prefix "The " (iname container) " is closed.")
-      (empty? items) (str prefix "The " (iname container) " is empty.")
-      :else (str prefix "The " (iname container)
-                 " contains:\n" (print-list items))))))
+     (cond
+       (:closed container) (str prefix "The " (iname container) " is closed.")
+       (empty? items) (str prefix "The " (iname container) " is empty.")
+       :else (str prefix "The " (iname container)
+                  " contains:\n" (print-list items))))))
 
 (defn get-from
   "Get the spec for the item with the given name, if it's in the given set,
@@ -91,5 +90,4 @@
                            (assoc item :items (replace-from inner old-item new-item))
                            item))
               item-set))))
-
 

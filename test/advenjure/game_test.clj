@@ -15,20 +15,19 @@
                        :take true
                        :read "Tells the results of every major sports event till the end of the century."))
 (def bedroom (room/make "Bedroom" "short description of bedroom"
-              :initial-description "long description of bedroom"
-              :items #{(it/make ["bed"] "just a bed") drawer sock}
-              :north :living
-              :visited true))
+                        :initial-description "long description of bedroom"
+                        :items #{(it/make ["bed"] "just a bed") drawer sock}
+                        :north :living
+                        :visited true))
 
 (def living (room/make "Bedroom" "short description of living room"
-             :initial-description "long description of living room"
-             :items #{(it/make ["sofa"] "just a sofa")}
-             :south :bedroom))
+                       :initial-description "long description of living room"
+                       :items #{(it/make ["sofa"] "just a sofa")}
+                       :south :bedroom))
 
 (def game-state {:current-room :bedroom
                  :room-map {:bedroom bedroom, :living living}
                  :inventory #{magazine}})
-
 
 (deftest process-input-test
   (with-redefs [say say-mock]

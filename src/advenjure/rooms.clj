@@ -13,10 +13,10 @@
   "Add the item to the room with an optional custom description.
   Returns the updated room."
   ([room item]
-   (assoc room :items (conj (:items room) item)))
+   (update-in room [:items] conj item))
   ([room item description]
    (-> room
-       (assoc :items (conj (:items room) item))
+       (update-in [:items] conj item)
        (assoc-in [:item-descriptions (iname item)] description))))
 
 (defn describe
@@ -27,8 +27,8 @@
   descriptions defined use them instead of the default list description."
   [room]
   (let [room-descr (if (:visited room)
-                    (:description room)
-                    (or (:initial-description room) (:description room)))
+                     (:description room)
+                     (or (:initial-description room) (:description room)))
 
         current-items (set (map iname (:items room))) ;items currently in the room
         custom-items (filter #(current-items (first %)) (:item-descriptions room)) ;items in the room with custom description
@@ -37,13 +37,12 @@
         remain-items (filter #(nil? (get (:item-descriptions room) (iname %))) (:items room)) ; get room items with no custom description
         item-descr (reduce #(str %1 "\nThere's " (print-list-item %2) " here."
                                  (describe-container %2 " "))
-                            ""
-                            remain-items)]
+                           ""
+                           remain-items)]
 
     (if (not-empty item-descr)
       (str room-descr custom-prefix custom-descr item-descr)
       (str room-descr custom-prefix custom-descr))))
-
 
 ; ROOM MAP BUILDING
 (def matching-directions {:north :south
@@ -70,5 +69,4 @@
   r2 can be a condition function or string to make a conditional connection."
   [room-map r1 direction r2]
   (assoc-in room-map [r1 direction] r2))
-
 

@@ -4,7 +4,6 @@
             [clojure.test :refer [function?]]
             [advenjure.rooms :as rooms]))
 
-
 ;;;; FUNCTIONS TO BUILD VERB HANDLERS
 ; there's some uglyness here, but it enables simple definitions for the verb handlers
 (defn noop [& args])
@@ -32,7 +31,7 @@
   ; this one uses a noop handler, solely based on post/preconditions (i.e. read)
   ([verb-name verb-kw] (make-item-handler verb-name verb-kw noop))
   ([verb-name verb-kw handler &
-     {:keys [kw-required] :or {kw-required true}}]
+    {:keys [kw-required] :or {kw-required true}}]
    (fn
      ([game-state] (say (str verb-name " what?")))
      ([game-state item-name]
@@ -47,13 +46,12 @@
           :else (let [new-state (handler game-state item)]
                   (eval-postcondition conditions game-state new-state))))))))
 
-
 (defn make-compound-item-handler
   ; some copy pasta, but doesn't seem worth to refactor
   "The same as above but adapted to compund verbs."
   ([verb-name verb-kw] (make-item-handler verb-name verb-kw noop))
   ([verb-name verb-kw handler &
-     {:keys [kw-required] :or {kw-required true}}]
+    {:keys [kw-required] :or {kw-required true}}]
    (fn
      ([game-state] (say (str verb-name " what?")))
      ([game-state item1] (say (str verb-name " " item1 " with what?")))
@@ -121,65 +119,65 @@
 
 (def look-at
   (make-item-handler
-    "look at" :look-at
-    (fn [game-state item] (say (:description item)))
-    :kw-required false))
+   "look at" :look-at
+   (fn [game-state item] (say (:description item)))
+   :kw-required false))
 
 (def look-inside
   (make-item-handler
-    "look inside" :look-in
-    (fn [game-state item]
-      (if (:items item)
+   "look inside" :look-in
+   (fn [game-state item]
+     (if (:items item)
        (say (describe-container item))
        (say (str "I can't look inside a " (iname item) "."))))
-    :kw-required false))
+   :kw-required false))
 
 (def take_
   (make-item-handler
-    "take" :take
-    (fn [game-state item]
-      "Try to take an item from the current room or from a container object in the inventory.
+   "take" :take
+   (fn [game-state item]
+     "Try to take an item from the current room or from a container object in the inventory.
       Won't allow taking an object already in the inventory (i.e. not in a container)."
-      (if (contains? (:inventory game-state) item)
-        (say "I already got that.")
-        (let [new-state (remove-item game-state item)
-              new-inventory (conj (:inventory new-state) item)]
-          (say "Taken.")
-          (assoc new-state :inventory new-inventory))))))
+     (if (contains? (:inventory game-state) item)
+       (say "I already got that.")
+       (let [new-state (remove-item game-state item)
+             new-inventory (conj (:inventory new-state) item)]
+         (say "Taken.")
+         (assoc new-state :inventory new-inventory))))))
 
 (def open
   (make-item-handler
-    "open" :open
-    (fn [game-state item]
-      (cond
-        (not (:closed item)) (say "It's already open.")
-        (:locked item) (say "It's locked.")
-        :else (let [open-item (assoc item :closed false)]
-                (say "Opened.")
-                (replace-item game-state item open-item))))))
+   "open" :open
+   (fn [game-state item]
+     (cond
+       (not (:closed item)) (say "It's already open.")
+       (:locked item) (say "It's locked.")
+       :else (let [open-item (assoc item :closed false)]
+               (say "Opened.")
+               (replace-item game-state item open-item))))))
 
 (def close
   (make-item-handler
-    "close" :close
-    (fn [game-state item]
-      (if (:closed item)
-        (say "It's already closed.")
-        (let [closed-item (assoc item :closed true)]
-             (say "Closed.")
-             (replace-item game-state item closed-item))))))
+   "close" :close
+   (fn [game-state item]
+     (if (:closed item)
+       (say "It's already closed.")
+       (let [closed-item (assoc item :closed true)]
+         (say "Closed.")
+         (replace-item game-state item closed-item))))))
 
 (def unlock
   (make-compound-item-handler
-    "unlock" :unlock
-    (fn [game-state locked key-item]
-      (cond
-        (not (:locked locked)) (say "It's not locked.")
-        (not (= locked (:unlocks key-item))) (say "That doesn't work.")
-        :else (let [unlocked (assoc locked :locked false)]
-                (say "Unlocked.")
-                (-> game-state
-                    (remove-item key-item)
-                    (replace-item locked unlocked)))))))
+   "unlock" :unlock
+   (fn [game-state locked key-item]
+     (cond
+       (not (:locked locked)) (say "It's not locked.")
+       (not= locked (:unlocks key-item)) (say "That doesn't work.")
+       :else (let [unlocked (assoc locked :locked false)]
+               (say "Unlocked.")
+               (-> game-state
+                   (remove-item key-item)
+                   (replace-item locked unlocked)))))))
 
 ;;; NOOP VERBS (rely entirely in pre/post conditions)
 (def read_ (make-item-handler "read" :read))
