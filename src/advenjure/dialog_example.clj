@@ -9,68 +9,78 @@
  ;;; dialog and keep traversing.
  ;;; when using the jump function, the current tree traversal is dropped.
 
-; will use the first line/dialog that "evaluates to available"
-(conditional greet-npc
-             (once (PLAYER "Hello!")) ; will use it first time then kill it
-             (if-event :knows-npc (PLAYER "Hi, NPC."))
-             (PLAYER "Hi again.")) ; won't kill it b/c it's a regular single line
+; the bool function will take game-state. If true at execution show the first
+; dialog branch, if false the second (if any)
+(def greet-npc (conditional (event? :knows-npc)
+                            (PLAYER "Hi, NPC.")
+                            (PLAYER "Hello!")))
 
-; use any of the given lines
-(random npc-says-hi
-        (NPC "Hello.")
-        (NPC "Hi.")
-        (NPC "Hmmm."))
+; randomly select one of the given dialog lines
+(def npc-says-hi (random (NPC "Hello.")
+                         (NPC "Hi.")
+                         (NPC "Hmmm.")))
 
-; present the player the given dialog options. This will only be exhausted while there are
-; selectable options (i.e options not consumed by "once" or discarded by event conditions)
-; a jump can be used to force the exit of the options cycle.
-(optional guess-npc
-          (once (PLAYER "A not politically correct kind of person?")
-                (NPC "No."))
+; present the player the given dialog options. The cycle will be repeated while
+; there are available options or until one with the :go-back modifier
+; is executed. Options will be consumed after being executed, unless the
+; :sticky modifier is used.
+(def guess-npc
+  (optional
+    ("A not politically correct kind of person?"
+        (dialog (PLAYER "A not politically correct kind of person?")
+                (NPC "No.")))
 
-          (once (PLAYER "A non-deterministic polynomial-time complete?")
-                (NPC "No."))
+    ("A non-deterministic polynomial-time complete?"
+         (dialog (PLAYER "A non-deterministic polynomial-time complete?")
+                 (NPC "No.")))
 
-          (dialog (PLAYER "A non-player character?")
-                  (NPC "That's right.")
-                  (set-event :knows-npc)
-                  (jump npc-dialog-options))
+    ("A non-player character?"
+         (dialog (PLAYER "A non-player character?")
+                 (NPC "That's right.")
+                 (set-event :knows-npc))
+         :go-back)
 
-          (dialog (PLAYER "I give up")
-                  (jump npc-dialog-options)))
-
-(dialog npc-dialog-start
-        greet-npc
-        npc-says-hi
-        npc-dialog-options)
-
-(optional npc-dialog-options
-          (if-not-event :knows-npc (PLAYER "Who are you?")
-                                   (NPC "I'm an NPC.")
-                                   guess-npc)
-
-          (once (PLAYER "Why are you here?")
-                (NPC "The programmer put me here to test dialog trees."))
-
-          (once (PLAYER "Would you move? I'm kind of in a hurry")
-                (NPC "Sorry, I can't let you pass until we exhaust our conversation.")
-                (set-event :knows-wont-move))
-
-          (if-event :knows-wont-move
-                    (PLAYER "What do I have to do for you to move?")
-                    (NPC "You bring me something interesting to read."))
-
-          (if-item magazine
-                   (PLAYER "Do you want this magazine?")
-                   (NPC "I sure do, sir.")
-                   (change-game npc-moves)
-                   (end-dialog))
-
-          (dialog (PLAYER "Bye.")
-                  (NPC "See you.")
-                  (end-dialog)))
+    ("I give up." (dialog (PLAYER "I give up."))
+        :sticky :go-back)))
 
 (defn npc-moves
   "Magazine item is removed from inventory, NPC character is removed from room,
   player describes NPC leaving."
   [game-state])
+
+(def npc-dialog-options
+  (optional
+    ("Who are you?"
+          (dialog (PLAYER "Who are you?")
+                  (NPC "I'm an NPC.")
+                  guess-npc)
+          :show-if (not-event? :knows-npc))
+
+    ("Why are you here?"
+          (dialog (PLAYER "Why are you here?")
+                  (NPC "The programmer put me here to test dialog trees.")))
+
+    ("Would you move? I'm kind of in a hurry"
+            (dialog (PLAYER "Would you move? I'm kind of in a hurry")
+                    (NPC "Sorry, I can't let you pass until we exhaust our conversation.")
+                    (set-event :knows-wont-move)))
+
+    ("What do I have to do for you to move?"
+           (dialog (PLAYER "What do I have to do for you to move?")
+                   (NPC "You bring me something interesting to read."))
+           :show-if (event? :knows-wont-move)
+           :sticky)
+
+    ("Do you want this magazine?"
+         (dialog (PLAYER "Do you want this magazine?")
+                 (NPC "I sure do, sir.")
+                 npc-moves)
+         :show-if (item? "magazine")
+         :go-back)
+
+    ("Bye." (dialog (PLAYER "Bye.")
+                    (NPC "See you.")))))
+
+(def npc-dialog-start
+        (dialog greet-npc npc-says-hi npc-dialog-options))
+
