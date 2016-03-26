@@ -11,9 +11,10 @@
   "If line is a literal line, return the expression to print it.
   If it's a callable, return an expression that calls it."
   [line]
-  (if (and (seq? line) (string? (eval (first line))))
-    `(print-dialog ~@line)
-    (list line)))
+  (cond
+    (and (seq? line) (= (first line) 'dialog)) (list line) ; case (dialog (dialog ...))
+    (and (seq? line) (string? (eval (first line)))) `(print-dialog ~@line) ; case dialog literal
+    :else (list line))) ; case function literal or symbol
 
 (defmacro dialog
   "Expand a dialog definition into a function to execute it."
@@ -128,3 +129,29 @@
   (let [specs (map option-spec options)]
     `(fn [game-state#]
        (execute-optional game-state# (list ~@specs)))))
+
+;;; OTHER DIALOG FORMS
+(defmacro random
+  "Given a list of dialog forms, return a function that would execute any of
+  them randomly each time it's called."
+  [& lines]
+  (let [lines (vec (map (fn [l] `(dialog ~l)) lines))
+        size (count lines)]
+    `(fn [game-state#]
+       (let [selected# (get ~lines (rand-int ~size))]
+         (selected# game-state#)))))
+
+(defmacro conditional
+  "Return a function that will test the condition function using the game-state
+  and execute the dialog line if true. If false and a second line is given,
+  that will be executed instead."
+  ([condition true-line]
+   `(fn [game-state#]
+      (if (~condition game-state#)
+        ((dialog ~true-line) game-state#)
+        game-state#)))
+  ([condition true-line false-line]
+   `(fn [game-state#]
+      (if (~condition game-state#)
+        ((dialog ~true-line) game-state#)
+        ((dialog ~false-line) game-state#)))))
