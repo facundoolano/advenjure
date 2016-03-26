@@ -58,8 +58,8 @@
   [modifiers]
   (loop [[mod & more] modifiers]
     (cond
-      (= :show-if mod) (eval (first more))
-      (empty? more) (fn [gs] true)
+      (= :show-if mod) (first more)
+      (empty? more) `(fn [gs#] true)
       :else (recur more))))
 
 (defn option-spec
@@ -78,7 +78,7 @@
   [game-state option]
   (and
     (not (contains? (:executed-dialogs game-state) (:id option)))
-    ((:show-if option) game-state)))
+    ((eval (:show-if option)) game-state)))
 
 (defn print-options
   [options]
