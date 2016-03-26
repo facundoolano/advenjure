@@ -7,7 +7,11 @@
   "Make a new game state based on a room map and an optional initial inventory set."
   ([room-map start-room] (make room-map start-room #{}))
   ([room-map start-room inventory]
-   {:room-map room-map :current-room start-room :inventory inventory}))
+   {:room-map room-map
+    :current-room start-room
+    :inventory inventory
+    :events #{}
+    :executed-dialogs #{}}))
 
 (defn get-input
   ([] (get-input "\n>"))
