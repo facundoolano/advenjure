@@ -15,13 +15,6 @@
     `(print-dialog ~@line)
     (list line)))
 
-; (defmacro if-event
-;   [event line]
-;   `(fn [game-state#]
-;      (if (contains? (:events game-state#) ~event)
-;        (-> game-state#
-;            ~(eval-line line)))))
-
 (defmacro dialog
   "Expand a dialog definition into a function to execute it."
   [& lines]
@@ -77,8 +70,12 @@
 (defn is-available
   [game-state option]
   (and
-    (not (contains? (:executed-dialogs game-state) (:id option)))
+    (or (:sticky option) (not (contains? (:executed-dialogs game-state) (:id option))))
     ((eval (:show-if option)) game-state)))
+
+(defn filter-available
+  [game-state options]
+  (into [] (filter #(is-available game-state %) options)))
 
 (defn print-options
   [options]
@@ -93,13 +90,23 @@
   (read-string (read-line)))
 
 (defn execute-optional
+  ; TODO needs some more refactoring
   [game-state options]
-  (let [available (into [] (filter #(is-available game-state %) options))]
+  (loop [available (filter-available game-state options)
+         game-state game-state]
+
     (print-options available)
     (let [i (read-option (count available))
           option (get available (dec i))
-          dialog (eval (:dialog option))]
-      (dialog game-state)))) ; SEEMS TO BE BREAKING HERE
+          dialog (eval (:dialog option))
+          new-state (-> game-state
+                        (dialog)
+                        (update-in [:executed-dialogs] conj (:id option)))
+          remaining (filter-available new-state options)]
+
+      (if (or (:go-back option) (empty? remaining))
+        new-state
+        (recur remaining new-state)))))
 
 (defmacro optional
   "Present dialog options to the user and execute the one selected."

@@ -54,7 +54,8 @@
           (dialog (PLAYER "Who are you?")
                   (NPC "I'm an NPC.")
                   guess-npc)
-          :show-if (not-event? :knows-npc))
+          :show-if (not-event? :knows-npc)
+          :sticky)
 
     ("Why are you here?"
           (dialog (PLAYER "Why are you here?")
@@ -79,7 +80,9 @@
          :go-back)
 
     ("Bye." (dialog (PLAYER "Bye.")
-                    (NPC "See you.")))))
+                    (NPC "See you."))
+            :sticky
+            :go-back)))
 
 (def npc-dialog
         (dialog greet-npc npc-says-hi npc-dialog-options))
