@@ -81,6 +81,6 @@
     ("Bye." (dialog (PLAYER "Bye.")
                     (NPC "See you.")))))
 
-(def npc-dialog-start
+(def npc-dialog
         (dialog greet-npc npc-says-hi npc-dialog-options))
 
