@@ -15,11 +15,14 @@
   (if (or (:unlock item) (contains? item :locked))
     {:unlock true :locked true :close true :closed true :open true}))
 
+(defn talk-defaults [item] (if (:dialog item) {:talk true}))
+
 (defn make
   ([names description & {:as extras}]
    (map->Item (merge {:names names :description description}
                      (open-defaults extras)
                      (unlock-defaults extras)
+                     (talk-defaults extras)
                      extras)))
   ([names]
    (let [names (if (string? names) [names] names)]

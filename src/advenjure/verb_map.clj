@@ -21,20 +21,28 @@
                   add-go-shortcuts
                   (add-verb ["^go (.*)" "^talk (.*)" "^go$"] go)
                   (add-verb ["^look$" "^look around$" "^l$"] look)
-                  (add-verb ["^look at (.*)" "^look at$" "^describe (.*)" "^describe$"] look-at)
-                  (add-verb ["^look in (.*)" "^look in$" "^look inside (.*)" "^look inside$"] look-inside)
+                  (add-verb ["^look at (.*)" "^look at$" "^describe (.*)"
+                             "^describe$"] look-at)
+                  (add-verb ["^look in (.*)" "^look in$" "^look inside (.*)"
+                             "^look inside$"] look-inside)
                   (add-verb ["^take (.*)" "^take$" "^get (.*)" "^get$"
-                             "^pick (.*)" "^pick$" "^pick up (.*)" "^pick (.*) up$" "^pick up$"] take_)
+                             "^pick (.*)" "^pick$" "^pick up (.*)"
+                             "^pick (.*) up$" "^pick up$"] take_)
                   (add-verb ["^inventory$" "^i$"] inventory)
                   (add-verb ["^read (.*)" "^read$"] read_)
                   (add-verb ["^open (.*)" "^open$"] open)
                   (add-verb ["^close (.*)" "^close$"] close)
-                  (add-verb ["^turn on (.*)" "^turn on$" "^turn (.*) on"] identity)
-                  (add-verb ["^turn off (.*)" "^turn off$" "^turn (.*) off"] identity)
-                  (add-verb ["^put (.*) in (.*)" "^put$" "^put (.*)$" "^put (.*) in$"
-                             "^put (.*) inside (.*)" "^put (.*) inside$"] identity)
+                  (add-verb ["^turn on (.*)" "^turn on$" "^turn (.*) on"]
+                            identity)
+                  (add-verb ["^turn off (.*)" "^turn off$" "^turn (.*) off"]
+                            identity)
+                  (add-verb ["^put (.*) in (.*)" "^put (.*) in$"
+                             "^put$" "^put (.*)$" "^put (.*) inside (.*)"
+                             "^put (.*) inside$"] identity)
                   (add-verb ["^unlock (.*) with (.*)" "^unlock (.*)"
                              "^unlock (.*) with$" "^unlock$"] unlock) ;FIXME open X with Y should work too
+                  (add-verb ["^talk with (.*)" "^talk to (.*)" "^talk (.*)"]
+                            talk)
                   (add-verb ["^save$"] save)
                   (add-verb ["^restore$" "^load$"] restore)
                   (add-verb ["^exit$"] exit)

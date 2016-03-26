@@ -2,7 +2,8 @@
   (:require [advenjure.items :as item]
             [advenjure.rooms :as room]
             [advenjure.utils :as utils]
-            [advenjure.game :as game])
+            [advenjure.game :as game]
+            [advenjure.dialogs :refer [dialog]])
   (:gen-class))
 
 ;;; DEFINE ROOMS AND ITEMS
@@ -14,7 +15,11 @@
 (def wallet (item/make ["wallet"] "It's made of cheap imitation leather."
                        :take true
                        :open "I don't have a dime."
-                       :look-in "I don't have a dime."))
+                       :look-in "I don't have a dime."
+                       :dialog (dialog ("ME" "Hi, wallet.")
+                                       ("WALLET" "Tsup?")
+                                       ("ME" "Any cash I can use?")
+                                       ("WALLET" "Sorry."))))
 
 (def bedroom (-> (room/make "Bedroom"
                             "A smelling bedroom. There was an unmade bed near the corner and a door to the north."

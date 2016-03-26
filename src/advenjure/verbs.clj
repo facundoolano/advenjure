@@ -179,6 +179,13 @@
                    (remove-item key-item)
                    (replace-item locked unlocked)))))))
 
+(def talk
+  (make-item-handler
+   "talk to" :talk
+   (fn [game-state item]
+     (let [dialog (:dialog item)]
+       (dialog game-state)))))
+
 ;;; NOOP VERBS (rely entirely in pre/post conditions)
 (def read_ (make-item-handler "read" :read))
 
