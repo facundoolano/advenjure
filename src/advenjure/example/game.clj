@@ -1,9 +1,10 @@
-(ns advenjure.example
+(ns advenjure.example.game
   (:require [advenjure.items :as item]
             [advenjure.rooms :as room]
             [advenjure.utils :as utils]
             [advenjure.game :as game]
-            [advenjure.dialogs :refer [dialog]])
+            [advenjure.dialogs :refer [dialog]]
+            [advenjure.example.dialogs :refer [npc-dialog]])
   (:gen-class))
 
 ;;; DEFINE ROOMS AND ITEMS
@@ -44,20 +45,38 @@
                 (room/add-item door "")
                 (room/add-item (item/make ["window"] "It's nailed shut." :closed true :open "It's nailed shut.") "")))
 
+(def npc (item/make ["character" "suspicious looking character" "npc"]
+                    "The guy was fat and hairy and was giving me a crooked look." :dialog npc-dialog))
+
+(def hallway (-> (room/make "Hallway"
+                            "A narrow hallway with a door to the west and a big portal to the east."
+                            :initial-description "I walked out of the living room and found myself in a narrow hallway leading to a big portal. I was closer to the exit.")
+                 (room/add-item (item/make "portal") "")
+                 (room/add-item (item/make "door") "")
+                 (room/add-item npc "A suspicious looking character was guarding the portal.")))
+
 (def outside (room/make "Outside" "I found myself in a beautiful garden and was able to breath again. A new adventure began, an adventure that is out of the scope of this example game."))
 
 (defn can-leave? [gs]
   (let [door (utils/find-item gs "wooden door")]
     (cond (:locked door) "The door is locked."
           (not (contains? (:inventory gs) wallet)) "I can't leave without my wallet."
-          :else :outside)))
+          :else :hallway)))
+
+(defn npc-gone? [gs]
+  (if (utils/find-item gs "character")
+    "I can't, that guy is blocking the portal."
+    :outside))
 
 ;;; BUILD THE ROOM MAP
 (def room-map (-> {:bedroom bedroom
                    :living living
-                   :outside outside}
+                   :outside outside
+                   :hallway hallway}
                   (room/connect :bedroom :north :living)
-                  (room/one-way-connect :living :east can-leave?)))
+                  (room/one-way-connect :living :east can-leave?)
+                  (room/one-way-connect :hallway :west :living)
+                  (room/one-way-connect :hallway :east npc-gone?)))
 
 ;;; RUN THE GAME
 (defn -main

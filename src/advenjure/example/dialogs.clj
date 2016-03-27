@@ -1,6 +1,9 @@
+(ns advenjure.example.dialogs
+  (:require [advenjure.dialogs :refer :all]
+            [advenjure.utils :as utils]))
 
- (def PLAYER "PLAYER")
- (def NPC "NPC")
+(def PLAYER "ME")
+(def NPC "NPC")
 
  ;;; By default a (dialog) entry would go sequentially through all of it's branches
  ;;; If a branch is a single line, i.e. (PLAYER "Hi"), just say it.
@@ -46,7 +49,13 @@
 (defn npc-moves
   "Magazine item is removed from inventory, NPC character is removed from room,
   player describes NPC leaving."
-  [game-state])
+  [game-state]
+  (let [magazine (utils/find-item game-state "magazine")
+        npc (utils/find-item game-state "character")]
+    (utils/say "And so the NPC took the magazine and left the room.")
+    (-> game-state
+        (utils/remove-item magazine)
+        (utils/remove-item npc))))
 
 (def npc-dialog-options
   (optional
