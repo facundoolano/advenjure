@@ -77,7 +77,8 @@
 
     ("What do I have to do for you to move?"
            (dialog (PLAYER "What do I have to do for you to move?")
-                   (NPC "You bring me something interesting to read."))
+                   (NPC "You bring me something interesting to read.")
+                   (set-event :wants-to-read))
            :show-if (event? :knows-wont-move)
            :sticky)
 
@@ -85,7 +86,7 @@
          (dialog (PLAYER "Do you want this magazine?")
                  (NPC "I sure do, sir.")
                  npc-moves)
-         :show-if (item? "magazine")
+         :show-if #(and ((item? "magazine") %) ((event? :wants-to-read) %))
          :go-back)
 
     ("Bye." (dialog (PLAYER "Bye.")

@@ -50,7 +50,7 @@
 
 (def hallway (-> (room/make "Hallway"
                             "A narrow hallway with a door to the west and a big portal to the east."
-                            :initial-description "I walked out of the living room and found myself in a narrow hallway leading to a big portal. I was closer to the exit.")
+                            :initial-description "I walked out of the living room and found myself in the west side of a narrow hallway leading to a big portal towards east. I felt closer to the exit.")
                  (room/add-item (item/make "portal") "")
                  (room/add-item (item/make "door") "")
                  (room/add-item npc "A suspicious looking character was guarding the portal.")))

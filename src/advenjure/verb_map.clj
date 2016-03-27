@@ -32,15 +32,14 @@
                   (add-verb ["^read (.*)" "^read$"] read_)
                   (add-verb ["^open (.*)" "^open$"] open)
                   (add-verb ["^close (.*)" "^close$"] close)
-                  (add-verb ["^turn on (.*)" "^turn on$" "^turn (.*) on"]
-                            identity)
-                  (add-verb ["^turn off (.*)" "^turn off$" "^turn (.*) off"]
-                            identity)
-                  (add-verb ["^put (.*) in (.*)" "^put (.*) in$"
-                             "^put$" "^put (.*)$" "^put (.*) inside (.*)"
-                             "^put (.*) inside$"] identity)
+                  ; (add-verb ["^turn on (.*)" "^turn on$" "^turn (.*) on"] identity)
+                  ; (add-verb ["^turn off (.*)" "^turn off$" "^turn (.*) off"] identity)
+                  ; (add-verb ["^put (.*) in (.*)" "^put (.*) in$"
+                  ;            "^put$" "^put (.*)$" "^put (.*) inside (.*)"
+                  ;            "^put (.*) inside$"] identity)
                   (add-verb ["^unlock (.*) with (.*)" "^unlock (.*)"
-                             "^unlock (.*) with$" "^unlock$"] unlock) ;FIXME open X with Y should work too
+                             "^unlock (.*) with$" "^unlock$"
+                             "^open (.*) with (.*)" "^open (.*) with"] unlock)
                   (add-verb ["^talk with (.*)" "^talk to (.*)" "^talk (.*)"]
                             talk)
                   (add-verb ["^save$"] save)
