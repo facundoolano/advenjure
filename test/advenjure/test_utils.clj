@@ -16,8 +16,8 @@
                   (seq expected))
          lines (count as-seq)
          results (take-last lines (clojure.string/split-lines @output))]
-     (is (= (map clojure.string/capitalize results) ;just ignore case man
-            (map clojure.string/capitalize as-seq))))))
+     (is (= (map clojure.string/capitalize as-seq) ;just ignore case man
+            (map clojure.string/capitalize results))))))
 
 (use-fixtures :each (fn [f]
                       (reset! output nil)

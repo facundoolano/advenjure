@@ -1,9 +1,11 @@
 (ns advenjure.dialogs
   (:require [advenjure.items :as items]))
 
+(def printfn println)
+
 (defn print-dialog
   [game-state character speech]
-  (println (str character " —" speech))
+  (printfn (str character " —" speech))
   (read-line)
   game-state)
 
@@ -82,7 +84,7 @@
   [options]
   (dorun ; TODO maybe use a more readable loop instead
     (map-indexed (fn [i opt]
-                   (println (str (inc i) ". " (:title opt))))
+                   (printfn (str (inc i) ". " (:title opt))))
                  options)))
 
 (defn read-input
