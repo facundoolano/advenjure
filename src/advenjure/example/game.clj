@@ -17,10 +17,10 @@
                        :take true
                        :open "I don't have a dime."
                        :look-in "I don't have a dime."
-                       :dialog (dialog ("ME" "Hi, wallet.")
-                                       ("WALLET" "Tsup?")
-                                       ("ME" "Any cash I can use?")
-                                       ("WALLET" "Sorry."))))
+                       :dialog `(dialog ("ME" "Hi, wallet.")
+                                        ("WALLET" "Tsup?")
+                                        ("ME" "Any cash I can use?")
+                                        ("WALLET" "Sorry."))))
 
 (def bedroom (-> (room/make "Bedroom"
                             "A smelling bedroom. There was an unmade bed near the corner and a door to the north."
@@ -46,7 +46,7 @@
                 (room/add-item (item/make ["window"] "It's nailed shut." :closed true :open "It's nailed shut.") "")))
 
 (def npc (item/make ["character" "suspicious looking character" "npc"]
-                    "The guy was fat and hairy and was giving me a crooked look." :dialog npc-dialog))
+                    "The guy was fat and hairy and was giving me a crooked look." :dialog `npc-dialog))
 
 (def hallway (-> (room/make "Hallway"
                             "A narrow hallway with a door to the west and a big portal to the east."
@@ -74,9 +74,9 @@
                    :outside outside
                    :hallway hallway}
                   (room/connect :bedroom :north :living)
-                  (room/one-way-connect :living :east can-leave?)
+                  (room/one-way-connect :living :east `can-leave?)
                   (room/one-way-connect :hallway :west :living)
-                  (room/one-way-connect :hallway :east npc-gone?)))
+                  (room/one-way-connect :hallway :east `npc-gone?)))
 
 ;;; RUN THE GAME
 (defn -main

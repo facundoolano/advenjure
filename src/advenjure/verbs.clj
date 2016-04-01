@@ -11,7 +11,7 @@
 (defn eval-precondition
   "If the condition is a function return it's value, otherwise return unchanged."
   [condition & args]
-  (let [condition (or (:pre condition) condition)]
+  (let [condition (eval (or (:pre condition) condition))]
     (if (function? condition)
       (apply condition args)
       condition)))
@@ -20,9 +20,10 @@
   "If there's a postcondition defined, evaluate it and return new game-state.
   Otherwise return the game-state unchanged."
   [condition old-state new-state]
-  (if (function? (:post condition))
-    (or ((:post condition) old-state new-state) new-state)
-    new-state))
+  (let [condition (eval (:post condition))]
+    (if (function? condition)
+      (or (condition old-state new-state) new-state)
+      new-state)))
 
 (defn make-item-handler
   "Takes the verb name, the kw to look up at the item at the handler function,
@@ -183,7 +184,7 @@
   (make-item-handler
    "talk to" :talk
    (fn [game-state item]
-     (let [dialog (:dialog item)]
+     (let [dialog (eval (:dialog item))]
        (dialog game-state)))))
 
 ;;; NOOP VERBS (rely entirely in pre/post conditions)

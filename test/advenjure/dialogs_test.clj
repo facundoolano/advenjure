@@ -48,7 +48,7 @@
   (with-redefs [printfn say-mock
                 read-line (fn [] nil)]
     (testing "linear dialog"
-      (let [character (it/make ["character"] "" :dialog simple)
+      (let [character (it/make ["character"] "" :dialog `simple)
             new-state (assoc-in game-state
                                 [:room-map :bedroom :items] #{character})]
         (talk new-state "character")
@@ -56,7 +56,7 @@
 
 
     (testing "compound literal dialog"
-      (let [character (it/make ["character"] "" :dialog compound)
+      (let [character (it/make ["character"] "" :dialog `compound)
             new-state (assoc-in game-state
                                 [:room-map :bedroom :items] #{character})]
         (talk new-state "character")
@@ -64,21 +64,21 @@
 
 
     (testing "compound referenced dialog"
-      (let [character (it/make ["character"] "" :dialog referenced)
+      (let [character (it/make ["character"] "" :dialog `referenced)
             new-state (assoc-in game-state
                                 [:room-map :bedroom :items] #{character})]
         (talk new-state "character")
         (is-output ["ME —Hi!" "YOU —Hey there!" "ME —Bye then"])))
 
     (testing "conditional event"
-      (let [character (it/make ["character"] "" :dialog cond-event)
+      (let [character (it/make ["character"] "" :dialog `cond-event)
             new-state (assoc-in game-state
                                 [:room-map :bedroom :items] #{character})]
         (talk new-state "character")
         (is-output "ME —I'm full.")))
 
     (testing "conditional item"
-      (let [character (it/make ["character"] "" :dialog cond-item)
+      (let [character (it/make ["character"] "" :dialog `cond-item)
             new-state (assoc-in game-state
                                 [:room-map :bedroom :items] #{character})]
         (talk new-state "character")
@@ -89,7 +89,7 @@
   (with-redefs [printfn say-mock
                 read-line (fn [] "1")]
     (testing "simple choice and go back"
-      (let [character (it/make ["character"] "" :dialog choice)
+      (let [character (it/make ["character"] "" :dialog `choice)
             new-state (assoc-in game-state
                                 [:room-map :bedroom :items] #{character})]
         (talk new-state "character")
