@@ -1,7 +1,8 @@
 (ns advenjure.game
   (:require [advenjure.rooms :as room]
             [advenjure.utils :as utils]
-            [advenjure.verb-map :refer [find-verb verb-map]]))
+            [advenjure.verb-map :refer [find-verb verb-map]]
+            [advenjure.interface :refer [get-input]]))
 
 (defn make
   "Make a new game state based on a room map and an optional initial inventory set."
@@ -12,11 +13,6 @@
     :inventory inventory
     :events #{}
     :executed-dialogs #{}}))
-
-(defn get-input
-  ([] (get-input "\n>"))
-  ([prefix]
-   (do (print prefix) (flush) (read-line))))
 
 (defn process-input
   "Take an input comand, find the verb in it and execute its action handler."

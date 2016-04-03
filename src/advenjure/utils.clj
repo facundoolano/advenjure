@@ -1,6 +1,7 @@
 (ns advenjure.utils
   (:require [advenjure.items :refer :all]
-            [advenjure.rooms :as rooms]))
+            [advenjure.rooms :as rooms]
+            [advenjure.interface :refer [print-line]]))
 
 (defn current-room
   "Get the current room spec from game state."
@@ -43,8 +44,8 @@
                   (replace-from (:items room) old-item new-item)))))
 
 (defn say
-  ([speech] (println (str (clojure.string/capitalize (first speech))
-                          (subs speech 1)))))
+  ([speech] (print-line (str (clojure.string/capitalize (first speech))
+                             (subs speech 1)))))
 
 (defn change-rooms
   "Change room, say description, set visited."

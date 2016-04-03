@@ -4,7 +4,8 @@
             [advenjure.utils :as utils]
             [advenjure.game :as game]
             [advenjure.dialogs :refer [dialog]]
-            [advenjure.example.dialogs :refer [npc-dialog]])
+            [advenjure.example.dialogs :refer [npc-dialog]]
+            [advenjure.interface :refer :all])
   (:gen-class))
 
 ;;; DEFINE ROOMS AND ITEMS
@@ -78,10 +79,11 @@
                   (room/one-way-connect :hallway :west :living)
                   (room/one-way-connect :hallway :east `npc-gone?)))
 
-;;; RUN THE GAME
+; RUN THE GAME
 (defn -main
   "Build and run the example game."
   [& args]
+  (clear-screen)
   (let [game-state (game/make room-map :bedroom)
         finished? #(= (:current-room %) :outside)]
     (game/run game-state finished? "Welcome to the example game! type 'help' if you don't know what to do.\n")))

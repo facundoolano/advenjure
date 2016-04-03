@@ -1,6 +1,7 @@
 (ns advenjure.dialogs-test
   (:require [clojure.test :refer :all]
             [advenjure.test-utils :refer :all]
+            [advenjure.interface :refer :all]
             [advenjure.dialogs :refer :all]
             [advenjure.rooms :as room]
             [advenjure.items :as it]
@@ -45,8 +46,8 @@
 
 
 (deftest basic-dialogs
-  (with-redefs [printfn say-mock
-                read-line (fn [] nil)]
+  (with-redefs [print-line say-mock
+                read-key (fn [] nil)]
     (testing "linear dialog"
       (let [character (it/make ["character"] "" :dialog `simple)
             new-state (assoc-in game-state
@@ -86,8 +87,8 @@
 
 
 (deftest optional-dialogs
-  (with-redefs [printfn say-mock
-                read-line (fn [] "1")]
+  (with-redefs [print-line say-mock
+                read-key (fn [] "1")]
     (testing "simple choice and go back"
       (let [character (it/make ["character"] "" :dialog `choice)
             new-state (assoc-in game-state

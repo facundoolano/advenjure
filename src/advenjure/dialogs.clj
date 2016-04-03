@@ -1,12 +1,11 @@
 (ns advenjure.dialogs
-  (:require [advenjure.items :as items]))
-
-(def printfn println)
+  (:require [advenjure.items :as items]
+            [advenjure.interface :refer [print-line read-key read-value]]))
 
 (defn print-dialog
   [game-state character speech]
-  (printfn (str character " —" speech))
-  (read-line)
+  (print-line (str character " —" speech))
+  (read-key)
   game-state)
 
 (defn eval-line
@@ -82,18 +81,12 @@
 
 (defn print-options
   [options]
+  (println)
   (dorun ; TODO maybe use a more readable loop instead
     (map-indexed (fn [i opt]
-                   (printfn (str (inc i) ". " (:title opt))))
-                 options)))
-
-(defn read-input
-  "read a value from input. Return nil if no value entered."
-  []
-  (let [input (read-line)]
-    (try
-      (read-string input)
-      (catch RuntimeException e nil))))
+                   (print-line (str (inc i) ". " (:title opt))))
+                 options))
+  (println))
 
 (defn select-option
   "Present the player with a list of options, read input and return the
@@ -105,9 +98,9 @@
       (first options)
       (do
         (print-options options)
-        (loop [i (read-input)] ;fails with empty string
+        (loop [i (read-value)] ;fails with empty string
           (if-not (contains? choices i)
-            (recur (read-input))
+            (recur (read-value))
             (get options (dec i))))))))
 
 (defn execute-optional
