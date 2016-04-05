@@ -63,7 +63,9 @@
 (defn visible-items
   "Return items inside a container only if not closed."
   [container]
-  (and (not (:closed container)) (:items container)))
+  (if (:closed container)
+    #{}
+    (:items container)))
 
 
 (defn get-from
@@ -74,7 +76,7 @@
   [item-set item-name]
   (or (first (filter #(some #{item-name} (:names %)) item-set))
       (first (map #(get-from (:items %) item-name)
-                  (filter visible-items item-set)))))
+                  (filter #(and (not (:closed %)) (:items %)) item-set))))) ; FIXME should use visible-items
 
 (defn remove-from
   "Try to -recursively- remove the item from the given set. It takes a full
@@ -105,6 +107,6 @@
   (if (nil? item-set)
     []
     (let [this-names (flatten (map :names item-set))
-          inner-names (flatten (map #(all-item-names (filter visible-items %))
+          inner-names (flatten (map #(all-item-names (visible-items %))
                                     item-set))]
       (concat this-names inner-names))))

@@ -1,7 +1,8 @@
 (ns advenjure.dialogs-test
   (:require [clojure.test :refer :all]
             [advenjure.test-utils :refer :all]
-            [advenjure.interface :refer :all]
+            [advenjure.ui.output :refer :all]
+            [advenjure.ui.input :refer :all]
             [advenjure.dialogs :refer :all]
             [advenjure.rooms :as room]
             [advenjure.items :as it]

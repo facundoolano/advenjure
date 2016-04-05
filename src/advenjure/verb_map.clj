@@ -19,28 +19,28 @@
 
 (def verb-map (-> {}
                   add-go-shortcuts
-                  (add-verb ["^go (.*)" "^talk (.*)" "^go$"] go)
+                  (add-verb ["^go (?<dir>.*)" "^go$"] go)
                   (add-verb ["^look$" "^look around$" "^l$"] look)
-                  (add-verb ["^look at (.*)" "^look at$" "^describe (.*)"
+                  (add-verb ["^look at (?<item1>.*)" "^look at$" "^describe (?<item2>.*)"
                              "^describe$"] look-at)
-                  (add-verb ["^look in (.*)" "^look in$" "^look inside (.*)"
+                  (add-verb ["^look in (?<item1>.*)" "^look in$" "^look inside (?<item2>.*)"
                              "^look inside$"] look-inside)
-                  (add-verb ["^take (.*)" "^take$" "^get (.*)" "^get$"
-                             "^pick (.*)" "^pick$" "^pick up (.*)"
-                             "^pick (.*) up$" "^pick up$"] take_)
+                  (add-verb ["^take (?<item1>.*)" "^take$" "^get (?<item2>.*)" "^get$"
+                             "^pick (?<item1>.*)" "^pick$" "^pick up (?<item2>.*)"
+                             "^pick (?<item>.*) up$" "^pick up$"] take_)
                   (add-verb ["^inventory$" "^i$"] inventory)
-                  (add-verb ["^read (.*)" "^read$"] read_)
-                  (add-verb ["^open (.*)" "^open$"] open)
-                  (add-verb ["^close (.*)" "^close$"] close)
-                  ; (add-verb ["^turn on (.*)" "^turn on$" "^turn (.*) on"] identity)
-                  ; (add-verb ["^turn off (.*)" "^turn off$" "^turn (.*) off"] identity)
-                  ; (add-verb ["^put (.*) in (.*)" "^put (.*) in$"
-                  ;            "^put$" "^put (.*)$" "^put (.*) inside (.*)"
-                  ;            "^put (.*) inside$"] identity)
-                  (add-verb ["^unlock (.*) with (.*)" "^unlock (.*)"
-                             "^unlock (.*) with$" "^unlock$"
-                             "^open (.*) with (.*)" "^open (.*) with"] unlock)
-                  (add-verb ["^talk with (.*)" "^talk to (.*)" "^talk (.*)"]
+                  (add-verb ["^read (?<item>.*)" "^read$"] read_)
+                  (add-verb ["^open (?<item>.*)" "^open$"] open)
+                  (add-verb ["^close (?<item>.*)" "^close$"] close)
+                  ; (add-verb ["^turn on (?<item>.*)" "^turn on$" "^turn (?<item>.*) on"] identity)
+                  ; (add-verb ["^turn off (?<item>.*)" "^turn off$" "^turn (?<item>.*) off"] identity)
+                  ; (add-verb ["^put (?<item>.*) in (?<item>.*)" "^put (?<item>.*) in$"
+                  ;            "^put$" "^put (?<item>.*)$" "^put (?<item>.*) inside (?<item>.*)"
+                  ;            "^put (?<item>.*) inside$"] identity)
+                  (add-verb ["^unlock (?<item1>.*) with (?<item2>.*)" "^unlock (?<item>.*)"
+                             "^unlock (?<item1>.*) with$" "^unlock$"
+                             "^open (?<item1>.*) with (?<item2>.*)" "^open (?<item>.*) with"] unlock)
+                  (add-verb ["^talk with (?<item>.*)" "^talk to (?<item>.*)" "^talk (?<item>.*)"]
                             talk)
                   (add-verb ["^save$"] save)
                   (add-verb ["^restore$" "^load$"] restore)

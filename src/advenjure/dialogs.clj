@@ -1,6 +1,7 @@
 (ns advenjure.dialogs
   (:require [advenjure.items :as items]
-            [advenjure.interface :refer [print-line read-key read-value]]))
+            [advenjure.ui.input :refer [read-key read-value]]
+            [advenjure.ui.output :refer [print-line]]))
 
 (defn print-dialog
   [game-state character speech]

@@ -1,7 +1,7 @@
 (ns advenjure.utils
   (:require [advenjure.items :refer :all]
             [advenjure.rooms :as rooms]
-            [advenjure.interface :refer [print-line]]))
+            [advenjure.ui.output :refer [print-line]]))
 
 (defn current-room
   "Get the current room spec from game state."

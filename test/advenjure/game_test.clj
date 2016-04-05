@@ -30,7 +30,7 @@
                  :inventory #{magazine}})
 
 (deftest process-input-test
-  (with-redefs [say say-mock]
+  (with-redefs [advenjure.ui.output/print-line say-mock]
 
     (testing "unknown command"
       (let [new-state (process-input game-state "dance around")]

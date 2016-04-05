@@ -1,5 +1,6 @@
-(ns advenjure.interface
-  (:require [advenjure.items :refer [all-item-names]])
+(ns advenjure.ui.input
+  (:require [advenjure.items :refer [all-item-names]]
+            [advenjure.utils :refer [direction-mappings current-room]])
   (:import [jline.console ConsoleReader]
            [jline.console.completer StringsCompleter ArgumentCompleter NullCompleter AggregateCompleter]))
 
@@ -7,9 +8,6 @@
 ;; should have one init and one refresh, plus input methods probably
 
 (def console (ConsoleReader.))
-
-(defn init []
-  (.clearScreen console))
 
 (defn read-key []
   (str (char (.readCharacter console))))
@@ -22,23 +20,25 @@
       (read-string input)
       (catch RuntimeException e nil))))
 
-(def print-line println)
 
 (defn verb-to-completer
   "Take a verb regexp and an available items completer, and return an
   ArgumentCompleter that respects the regexp."
-  [verb items-completer]
+  [verb items-completer dirs-completer]
   (let [verb (clojure.string/replace (subs verb 1) #"\$" "")
         tokens (clojure.string/split verb #" ")
-        mapper (fn [token] (if (= token "(.*)") items-completer
-                             (StringsCompleter. [token])))]
+        mapper (fn [token] (cond
+                             (#{"(?<item>.*)" "(?<item1>.*)" "(?<item2>.*)"} token) items-completer
+                             (= token "(?<dir>.*)") dirs-completer
+                             :else (StringsCompleter. [token])))]
     (ArgumentCompleter. (concat (map mapper tokens) [(NullCompleter.)]))))
 
 (defn update-completer
   [verbs items]
   (let [current (first (.getCompleters console))
         items (StringsCompleter. items)
-        arguments (map #(verb-to-completer % items) verbs)
+        dirs (StringsCompleter. (keys direction-mappings))
+        arguments (map #(verb-to-completer % items dirs) verbs)
         aggregate (AggregateCompleter. arguments)]
     (.removeCompleter console current)
     (.addCompleter console aggregate)))
@@ -51,7 +51,7 @@
 (defn get-input
   ([game-state verb-map]
    (let [verbs (keys verb-map)
-         room (get-in game-state [:room-map (:current-room game-state)]) ;; FIXME duplicated from utils
+         room (current-room game-state)
          all-items (into (:inventory game-state) (:items room))
          item-names (all-item-names all-items)]
      (update-completer verbs item-names)
