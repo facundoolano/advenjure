@@ -71,12 +71,11 @@
 (defn get-from
   "Get the spec for the item with the given name, if it's in the given set,
   or is contained by one of its items."
-  ; TODO probably a cleaner way to get this result
   ; TODO allow multiple results --i.e. door --> "glass door" "wooden door"
   [item-set item-name]
   (or (first (filter #(some #{item-name} (:names %)) item-set))
       (first (map #(get-from (:items %) item-name)
-                  (filter #(and (not (:closed %)) (:items %)) item-set))))) ; FIXME should use visible-items
+                  (filter #(not-empty (visible-items %)) item-set)))))
 
 (defn remove-from
   "Try to -recursively- remove the item from the given set. It takes a full

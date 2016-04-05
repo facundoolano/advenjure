@@ -4,9 +4,6 @@
   (:import [jline.console ConsoleReader]
            [jline.console.completer StringsCompleter ArgumentCompleter NullCompleter AggregateCompleter]))
 
-;; TODO separate jline wrapper methods from logic that takes the state and updates the interface
-;; should have one init and one refresh, plus input methods probably
-
 (def console (ConsoleReader.))
 
 (defn read-key []
