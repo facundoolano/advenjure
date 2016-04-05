@@ -60,6 +60,12 @@
        :else (str prefix "The " (iname container)
                   " contains:\n" (print-list items))))))
 
+(defn visible-items
+  "Return items inside a container only if not closed."
+  [container]
+  (and (not (:closed container)) (:items container)))
+
+
 (defn get-from
   "Get the spec for the item with the given name, if it's in the given set,
   or is contained by one of its items."
@@ -68,7 +74,7 @@
   [item-set item-name]
   (or (first (filter #(some #{item-name} (:names %)) item-set))
       (first (map #(get-from (:items %) item-name)
-                  (filter #(and (not (:closed %)) (:items %)) item-set)))))
+                  (filter visible-items item-set)))))
 
 (defn remove-from
   "Try to -recursively- remove the item from the given set. It takes a full
@@ -93,3 +99,12 @@
                            (assoc item :items (replace-from inner old-item new-item))
                            item))
               item-set))))
+
+(defn all-item-names
+  [item-set]
+  (if (nil? item-set)
+    []
+    (let [this-names (flatten (map :names item-set))
+          inner-names (flatten (map #(all-item-names (filter visible-items %))
+                                    item-set))]
+      (concat this-names inner-names))))

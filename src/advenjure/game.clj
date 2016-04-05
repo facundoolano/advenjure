@@ -30,7 +30,7 @@
   ([game-state finished? initial-msg]
    (utils/say initial-msg)
    (loop [state (utils/change-rooms game-state (:current-room game-state))]
-     (let [input (get-input)
+     (let [input (get-input state verb-map)
            new-state (process-input state input)]
        (if-not (finished? new-state)
          (recur new-state))))
