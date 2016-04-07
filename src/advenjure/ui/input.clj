@@ -31,7 +31,7 @@
     (ArgumentCompleter. (concat (map mapper tokens) [(NullCompleter.)]))))
 
 (defn update-completer
-  [verbs items]
+  [verbs items]""
   (let [current (first (.getCompleters console))
         items (StringsCompleter. items)
         dirs (StringsCompleter. (keys direction-mappings))
@@ -45,6 +45,14 @@
                       (Character/isWhitespace %))]
     (clojure.string/trim (apply str (filter is-alpha verb)))))
 
+
+(defn prompt [gs]
+  (let [room (:name (current-room gs))
+        moves (:moves gs)
+        points (:points gs)
+        p (str "\n@" room " [" moves ":" points "] > ")]
+    (.readLine console p)))
+
 (defn get-input
   ([game-state verb-map]
    (let [verbs (keys verb-map)
@@ -52,7 +60,5 @@
          all-items (into (:inventory game-state) (:items room))
          item-names (all-item-names all-items)]
      (update-completer verbs item-names)
-     (.readLine console ">")))
-  ([]
-   (.readLine console ">")))
+     (prompt game-state))))
 

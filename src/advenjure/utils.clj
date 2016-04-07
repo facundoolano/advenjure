@@ -1,5 +1,6 @@
 (ns advenjure.utils
-  (:require [advenjure.items :refer :all]
+  (:require [clojure.string :as string]
+            [advenjure.items :refer :all]
             [advenjure.rooms :as rooms]
             [advenjure.ui.output :refer [print-line]]))
 
@@ -43,15 +44,30 @@
         (assoc-in [:room-map room-kw :items]
                   (replace-from (:items room) old-item new-item)))))
 
+(defn string-wrap
+  ([text] (string-wrap text 80))
+  ([text max-size]
+   (loop [[word & others] (string/split text #" ")
+           current ""
+           lines []]
+     (if word
+       (let [new-current (str current " " word)
+             line-size (count (last (string/split new-current #"\n")))]
+         (if (> max-size line-size)
+           (recur others new-current lines)
+           (recur others word (conj lines current))))
+       (string/triml (string/join "\n" (conj lines current)))))))
+
 (defn say
-  ([speech] (print-line (str (clojure.string/capitalize (first speech))
-                             (subs speech 1)))))
+  [speech]
+  (print-line
+    (string-wrap (str (string/capitalize (first speech))
+                      (subs speech 1)))))
 
 (defn change-rooms
   "Change room, say description, set visited."
   [game-state new-room]
   (let [room-spec (get-in game-state [:room-map new-room])]
-    (say (:name room-spec))
     (say (rooms/describe room-spec))
     (-> game-state
         (assoc :current-room new-room)

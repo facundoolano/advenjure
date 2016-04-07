@@ -13,7 +13,9 @@
     :current-room start-room
     :inventory inventory
     :events #{}
-    :executed-dialogs #{}}))
+    :executed-dialogs #{}
+    :points 0
+    :moves 0}))
 
 (defn process-input
   "Take an input comand, find the verb in it and execute its action handler."
@@ -22,7 +24,8 @@
         [verb tokens] (find-verb clean)
         handler (get verb-map verb)]
     (if handler
-      (or (apply handler game-state tokens) game-state)
+      (let [new-state (update-in game-state [:moves] inc)]
+        (or (apply handler new-state tokens) new-state))
       (do (print-line "I don't know how to do that.") game-state))))
 
 (defn run
