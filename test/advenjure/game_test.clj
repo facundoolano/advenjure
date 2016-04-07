@@ -27,7 +27,10 @@
 
 (def game-state {:current-room :bedroom
                  :room-map {:bedroom bedroom, :living living}
-                 :inventory #{magazine}})
+                 :inventory #{magazine}
+                 :moves 0
+                 :points 0})
+
 
 (deftest process-input-test
   (with-redefs [advenjure.ui.output/print-line say-mock]
@@ -44,7 +47,7 @@
                     "There's a sock here."
                     "There's a drawer here. The drawer contains:"
                     "A key"])
-        (is (= new-state game-state))))
+        (is (= new-state (update-in game-state [:moves] inc)))))
 
     (testing "invalid look with parameters"
       (let [new-state (process-input game-state "look something")]
@@ -54,7 +57,7 @@
     (testing "look at item"
       (let [new-state (process-input game-state "look at bed")]
         (is-output "just a bed")
-        (is (= new-state game-state))))
+        (is (= new-state (update-in game-state [:moves] inc)))))
 
     (testing "take item"
       (let [new-state (process-input game-state "take sock")]
