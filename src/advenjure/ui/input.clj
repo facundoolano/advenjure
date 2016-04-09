@@ -1,5 +1,6 @@
 (ns advenjure.ui.input
-  (:require [advenjure.items :refer [all-item-names]]
+  (:require [clojure.string :as string]
+            [advenjure.items :refer [all-item-names]]
             [advenjure.utils :refer [direction-mappings current-room]])
   (:import [jline.console ConsoleReader]
            [jline.console.completer StringsCompleter ArgumentCompleter NullCompleter AggregateCompleter]))
@@ -22,8 +23,8 @@
   "Take a verb regexp and an available items completer, and return an
   ArgumentCompleter that respects the regexp."
   [verb items-completer dirs-completer]
-  (let [verb (clojure.string/replace (subs verb 1) #"\$" "")
-        tokens (clojure.string/split verb #" ")
+  (let [verb (string/replace (subs verb 1) #"\$" "")
+        tokens (string/split verb #" ")
         mapper (fn [token] (cond
                              (#{"(?<item>.*)" "(?<item1>.*)" "(?<item2>.*)"} token) items-completer
                              (= token "(?<dir>.*)") dirs-completer
@@ -39,12 +40,6 @@
         aggregate (AggregateCompleter. arguments)]
     (.removeCompleter console current)
     (.addCompleter console aggregate)))
-
-(defn clean-verb [verb]
-  (let [is-alpha #(or (Character/isLetter %)
-                      (Character/isWhitespace %))]
-    (clojure.string/trim (apply str (filter is-alpha verb)))))
-
 
 (defn prompt [gs]
   (let [room (:name (current-room gs))

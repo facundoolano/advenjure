@@ -40,7 +40,7 @@
      (if (vowel? (first (iname item))) "an " "a ")
      (iname item))))
 
-(defn ntabs [n] (apply str (repeat n "  ")))
+(defn ntabs [n] (string/join (repeat n "  ")))
 
 (defn print-list
   ([items] (print-list items 1))
