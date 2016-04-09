@@ -79,7 +79,7 @@
   [game-state]
   (if (empty? (:inventory game-state))
     (say "I'm not carrying anything.")
-    (say (str "I'm carrying:\n" (print-list (:inventory game-state))))))
+    (say (str "I'm carrying:" (print-list (:inventory game-state))))))
 
 (defn save
   "Save the current game state to a file."

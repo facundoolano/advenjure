@@ -28,7 +28,7 @@
            "this is a kitchen.\nThere's an oven here.")))
   (testing "describe list container contents"
     (is (= (describe full-kitchen)
-           "this is a kitchen.\nThere's an oven here. The oven contains:\n  A turkey"))
+           "this is a kitchen.\nThere's an oven here. The oven contains a turkey"))
 
     (testing "describe override item mention"
       (is (= (describe (assoc kitchen

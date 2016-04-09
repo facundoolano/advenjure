@@ -45,11 +45,12 @@
 (defn print-list
   ([items] (print-list items 1))
   ([items level]
-   (string/join
-     (str "\n" (ntabs level))
-     (for [item items]
-       (str (string/capitalize (print-list-item item))
-            (describe-container item ". " (inc level)))))))
+   (str "\n" (ntabs level)
+     (string/join
+       (str "\n" (ntabs level))
+       (for [item items]
+         (str (string/capitalize (print-list-item item))
+              (describe-container item ". " (inc level))))))))
 
 (defn describe-container
   "Recursively lists the contents of the item. If a prefix is given, it will be
@@ -60,11 +61,16 @@
   ([container prefix] (describe-container container prefix 1))
   ([container prefix level]
    (if-let [items (:items container)]
-     (cond
-       (:closed container) (str prefix "The " (iname container) " is closed.")
-       (empty? items) (str prefix "The " (iname container) " is empty.")
-       :else (str prefix "The " (iname container)
-                  " contains:\n" (ntabs level) (print-list items))))))
+     (let [container-name (str prefix "The " (iname container))]
+       (cond
+         (:closed container) (str container-name " is closed.")
+         (empty? items) (str container-name " is empty.")
+         (= 1 (count items)) (str container-name " contains "
+                                  (print-list-item (first items)))
+         (= 2 (count items)) (str container-name " contains "
+                                  (print-list-item (first items)) " and "
+                                  (print-list-item (second items)))
+         :else (str container-name " contains:" (print-list items)))))))
 
 (defn visible-items
   "Return items inside a container only if not closed."

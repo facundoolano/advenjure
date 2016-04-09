@@ -44,8 +44,7 @@
       (is-output ["short description of bedroom"
                   "There's a bed here."
                   "There's a sock here."
-                  "There's a drawer here. The drawer contains:"
-                  "A key"]))))
+                  "There's a drawer here. The drawer contains a key"]))))
 
 (deftest look-at-verb
   (with-redefs [say say-mock]
@@ -89,14 +88,14 @@
   (with-redefs [say say-mock]
     (testing "look in container lists contents"
       (look-inside game-state "drawer")
-      (is-output ["The drawer contains:" "A key"]))
+      (is-output ["The drawer contains a key"]))
 
     (testing "look in container inside container"
       (let [bottle {:names ["bottle"] :items #{{:names ["amount of water"]}}}
             sack {:names ["sack"] :items #{bottle}}
             new-state (assoc game-state :inventory #{sack})]
         (look-inside new-state "bottle")
-        (is-output ["The bottle contains:" "An amount of water"])))
+        (is-output ["The bottle contains an amount of water"])))
 
     (testing "look inside non-container"
       (look-inside game-state "bed")
@@ -117,8 +116,7 @@
           (is-output ["short description of bedroom"
                       "There's a bed here."
                       "There's a sock here."
-                      "There's a drawer here. The drawer contains:"
-                      "A key"])
+                      "There's a drawer here. The drawer contains a key"])
           (is (= (:current-room newer-state) :bedroom))
           (is (get-in newer-state [:room-map :bedroom :visited])))))
 
@@ -228,8 +226,7 @@
             newer-state (open new-state "bottle")
             new-sack (it/get-from (:inventory newer-state) "sack")
             new-bottle (it/get-from (:items new-sack) "bottle")]
-        (is-output ["The bottle contains:"
-                    "An amount of water"])
+        (is-output ["The bottle contains an amount of water"])
         (is (not (:closed new-bottle)))))))
 
 (deftest close-verb
@@ -357,9 +354,7 @@
             new-state (assoc game-state :inventory #{sack})]
         (inventory new-state)
         (is-output ["I'm carrying:"
-                    "A sack. The sack contains:"
-                    "A bottle. The bottle contains:"
-                    "An amount of water"])))))
+                    "A sack. The sack contains a bottle"])))))
 
 (deftest pre-post-conditions
   (with-redefs [say say-mock
