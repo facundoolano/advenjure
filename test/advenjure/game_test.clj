@@ -33,7 +33,8 @@
 
 
 (deftest process-input-test
-  (with-redefs [advenjure.ui.output/print-line say-mock]
+  (with-redefs [advenjure.ui.output/print-line say-mock
+                advenjure.map/print-map identity]
 
     (testing "unknown command"
       (let [new-state (process-input game-state "dance around")]

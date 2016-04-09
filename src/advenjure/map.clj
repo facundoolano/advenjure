@@ -2,7 +2,7 @@
   (:require [clojure.string :as string]
             [advenjure.utils :refer [current-room directions]]
             [advenjure.ui.output :refer [print-line]]
-            [advenjure.verbs :refer [eval-precondition]]))
+            [advenjure.conditions :refer [eval-precondition]]))
 
 (def full 60)
 (def half (/ full 2))

@@ -65,12 +65,3 @@
   (print-line
     (string-wrap (str (string/capitalize (first speech))
                       (subs speech 1)))))
-
-(defn change-rooms
-  "Change room, say description, set visited."
-  [game-state new-room]
-  (let [room-spec (get-in game-state [:room-map new-room])]
-    (say (rooms/describe room-spec))
-    (-> game-state
-        (assoc :current-room new-room)
-        (assoc-in [:room-map new-room :visited] true))))

@@ -1,29 +1,13 @@
 (ns advenjure.verbs
   (:require [advenjure.utils :refer :all]
+            [advenjure.change-rooms :refer [change-rooms]]
+            [advenjure.conditions :refer :all]
             [advenjure.items :refer [print-list describe-container iname]]
-            [clojure.test :refer [function?]]
             [advenjure.rooms :as rooms]))
 
 ;;;; FUNCTIONS TO BUILD VERB HANDLERS
 ; there's some uglyness here, but it enables simple definitions for the verb handlers
 (defn noop [& args])
-
-(defn eval-precondition
-  "If the condition is a function return it's value, otherwise return unchanged."
-  [condition & args]
-  (let [condition (eval (or (:pre condition) condition))]
-    (if (function? condition)
-      (apply condition args)
-      condition)))
-
-(defn eval-postcondition
-  "If there's a postcondition defined, evaluate it and return new game-state.
-  Otherwise return the game-state unchanged."
-  [condition old-state new-state]
-  (let [condition (eval (:post condition))]
-    (if (function? condition)
-      (or (condition old-state new-state) new-state)
-      new-state)))
 
 (defn make-item-handler
   "Takes the verb name, the kw to look up at the item at the handler function,

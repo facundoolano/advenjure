@@ -1,6 +1,6 @@
 (ns advenjure.game
   (:require [advenjure.rooms :as room]
-            [advenjure.utils :refer [change-rooms]]
+            [advenjure.change-rooms :refer [change-rooms]]
             [advenjure.verb-map :refer [find-verb verb-map]]
             [advenjure.ui.input :refer [get-input]]
             [advenjure.ui.output :refer [print-line init]]))
