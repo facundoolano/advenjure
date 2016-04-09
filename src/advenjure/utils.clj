@@ -18,6 +18,8 @@
                          "west" :west, "w" :west
                          "northwest" :northwest, "nw" :northwest})
 
+(def directions (set (vals direction-mappings)))
+
 (defn find-item
   "Try to find the given item name either in the inventory or the current room."
   [game-state token]
