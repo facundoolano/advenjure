@@ -32,7 +32,7 @@
 
         current-items (set (map iname (:items room))) ;items currently in the room
         custom-items (filter #(current-items (first %)) (:item-descriptions room)) ;items in the room with custom description
-        custom-descr (string/join " " (vals custom-items)) ; string of custom descriptions
+        custom-descr (string/join " " (remove string/blank? (vals custom-items))) ; string of custom descriptions (skip if blank)
         custom-prefix (if (not-empty custom-descr) " ") ; put a space between room and custom descriptions if any
         remain-items (filter #(nil? (get (:item-descriptions room) (iname %))) (:items room)) ; get room items with no custom description
         item-descr (reduce #(str %1 "\nThere's " (print-list-item %2) " here."
