@@ -8,6 +8,8 @@
   "Save the speech lines to output, separated by '\n'"
   ([speech] (reset! output (clojure.string/join "\n" [@output speech])) nil))
 
+(def clean-str (comp clojure.string/capitalize clojure.string/trim))
+
 (defn is-output
   "Compare the last n output lines with the given."
   ([expected]
@@ -16,8 +18,8 @@
                   (seq expected))
          lines (count as-seq)
          results (take-last lines (clojure.string/split-lines @output))]
-     (is (= (map clojure.string/capitalize as-seq) ;just ignore case man
-            (map clojure.string/capitalize results))))))
+     (is (= (map clean-str as-seq) ;just ignore case man
+            (map clean-str results))))))
 
 (use-fixtures :each (fn [f]
                       (reset! output nil)

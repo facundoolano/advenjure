@@ -22,6 +22,8 @@
                                         ("ME" "Any cash I can use?")
                                         ("WALLET" "Sorry."))))
 
+(def bottle (item/make "bottle" "nothing special about it" :items #{(item/make "amount of water")}))
+
 (def bedroom (-> (room/make "Bedroom"
                             "A smelling bedroom. There was an unmade bed near the corner and a door to the north."
                             :initial-description "I woke up in a smelling little bedroom, without windows. By the bed I was laying in was a small table and to the north a glass door.")
@@ -29,7 +31,9 @@
                  (room/add-item (item/make ["bed"] "It was the bed I slept in.") "") ; empty means skip it while describing, already contained in room description
                  (room/add-item (item/make ["glass door" "door"]) "")
                  (room/add-item (item/make ["small table" "table"] "A small bed table."
-                                           :items #{wallet (item/make ["reading lamp" "lamp"])}))))
+                                           :items #{wallet bottle (item/make ["reading lamp" "lamp"])}))))
+
+
 
 (def door (item/make ["door" "wooden door"] "Just a wooden door." :locked true))
 

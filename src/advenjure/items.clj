@@ -19,14 +19,14 @@
 
 (defn make
   ([names description & {:as extras}]
-   (map->Item (merge {:names names :description description}
-                     (open-defaults extras)
-                     (unlock-defaults extras)
-                     (talk-defaults extras)
-                     extras)))
-  ([names]
    (let [names (if (string? names) [names] names)]
-     (make names "There's nothing special about it."))))
+     (map->Item (merge {:names names :description description}
+                       (open-defaults extras)
+                       (unlock-defaults extras)
+                       (talk-defaults extras)
+                       extras))))
+  ([names]
+   (make names "There's nothing special about it.")))
 
 (defn iname
   "Get the first name of the item."
@@ -40,25 +40,31 @@
      (if (vowel? (first (iname item))) "an " "a ")
      (iname item))))
 
-(defn print-list [items]
-  (string/join "\n"
-               (for [item items]
-                 (str (string/capitalize (print-list-item item))
-                      (describe-container item ". ")))))
+(defn ntabs [n] (apply str (repeat n "  ")))
+
+(defn print-list
+  ([items] (print-list items 1))
+  ([items level]
+   (string/join
+     (str "\n" (ntabs level))
+     (for [item items]
+       (str (string/capitalize (print-list-item item))
+            (describe-container item ". " (inc level)))))))
 
 (defn describe-container
   "Recursively lists the contents of the item. If a prefix is given, it will be
   appended to the resulting string.
   If the item is empty or closed, the message will say so.
   If the item is not a container, returns nil."
-  ([container] (describe-container container ""))
-  ([container prefix]
+  ([container] (describe-container container "" 1))
+  ([container prefix] (describe-container container prefix 1))
+  ([container prefix level]
    (if-let [items (:items container)]
      (cond
        (:closed container) (str prefix "The " (iname container) " is closed.")
        (empty? items) (str prefix "The " (iname container) " is empty.")
        :else (str prefix "The " (iname container)
-                  " contains:\n" (print-list items))))))
+                  " contains:\n" (ntabs level) (print-list items))))))
 
 (defn visible-items
   "Return items inside a container only if not closed."

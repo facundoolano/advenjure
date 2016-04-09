@@ -13,7 +13,7 @@
 (deftest describe-container-test
   (testing "describe lists items"
     (is (= (describe-container sack)
-           "The sack contains:\nA bottle. The bottle contains:\nAn amount of water")))
+           "The sack contains:\n  A bottle. The bottle contains:\n    An amount of water")))
 
   (testing "describe empty container"
     (is (= (describe-container empty-sack)
