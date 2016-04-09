@@ -154,7 +154,9 @@
        (not (:closed item)) (say "It's already open.")
        (:locked item) (say "It's locked.")
        :else (let [open-item (assoc item :closed false)]
-               (say "Opened.")
+               (if (:items open-item)
+                (say (describe-container open-item))
+                (say "Opened."))
                (replace-item game-state item open-item))))))
 
 (def close

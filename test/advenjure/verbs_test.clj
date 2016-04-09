@@ -197,7 +197,7 @@
             new-state (assoc game-state :inventory #{sack})
             newer-state (open new-state "sack")
             new-sack (it/get-from (:inventory newer-state) "sack")]
-        (is-output "Opened.")
+        (is-output "The sack is empty.")
         (is (not (:closed new-sack)))))
 
     (testing "open an already open item"
@@ -227,7 +227,8 @@
             newer-state (open new-state "bottle")
             new-sack (it/get-from (:inventory newer-state) "sack")
             new-bottle (it/get-from (:items new-sack) "bottle")]
-        (is-output "Opened.")
+        (is-output ["The bottle contains:"
+                    "An amount of water"])
         (is (not (:closed new-bottle)))))))
 
 (deftest close-verb
