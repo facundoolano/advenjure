@@ -11,27 +11,44 @@ A text adventure engine I wrote to learn Clojure (and because it's fun!).
 ```
 Welcome to the example game! type 'help' if you don't know what to do.
 
-Bedroom
-I woke up in a smelling little bedroom, without windows. 
-By the bed I was laying in was a small table and to the north a glass door. 
-On the floor was a sports magazine.  
+I woke up in a smelling little bedroom, without windows. By the bed I was
+laying in was a small table and to the north a glass door. On the floor was a
+sports magazine.
 There's a small table here. The small table contains:
-A reading lamp
-A wallet
+  A wallet
+  A reading lamp
+  A bottle. The bottle contains:
+    An amount of water
 
->look at lamp
-There's nothing special about it.
+                              ?
 
->look at wallet
+                         +--- N ---+
+                         |         |
+                         W         E
+                         |         |
+                         +--- S ---+
+
+
+
+@Bedroom [0:0] > look at wallet
 It's made of cheap imitation leather.
 
->take wallet
+@Bedroom [1:0] > take wallet
 Taken.
 
->inventory
-I'm carrying:
-A wallet
+@Bedroom [2:0] > look in
+in        inside
 
->look inside wallet
+@Bedroom [2:0] > look in wallet
 I don't have a dime.
+
+@Bedroom [3:0] > talk to
+amount of water   bed               bottle            door              glass door        lamp              magazine          reading lamp      small table       sports magazine   table
+wallet
+
+@Bedroom [3:0] > talk to wallet
+ME —Hi, wallet.
+WALLET —Tsup?
+ME —Any cash I can use?
+WALLET —Sorry.
 ```
