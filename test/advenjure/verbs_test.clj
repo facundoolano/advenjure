@@ -135,7 +135,7 @@
     (testing "take an item from the room"
       (let [new-state (take_ game-state "sock")]
         (is (it/get-from (:inventory new-state) "sock"))
-        (is (not (it/get-from (:items (current-room new-state)) "sock")))
+        (is (empty? (it/get-from (:items (current-room new-state)) "sock")))
         (is-output "Taken.")))
 
     (testing "take an item that's not takable"
@@ -167,7 +167,7 @@
     (testing "take item in room container"
       (let [new-state (take_ game-state "key")]
         (is (it/get-from (:inventory new-state) "key"))
-        (is (not (it/get-from (:items (current-room new-state)) "key")))
+        (is (empty? (it/get-from (:items (current-room new-state)) "key")))
         (is-output "Taken.")))
 
     (testing "take item in inv container"
@@ -235,7 +235,7 @@
       (let [sack (it/make ["sack"] "a sack" :items #{} :closed false)
             new-state (assoc game-state :inventory #{sack})
             newer-state (close new-state "sack")
-            new-sack (it/get-from (:inventory newer-state) "sack")]
+            new-sack (first (it/get-from (:inventory newer-state) "sack"))]
         (is-output "Closed.")
         (is (:closed new-sack))))
 
@@ -264,8 +264,8 @@
             sack (it/make ["sack"] "a sack" :items #{bottle})
             new-state (assoc game-state :inventory #{sack})
             newer-state (close new-state "bottle")
-            new-sack (it/get-from (:inventory newer-state) "sack")
-            new-bottle (it/get-from (:items new-sack) "bottle")]
+            new-sack (first (it/get-from (:inventory newer-state) "sack"))
+            new-bottle (first (it/get-from (:items new-sack) "bottle"))]
         (is-output "Closed.")
         (is (:closed new-bottle))))))
 
@@ -287,7 +287,7 @@
               new-chest (it/get-from (:inventory newer-state) "chest")]
           (is-output "Unlocked.")
           (is (not (:locked new-chest)))
-          (is (nil? (it/get-from (:inventory newer-state) "key"))) ; ASSUMING THE KEY IS DESTROYED AFTER USING
+          (is (empty? (it/get-from (:inventory newer-state) "key"))) ; ASSUMING THE KEY IS DESTROYED AFTER USING
           (open newer-state "chest")
           (is-output "Opened.")))
 
@@ -451,7 +451,7 @@
       (let [broken-bottle (it/make "broken bottle")]
         (defn break-bottle [oldgs newgs]
           (let [inventory (:inventory newgs)
-                bottle (it/get-from inventory "bottle")
+                bottle (first (it/get-from inventory "bottle"))
                 new-inv (it/replace-from inventory bottle broken-bottle)]
             (say "I think I broke it.")
             (assoc newgs :inventory new-inv)))

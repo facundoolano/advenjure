@@ -7,7 +7,8 @@
 (def sack (make ["sack" "brown sack"] "a sack" :items #{bottle}))
 (def empty-sack (assoc sack :items #{}))
 (def closed-sack (assoc sack :closed true))
-(def sword (make "sword"))
+(def sword (make ["sword" "silver sword"]))
+(def wsword (make ["sword" "wooden sword"]))
 
 (deftest describe-container-test
   (testing "describe lists items"
@@ -25,18 +26,23 @@
 (deftest get-from-test
   (testing "get top level item"
     (let [item-set #{sack sword}]
-      (is (= (get-from item-set "sack") sack))
-      (is (= (get-from item-set "brown sack") sack))
-      (is (= (get-from item-set "sword") sword))))
+      (is (= (get-from item-set "sack") [sack]))
+      (is (= (get-from item-set "brown sack") [sack]))
+      (is (= (get-from item-set "silver sword") [sword]))))
 
   (testing "get inner items"
     (let [item-set #{sack sword}]
-      (is (= (get-from item-set "bottle") bottle))
-      (is (= (get-from item-set "water") water))))
+      (is (= (get-from item-set "bottle") [bottle]))
+      (is (= (get-from item-set "water") [water]))))
 
   (testing "don't get from closed container"
     (let [item-set #{closed-sack sword}]
-      (is (nil? (get-from item-set "bottle")))
-      (is (nil? (get-from item-set "water")))))
+      (is (empty? (get-from item-set "bottle")))
+      (is (empty? (get-from item-set "water")))))
 
-  (testing "get multiple items"))
+  (testing "get multiple items"
+    (let [item-set #{wsword sword}]
+      (is (= (get-from item-set "silver sword") [sword]))
+      (is (= (get-from item-set "wooden sword") [wsword]))
+      (is (= (get-from item-set "sword") [sword wsword])))))
+

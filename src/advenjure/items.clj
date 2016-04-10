@@ -83,11 +83,10 @@
 (defn get-from
   "Get the spec for the item with the given name, if it's in the given set,
   or is contained by one of its items."
-  ; TODO allow multiple results --i.e. door --> "glass door" "wooden door"
   [item-set item-name]
-  (or (first (filter #(some #{item-name} (:names %)) item-set))
-      (first (map #(get-from (:items %) item-name)
-                  (filter #(not-empty (visible-items %)) item-set)))))
+  (concat (filter #(some #{item-name} (:names %)) item-set)
+          (flatten (map #(get-from (:items %) item-name)
+                        (filter #(not-empty (visible-items %)) item-set)))))
 
 (defn remove-from
   "Try to -recursively- remove the item from the given set. It takes a full

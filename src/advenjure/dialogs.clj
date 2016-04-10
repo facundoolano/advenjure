@@ -42,7 +42,7 @@
 (defn item?
   [item-name]
   (fn [game-state]
-    (items/get-from (:inventory game-state) item-name)))
+    (first (items/get-from (:inventory game-state) item-name))))
 
 (defn not-item? [item-name]
   (comp not (item? item-name)))
