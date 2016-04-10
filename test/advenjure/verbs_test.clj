@@ -8,7 +8,7 @@
 
 ;;;;;; some test data
 (def drawer (it/make ["drawer"] "it's an open drawer." :closed false
-                     :items #{(it/make ["key"] "it's a key" :take true)}))
+                     :items #{(it/make "pencil" "it's a pencil" :take true)}))
 (def sock (it/make ["sock"] "a sock" :take true))
 (def magazine (it/make ["magazine" "sports magazine"]
                        "The cover reads 'Sports Almanac 1950-2000'"
@@ -44,7 +44,7 @@
       (is-output ["short description of bedroom"
                   "There's a bed here."
                   "There's a sock here."
-                  "There's a drawer here. The drawer contains a key"]))))
+                  "There's a drawer here. The drawer contains a pencil"]))))
 
 (deftest look-at-verb
   (with-redefs [say say-mock]
@@ -66,8 +66,8 @@
         (is-output "a nickle")))
 
     (testing "look at room container item"
-      (look-at game-state "key")
-      (is-output "it's a key"))
+      (look-at game-state "pencil")
+      (is-output "it's a pencil"))
 
     (testing "look at closed container item"
       (let [coin {:names ["coin"] :description "a nickle"}
@@ -88,7 +88,7 @@
   (with-redefs [say say-mock]
     (testing "look in container lists contents"
       (look-inside game-state "drawer")
-      (is-output ["The drawer contains a key"]))
+      (is-output ["The drawer contains a pencil"]))
 
     (testing "look in container inside container"
       (let [bottle {:names ["bottle"] :items #{{:names ["amount of water"]}}}
@@ -116,7 +116,7 @@
           (is-output ["short description of bedroom"
                       "There's a bed here."
                       "There's a sock here."
-                      "There's a drawer here. The drawer contains a key"])
+                      "There's a drawer here. The drawer contains a pencil"])
           (is (= (:current-room newer-state) :bedroom))
           (is (get-in newer-state [:room-map :bedroom :visited])))))
 
@@ -165,9 +165,9 @@
         (is-output "I don't see that.")))
 
     (testing "take item in room container"
-      (let [new-state (take_ game-state "key")]
-        (is (it/get-from (:inventory new-state) "key"))
-        (is (empty? (it/get-from (:items (current-room new-state)) "key")))
+      (let [new-state (take_ game-state "pencil")]
+        (is (it/get-from (:inventory new-state) "pencil"))
+        (is (empty? (it/get-from (:items (current-room new-state)) "pencil")))
         (is-output "Taken.")))
 
     (testing "take item in inv container"

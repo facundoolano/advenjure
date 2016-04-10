@@ -20,11 +20,13 @@
    (fn
      ([game-state] (say (str verb-name " what?")))
      ([game-state item-name]
-      (let [item (find-item game-state item-name)
+      (let [items (find-item game-state item-name)
+            item (first items)
             conditions (verb-kw item)
             value (eval-precondition conditions game-state)]
         (cond
-          (nil? item) (say "I don't see that.")
+          (empty? items) (say "I don't see that.")
+          (> (count items) 1) (say (str "Which " item-name "?"))
           (string? value) (say value)
           (false? value) (say (str "I can't " verb-name " that."))
           (and kw-required (nil? value)) (say (str "I can't " verb-name " that."))
@@ -41,12 +43,16 @@
      ([game-state] (say (str verb-name " what?")))
      ([game-state item1] (say (str verb-name " " item1 " with what?")))
      ([game-state item1-name item2-name]
-      (let [item1 (find-item game-state item1-name)
-            item2 (find-item game-state item2-name)
+      (let [items1 (find-item game-state item1-name)
+            item1 (first items1)
+            items2 (find-item game-state item2-name)
+            item2 (first items2)
             conditions (verb-kw item1)
             value (eval-precondition conditions game-state item2)]
         (cond
-          (or (nil? item1) (nil? item2)) (say "I don't see that.")
+          (or (empty? items1) (empty? items2)) (say "I don't see that.")
+          (> (count items1) 1) (say (str "Which " item1-name "?"))
+          (> (count items2) 1) (say (str "Which " item2-name "?"))
           (string? value) (say value)
           (false? value) (say (str "I can't " verb-name " that."))
           (and kw-required (nil? value)) (say (str "I can't " verb-name " that."))

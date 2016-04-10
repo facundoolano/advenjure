@@ -8,7 +8,7 @@
 
 ;;;;;; some test data
 (def drawer (it/make ["drawer"] "it's an open drawer." :closed false
-                     :items #{(it/make ["key"] "it's a key" :take true)}))
+                     :items #{(it/make "pencil" "it's a pencil" :take true)}))
 (def sock (it/make ["sock"] "a sock" :take true))
 (def magazine (it/make ["magazine" "sports magazine"]
                        "The cover reads 'Sports Almanac 1950-2000'"
@@ -46,7 +46,7 @@
         (is-output ["short description of bedroom"
                     "There's a bed here."
                     "There's a sock here."
-                    "There's a drawer here. The drawer contains a key"])
+                    "There's a drawer here. The drawer contains a pencil"])
         (is (= new-state (update-in game-state [:moves] inc)))))
 
     (testing "invalid look with parameters"

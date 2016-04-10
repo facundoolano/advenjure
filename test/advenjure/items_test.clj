@@ -40,6 +40,10 @@
       (is (empty? (get-from item-set "bottle")))
       (is (empty? (get-from item-set "water")))))
 
+  (testing "don't get from partial match"
+    (let [item-set #{closed-sack sword}]
+      (is (empty? (get-from item-set "silver")))))
+
   (testing "get multiple items"
     (let [item-set #{wsword sword}]
       (is (= (get-from item-set "silver sword") [sword]))
