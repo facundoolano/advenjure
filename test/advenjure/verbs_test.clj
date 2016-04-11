@@ -76,6 +76,15 @@
         (look-at new-state "coin")
         (is-output "I don't see that.")))
 
+    (testing "look at ambiguous item name"
+      (let [red-shoe (it/make ["shoe" "red shoe"] "it's red")
+            brown-shoe (it/make ["shoe" "brown shoe"] "an old brown shoe")
+            new-state (assoc game-state :inventory #{red-shoe brown-shoe})]
+        (look-at new-state "shoe")
+        (is-output "Which shoe?")
+        (look-at new-state "brown shoe")
+        (is-output "an old brown shoe")))
+
     (testing "look at missing item"
       (look-at game-state "sofa")
       (is-output "I don't see that."))

@@ -45,7 +45,7 @@
   (let [room (:name (current-room gs))
         moves (:moves gs)
         points (:points gs)
-        p (str "\n@" room " [" moves ":" points "] > ")]
+        p (str "\n@" room " [" moves "] > ")]
     (.readLine console p)))
 
 (defn get-input

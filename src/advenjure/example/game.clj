@@ -24,18 +24,20 @@
 
 (def bottle (item/make "bottle" "nothing special about it" :items #{(item/make "amount of water")}))
 
+(def glass-door (item/make ["glass door" "door"] "needs some cleaning."))
+
 (def bedroom (-> (room/make "Bedroom"
                             "A smelling bedroom. There was an unmade bed near the corner and a door to the north."
                             :initial-description "I woke up in a smelling little bedroom, without windows. By the bed I was laying in was a small table and to the north a glass door.")
                  (room/add-item magazine "On the floor was a sports magazine.") ; use this when describing the room instead of "there's a magazine here"
                  (room/add-item (item/make ["bed"] "It was the bed I slept in.") "") ; empty means skip it while describing, already contained in room description
-                 (room/add-item (item/make ["glass door" "door"]) "")
+                 (room/add-item glass-door "")
                  (room/add-item (item/make ["small table" "table"] "A small bed table."
                                            :items #{wallet bottle (item/make ["reading lamp" "lamp"])}))))
 
 
 
-(def door (item/make ["door" "wooden door"] "Just a wooden door." :locked true))
+(def door (item/make ["door" "wooden door"] "Looks like oak to me." :locked true))
 
 (def drawer (item/make ["chest drawer" "chest" "drawer"]
                        "It has one drawer."
@@ -43,10 +45,11 @@
                        :items #{(item/make ["bronze key" "key"] "A bronze key." :unlocks door :take true)}))
 
 (def living (-> (room/make "Living Room"
-                           "A living room with a nailed shut window. A wooden door leaded east and a hallway south."
-                           :initial-description "The living room was as smelly as the bedroom, and although there was a window, it appeared to be nailed shut. There was a pretty good chance I'd choke to death if I didn't leave the place soon.\nA wooden door leaded east and a hallway south.")
+                           "A living room with a nailed shut window. A wooden door leaded east and a glass door  back to the bedroom."
+                           :initial-description "The living room was as smelly as the bedroom, and although there was a window, it appeared to be nailed shut. There was a pretty good chance I'd choke to death if I didn't leave the place soon.\nA wooden door leaded east and a glass door back to the bedroom.")
                 (room/add-item drawer "There was a chest drawer by the door.")
                 (room/add-item door "")
+                (room/add-item glass-door "")
                 (room/add-item (item/make ["window"] "It's nailed shut." :closed true :open "It's nailed shut.") "")))
 
 (def npc (item/make ["character" "suspicious looking character" "npc"]
