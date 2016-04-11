@@ -38,20 +38,20 @@
 
     (testing "unknown command"
       (let [new-state (process-input game-state "dance around")]
-        (is-output "I don't know how to do that.")
+        (is-output "I didn't know how to do that.")
         (is (= new-state game-state))))
 
     (testing "look verb"
       (let [new-state (process-input game-state "look ")]
         (is-output ["short description of bedroom"
-                    "There's a bed here."
-                    "There's a sock here."
-                    "There's a drawer here. The drawer contains a pencil"])
+                    "There was a bed there."
+                    "There was a sock there."
+                    "There was a drawer there. The drawer contained a pencil"])
         (is (= new-state (update-in game-state [:moves] inc)))))
 
     (testing "invalid look with parameters"
       (let [new-state (process-input game-state "look something")]
-        (is-output "I don't know how to do that.")
+        (is-output "I didn't know how to do that.")
         (is (= new-state game-state))))
 
     (testing "look at item"
@@ -68,10 +68,10 @@
     (testing "go shortcuts"
       (process-input game-state "north")
       (is-output ["long description of living room"
-                  "There's a sofa here."])
+                  "There was a sofa there."])
       (process-input game-state "n")
       (is-output ["long description of living room"
-                  "There's a sofa here."]))
+                  "There was a sofa there."]))
 
     (let [chest (it/make ["chest"] "a treasure chest" :closed true :locked true)
           ckey (it/make ["key"] "the chest key" :unlocks chest)

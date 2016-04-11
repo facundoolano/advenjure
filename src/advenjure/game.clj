@@ -26,7 +26,7 @@
     (if handler
       (let [new-state (update-in game-state [:moves] inc)]
         (or (apply handler new-state tokens) new-state))
-      (do (print-line "I don't know how to do that.") game-state))))
+      (do (print-line "I didn't know how to do that.") game-state))))
 
 (defn run
   "Run the game loop. Requires a finished? function to decide when to terminate the loop."

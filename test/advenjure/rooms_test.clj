@@ -25,10 +25,10 @@
 
   (testing "describe list items"
     (is (= (describe kitchen)
-           "this is a kitchen.\nThere's an oven here.")))
+           "this is a kitchen.\nThere was an oven there.")))
   (testing "describe list container contents"
     (is (= (describe full-kitchen)
-           "this is a kitchen.\nThere's an oven here. The oven contains a turkey"))
+           "this is a kitchen.\nThere was an oven there. The oven contained a turkey"))
 
     (testing "describe override item mention"
       (is (= (describe (assoc kitchen
@@ -44,4 +44,4 @@
       (is (= (describe (assoc kitchen
                               :description "This is a kitchen."
                               :item-descriptions {"microwave" "In the corner is a microwave"}))
-             "This is a kitchen.\nThere's an oven here.")))))
+             "This is a kitchen.\nThere was an oven there.")))))

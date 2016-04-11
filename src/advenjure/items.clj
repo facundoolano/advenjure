@@ -63,14 +63,14 @@
    (if-let [items (:items container)]
      (let [container-name (str prefix "The " (iname container))]
        (cond
-         (:closed container) (str container-name " is closed.")
-         (empty? items) (str container-name " is empty.")
-         (= 1 (count items)) (str container-name " contains "
+         (:closed container) (str container-name " was closed.")
+         (empty? items) (str container-name " was empty.")
+         (= 1 (count items)) (str container-name " contained "
                                   (print-list-item (first items)))
-         (= 2 (count items)) (str container-name " contains "
+         (= 2 (count items)) (str container-name " contained "
                                   (print-list-item (first items)) " and "
                                   (print-list-item (second items)))
-         :else (str container-name " contains:" (print-list items)))))))
+         :else (str container-name " contained:" (print-list items)))))))
 
 (defn visible-items
   "Return items inside a container only if not closed."

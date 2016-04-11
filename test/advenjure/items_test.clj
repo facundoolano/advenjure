@@ -13,15 +13,15 @@
 (deftest describe-container-test
   (testing "describe lists items"
     (is (= (describe-container sack)
-           "The sack contains a bottle")))
+           "The sack contained a bottle")))
 
   (testing "describe empty container"
     (is (= (describe-container empty-sack)
-           "The sack is empty.")))
+           "The sack was empty.")))
 
   (testing "describe closed container"
     (is (= (describe-container closed-sack)
-           "The sack is closed."))))
+           "The sack was closed."))))
 
 (deftest get-from-test
   (testing "get top level item"

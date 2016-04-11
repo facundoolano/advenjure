@@ -9,14 +9,14 @@
 
 ;;; DEFINE ROOMS AND ITEMS
 (def magazine (item/make ["sports magazine" "magazine"]
-                         "The cover reads 'Sports Almanac 1950-2000'"
+                         "The cover read 'Sports Almanac 1950-2000'"
                          :read "Oh là là? Oh là là!?"
                          :take true))
 
-(def wallet (item/make ["wallet"] "It's made of cheap imitation leather."
+(def wallet (item/make ["wallet"] "It was made of cheap imitation leather."
                        :take true
-                       :open "I don't have a dime."
-                       :look-in "I don't have a dime."
+                       :open "I didn't have a dime."
+                       :look-in "I didn't have a dime."
                        :dialog `(dialog ("ME" "Hi, wallet.")
                                         ("WALLET" "Tsup?")
                                         ("ME" "Any cash I can use?")
@@ -24,7 +24,7 @@
 
 (def bottle (item/make "bottle" "nothing special about it" :items #{(item/make "amount of water")}))
 
-(def glass-door (item/make ["glass door" "door"] "needs some cleaning."))
+(def glass-door (item/make ["glass door" "door"] "needed some cleaning."))
 
 (def bedroom (-> (room/make "Bedroom"
                             "A smelling bedroom. There was an unmade bed near the corner and a door to the north."
@@ -37,10 +37,10 @@
 
 
 
-(def door (item/make ["door" "wooden door"] "Looks like oak to me." :locked true))
+(def door (item/make ["door" "wooden door"] "Looked like oak to me." :locked true))
 
 (def drawer (item/make ["chest drawer" "chest" "drawer"]
-                       "It has one drawer."
+                       "It had one drawer."
                        :closed true
                        :items #{(item/make ["bronze key" "key"] "A bronze key." :unlocks door :take true)}))
 
@@ -50,7 +50,7 @@
                 (room/add-item drawer "There was a chest drawer by the door.")
                 (room/add-item door "")
                 (room/add-item glass-door "")
-                (room/add-item (item/make ["window"] "It's nailed shut." :closed true :open "It's nailed shut.") "")))
+                (room/add-item (item/make ["window"] "It was nailed shut." :closed true :open "It was nailed shut.") "")))
 
 (def npc (item/make ["character" "suspicious looking character" "npc"]
                     "The guy was fat and hairy and was giving me a crooked look." :dialog `npc-dialog))
@@ -66,13 +66,13 @@
 
 (defn can-leave? [gs]
   (let [door (utils/find-item gs "wooden door")]
-    (cond (:locked door) "The door is locked."
-          (not (contains? (:inventory gs) wallet)) "I can't leave without my wallet."
+    (cond (:locked door) "The door was locked."
+          (not (contains? (:inventory gs) wallet)) "I couldn't leave without my wallet."
           :else :hallway)))
 
 (defn npc-gone? [gs]
   (if (utils/find-item gs "character")
-    "I can't, that guy is blocking the portal."
+    "I couldn't, that guy was blocking the portal."
     :outside))
 
 ;;; BUILD THE ROOM MAP
