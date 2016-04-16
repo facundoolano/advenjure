@@ -27,7 +27,7 @@
                        (talk-defaults extras)
                        extras))))
   ([names]
-   (make names (_ "There's nothing special about it."))))
+   (make names (_ "There was nothing special about it."))))
 
 (defn iname
   "Get the first name of the item."

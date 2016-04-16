@@ -4,7 +4,9 @@
             [advenjure.utils :as utils]
             [advenjure.game :as game]
             [advenjure.dialogs :refer [dialog]]
-            [advenjure.example.dialogs :refer [npc-dialog]])
+            [advenjure.example.dialogs :refer [npc-dialog]]
+            [advenjure.text.gettext :refer [settext]]
+            [advenjure.text.en-present])
   (:gen-class))
 
 ;;; DEFINE ROOMS AND ITEMS
@@ -84,6 +86,9 @@
                   (room/one-way-connect :living :east `can-leave?)
                   (room/one-way-connect :hallway :west :living)
                   (room/one-way-connect :hallway :east `npc-gone?)))
+
+; set text config
+; (settext advenjure.text.en-present/dictionary)
 
 ; RUN THE GAME
 (defn -main

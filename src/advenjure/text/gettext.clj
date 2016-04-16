@@ -15,7 +15,7 @@
   "Look up the given key in the current text source dictionary.
   If not found return the key itself."
   [text-key & replacements]
-  (let [text-value (get text-source text-key text-key)]
+  (let [text-value (get @text-source text-key text-key)]
     (apply format text-value replacements)))
 
 
