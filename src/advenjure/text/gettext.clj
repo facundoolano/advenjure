@@ -1,6 +1,6 @@
 (ns advenjure.text.gettext
   (:require [advenjure.text.en-past]
-            [clojure.tools.reader :as r]))
+            [clojure.test :refer [function?]]))
 
 ; Ok, not immutable, but I can't pass it around as an argument everywhere.
 ; maybe some config propertie, but don't want to tie it to lein
@@ -15,13 +15,19 @@
   "Look up the given key in the current text source dictionary.
   If not found return the key itself."
   [text-key & replacements]
-  (let [text-value (get @text-source text-key text-key)]
+  (let [text-value (get @text-source text-key text-key)
+        text-value (if (function? text-value) (text-value nil) text-value)]
     (apply format text-value replacements)))
 
+(defn pgettext
+  [ctx text-key & replacements]
+  (let [text-value (get @text-source text-key text-key)
+        text-value (if (function? text-value) (text-value ctx) text-value)]
+    (apply format text-value replacements)))
 
 ; handy alias
 (def _ gettext)
-
+(def p_ pgettext)
 
 (defn- get-files
   [dir]
@@ -30,7 +36,7 @@
 (defn- extract-text
   [expressions]
   (let [extract (fn [expr]
-                  (if (and (seq? expr) (#{'_ 'gettext} (first expr)))
+                  (if (and (seq? expr) (#{'_ 'gettext 'p_ 'pgettext} (first expr)))
                     (second expr)))]
     (filter not-empty (map extract (tree-seq coll? rest expressions)))))
 
@@ -42,7 +48,7 @@
   [dir]
   (->>
     (get-files dir)
-    (mapcat (comp extract-text r/read-string #(str "(" % ")") slurp))
+    (mapcat (comp extract-text read-string #(str "(" % ")") slurp))
     zipzip))
 
 

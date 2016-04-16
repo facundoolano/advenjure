@@ -1,6 +1,6 @@
 (ns advenjure.items
   (:require [clojure.string :as string]
-            [advenjure.text.gettext :refer [_]]))
+            [advenjure.text.gettext :refer [_ p_]]))
 
 (defrecord Item [names description])
 
@@ -36,10 +36,7 @@
 (declare describe-container)
 
 (defn print-list-item [item]
-  (let [vowel? (set "aeiouAEIOU")]
-    (str
-     (if (vowel? (first (iname item))) (_ "an ") (_ "a "))
-     (iname item))))
+  (p_ item "a %s" (iname item)))
 
 (defn ntabs [n] (string/join (repeat n "  ")))
 

@@ -47,7 +47,7 @@
                        :items #{(item/make ["bronze key" "key"] "A bronze key." :unlocks door :take true)}))
 
 (def living (-> (room/make "Living Room"
-                           "A living room with a nailed shut window. A wooden door leaded east and a glass door  back to the bedroom."
+                           "A living room with a nailed shut window. A wooden door leaded east and a glass door back to the bedroom."
                            :initial-description "The living room was as smelly as the bedroom, and although there was a window, it appeared to be nailed shut. There was a pretty good chance I'd choke to death if I didn't leave the place soon.\nA wooden door leaded east and a glass door back to the bedroom.")
                 (room/add-item drawer "There was a chest drawer by the door.")
                 (room/add-item door "")
