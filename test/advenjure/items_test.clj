@@ -48,5 +48,5 @@
     (let [item-set #{wsword sword}]
       (is (= (get-from item-set "silver sword") [sword]))
       (is (= (get-from item-set "wooden sword") [wsword]))
-      (is (= (get-from item-set "sword") [sword wsword])))))
+      (is (= (into #{} (get-from item-set "sword")) #{wsword sword})))))
 
