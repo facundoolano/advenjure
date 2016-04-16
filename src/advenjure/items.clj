@@ -1,5 +1,6 @@
 (ns advenjure.items
-  (:require [clojure.string :as string]))
+  (:require [clojure.string :as string]
+            [advenjure.text.gettext :refer [_]]))
 
 (defrecord Item [names description])
 
@@ -26,7 +27,7 @@
                        (talk-defaults extras)
                        extras))))
   ([names]
-   (make names "There's nothing special about it.")))
+   (make names (_ "There's nothing special about it."))))
 
 (defn iname
   "Get the first name of the item."
@@ -37,7 +38,7 @@
 (defn print-list-item [item]
   (let [vowel? (set "aeiouAEIOU")]
     (str
-     (if (vowel? (first (iname item))) "an " "a ")
+     (if (vowel? (first (iname item))) (_ "an ") (_ "a "))
      (iname item))))
 
 (defn ntabs [n] (string/join (repeat n "  ")))
@@ -61,16 +62,18 @@
   ([container prefix] (describe-container container prefix 1))
   ([container prefix level]
    (if-let [items (:items container)]
-     (let [container-name (str prefix "The " (iname container))]
+     (let [container-name (str prefix (_ "The %s" (iname container)))]
        (cond
-         (:closed container) (str container-name " was closed.")
-         (empty? items) (str container-name " was empty.")
-         (= 1 (count items)) (str container-name " contained "
-                                  (print-list-item (first items)))
-         (= 2 (count items)) (str container-name " contained "
-                                  (print-list-item (first items)) " and "
-                                  (print-list-item (second items)))
-         :else (str container-name " contained:" (print-list items)))))))
+         (:closed container) (_ "%s was closed." container-name)
+         (empty? items) (_ "%s was empty." container-name)
+         (= 1 (count items)) (_ "%s contained %s"
+                                container-name
+                                (print-list-item (first items)))
+         (= 2 (count items)) (_ "%s contained % and %"
+                                container-name
+                                (print-list-item (first items))
+                                (print-list-item (second items)))
+         :else (_ "%s contained:%s" container-name (print-list items)))))))
 
 (defn visible-items
   "Return items inside a container only if not closed."

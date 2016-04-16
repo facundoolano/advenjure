@@ -3,7 +3,8 @@
             [advenjure.change-rooms :refer [change-rooms]]
             [advenjure.verb-map :refer [find-verb verb-map]]
             [advenjure.ui.input :refer [get-input]]
-            [advenjure.ui.output :refer [print-line init]]))
+            [advenjure.ui.output :refer [print-line init]]
+            [advenjure.text.gettext :refer [_]]))
 
 (defn make
   "Make a new game state based on a room map and an optional initial inventory set."
@@ -26,7 +27,7 @@
     (if handler
       (let [new-state (update-in game-state [:moves] inc)]
         (or (apply handler new-state tokens) new-state))
-      (do (print-line "I didn't know how to do that.") game-state))))
+      (do (print-line (_ "I didn't know how to do that.")) game-state))))
 
 (defn run
   "Run the game loop. Requires a finished? function to decide when to terminate the loop."
@@ -39,4 +40,4 @@
            new-state (process-input state input)]
        (if-not (finished? new-state)
          (recur new-state))))
-   (print-line "\nThe End.")))
+   (print-line (_ "\nThe End."))))

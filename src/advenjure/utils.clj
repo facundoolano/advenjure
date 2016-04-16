@@ -2,21 +2,22 @@
   (:require [clojure.string :as string]
             [advenjure.items :refer :all]
             [advenjure.rooms :as rooms]
-            [advenjure.ui.output :refer [print-line]]))
+            [advenjure.ui.output :refer [print-line]]
+            [advenjure.text.gettext :refer [_]]))
 
 (defn current-room
   "Get the current room spec from game state."
   [game-state]
   (get-in game-state [:room-map (:current-room game-state)]))
 
-(def direction-mappings {"north" :north, "n" :north
-                         "northeast" :northeast, "ne" :northeast
-                         "east" :east, "e" :east
-                         "southeast" :southeast, "se" :southeast
-                         "south" :south, "s" :south
-                         "southwest" :southwest, "sw" :southwest
-                         "west" :west, "w" :west
-                         "northwest" :northwest, "nw" :northwest})
+(def direction-mappings {(_ "north") :north, (_ "n") :north
+                         (_ "northeast") :northeast, (_ "ne") :northeast
+                         (_ "east") :east, (_ "e") :east
+                         (_ "southeast") :southeast, (_ "se") :southeast
+                         (_ "south") :south, (_ "s") :south
+                         (_ "southwest") :southwest, (_ "sw") :southwest
+                         (_ "west") :west, (_ "w") :west
+                         (_ "northwest") :northwest, (_ "nw") :northwest})
 
 (def directions (set (vals direction-mappings)))
 

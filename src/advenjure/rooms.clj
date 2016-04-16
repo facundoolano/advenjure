@@ -1,6 +1,7 @@
 (ns advenjure.rooms
   (:require [advenjure.items :refer [iname describe-container print-list-item]]
-            [clojure.string :as string]))
+            [clojure.string :as string]
+            [advenjure.text.gettext :refer [_]]))
 
 (defrecord Room [name description])
 
@@ -35,7 +36,7 @@
         custom-descr (string/join " " (remove string/blank? (vals custom-items))) ; string of custom descriptions (skip if blank)
         custom-prefix (if (not-empty custom-descr) " ") ; put a space between room and custom descriptions if any
         remain-items (filter #(nil? (get (:item-descriptions room) (iname %))) (:items room)) ; get room items with no custom description
-        item-descr (reduce #(str %1 "\nThere was " (print-list-item %2) " there."
+        item-descr (reduce #(str %1 (_ "\nThere was %s there." (print-list-item %2))
                                  (describe-container %2 " "))
                            ""
                            remain-items)]

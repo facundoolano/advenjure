@@ -3,7 +3,8 @@
             [advenjure.change-rooms :refer [change-rooms]]
             [advenjure.conditions :refer :all]
             [advenjure.items :refer [print-list describe-container iname]]
-            [advenjure.rooms :as rooms]))
+            [advenjure.rooms :as rooms]
+            [advenjure.text.gettext :refer [_]]))
 
 ;;;; FUNCTIONS TO BUILD VERB HANDLERS
 ; there's some uglyness here, but it enables simple definitions for the verb handlers
@@ -18,18 +19,18 @@
   ([verb-name verb-kw handler &
     {:keys [kw-required] :or {kw-required true}}]
    (fn
-     ([game-state] (say (str verb-name " what?")))
+     ([game-state] (say (_ "%s what?" verb-name)))
      ([game-state item-name]
       (let [items (find-item game-state item-name)
             item (first items)
             conditions (verb-kw item)
             value (eval-precondition conditions game-state)]
         (cond
-          (empty? items) (say "I didn't see that.")
-          (> (count items) 1) (say (str "Which " item-name "?"))
+          (empty? items) (say (_ "I didn't see that."))
+          (> (count items) 1) (say (_ "Which %s?" item-name))
           (string? value) (say value)
-          (false? value) (say (str "I couldn't " verb-name " that."))
-          (and kw-required (nil? value)) (say (str "I couldn't " verb-name " that."))
+          (false? value) (say (_ "I couldn't %s that." verb-name))
+          (and kw-required (nil? value)) (say (_ "I couldn't %s that." verb-name))
           :else (let [new-state (handler game-state item)]
                   (eval-postcondition conditions game-state new-state))))))))
 
@@ -40,8 +41,8 @@
   ([verb-name verb-kw handler &
     {:keys [kw-required] :or {kw-required true}}]
    (fn
-     ([game-state] (say (str verb-name " what?")))
-     ([game-state item1] (say (str verb-name " " item1 " with what?")))
+     ([game-state] (say (_ "%s what?" verb-name)))
+     ([game-state item1] (say (_ "%s %s with what?" verb-name item1)))
      ([game-state item1-name item2-name]
       (let [items1 (find-item game-state item1-name)
             item1 (first items1)
@@ -50,12 +51,12 @@
             conditions (verb-kw item1)
             value (eval-precondition conditions game-state item2)]
         (cond
-          (or (empty? items1) (empty? items2)) (say "I didn't see that.")
-          (> (count items1) 1) (say (str "Which " item1-name "?"))
-          (> (count items2) 1) (say (str "Which " item2-name "?"))
+          (or (empty? items1) (empty? items2)) (say (_ "I didn't see that."))
+          (> (count items1) 1) (say (_ "Which %s?" item1-name))
+          (> (count items2) 1) (say (_ "Which %s?" item2-name))
           (string? value) (say value)
           (false? value) (say (str "I couldn't " verb-name " that."))
-          (and kw-required (nil? value)) (say (str "I couldn't " verb-name " that."))
+          (and kw-required (nil? value)) (say (_ "I couldn't %s that." verb-name))
           :else (let [new-state (handler game-state item1 item2)]
                   (eval-postcondition conditions game-state new-state))))))))
 
@@ -69,7 +70,7 @@
            dir-value (eval-precondition dir-condition game-state)]
        (cond
          (string? dir-value) (say dir-value)
-         (not dir-value) (say "Couldn't go in that direction")
+         (not dir-value) (say (_ "Couldn't go in that direction"))
          :else (let [new-state (change-rooms game-state dir-value)]
                  (eval-postcondition dir-condition game-state new-state))))
 
@@ -84,14 +85,14 @@
   "Describe the inventory contents."
   [game-state]
   (if (empty? (:inventory game-state))
-    (say "I wasn't carrying anything.")
-    (say (str "I was carrying:" (print-list (:inventory game-state))))))
+    (say (_ "I wasn't carrying anything."))
+    (say (str (_ "I was carrying:") (print-list (:inventory game-state))))))
 
 (defn save
   "Save the current game state to a file."
   [game-state]
   (spit "saved.game" game-state)
-  (say "Done."))
+  (say (_ "Done.")))
 
 (defn restore
   "Restore a previous game state from file."
@@ -100,12 +101,12 @@
     (let [loaded-state (read-string (slurp "saved.game"))]
       (say (rooms/describe (current-room loaded-state)))
       loaded-state)
-    (catch java.io.FileNotFoundException e (say "No saved game found."))))
+    (catch java.io.FileNotFoundException e (say (_ "No saved game found.")))))
 
 (defn exit
   "Close the game."
   [game-state]
-  (say "Bye!")
+  (say (_ "Bye!"))
   (System/exit 0))
 
 (def look-at
@@ -120,7 +121,7 @@
    (fn [game-state item]
      (if (:items item)
        (say (describe-container item))
-       (say (str "I couldn't look inside a " (iname item) "."))))
+       (say (_ "I couldn't look inside a %s." (iname item)))))
    :kw-required false))
 
 (def take_
@@ -130,10 +131,10 @@
      "Try to take an item from the current room or from a container object in the inventory.
       Won't allow taking an object already in the inventory (i.e. not in a container)."
      (if (contains? (:inventory game-state) item)
-       (say "I already had that.")
+       (say (_ "I already had that."))
        (let [new-state (remove-item game-state item)
              new-inventory (conj (:inventory new-state) item)]
-         (say "Taken.")
+         (say (_ "Taken."))
          (assoc new-state :inventory new-inventory))))))
 
 (def open
@@ -141,12 +142,12 @@
    "open" :open
    (fn [game-state item]
      (cond
-       (not (:closed item)) (say "It was already open.")
-       (:locked item) (say "It was locked.")
+       (not (:closed item)) (say (_ "It was already open."))
+       (:locked item) (say (_ "It was locked."))
        :else (let [open-item (assoc item :closed false)]
                (if (:items open-item)
                 (say (describe-container open-item))
-                (say "Opened."))
+                (say (_ "Opened.")))
                (replace-item game-state item open-item))))))
 
 (def close
@@ -154,9 +155,9 @@
    "close" :close
    (fn [game-state item]
      (if (:closed item)
-       (say "It was already closed.")
+       (say (_ "It was already closed."))
        (let [closed-item (assoc item :closed true)]
-         (say "Closed.")
+         (say (_ "Closed."))
          (replace-item game-state item closed-item))))))
 
 (def unlock
@@ -164,10 +165,10 @@
    "unlock" :unlock
    (fn [game-state locked key-item]
      (cond
-       (not (:locked locked)) (say "It wasn't locked.")
-       (not= locked (:unlocks key-item)) (say "That didn't work.")
+       (not (:locked locked)) (say (_ "It wasn't locked."))
+       (not= locked (:unlocks key-item)) (say (_ "That didn't work."))
        :else (let [unlocked (assoc locked :locked false)]
-               (say "Unlocked.")
+               (say (_ "Unlocked."))
                (-> game-state
                    (remove-item key-item)
                    (replace-item locked unlocked)))))))
@@ -186,16 +187,16 @@
 (defn make-say-verb [speech]
   (fn [gs] (say speech)))
 
-(def stand (make-say-verb "I was standing up already"))
-(def help (make-say-verb (clojure.string/join "\n    " ["You're playing a text adventure game. You control the character by entering commands. Some available commands are:"
-                                                        "GO <direction>: move in the given compass direction. For example: \"GO NORTH\". \"NORTH\" and \"N\" will work too."
-                                                        "TAKE <item>: add an item to your inventory."
-                                                        "INVENTORY: list your inventory contents. \"I\" will work too."
-                                                        "LOOK: look around."
-                                                        "LOOK AT <item>: look at some specific item."
-                                                        "LOOK IN <item>: look inside some container item."
-                                                        "UNLOCK <item> WITH <item>: unlock some item using another one. For example: UNLOCK door WITH key."
-                                                        "OPEN, CLOSE, READ, TURN ON, PUT IN, EAT, DRINK, KILL, etc. may work on some objects, just try."
-                                                        "SAVE: save your current progress."
-                                                        "RESTORE: restore a previously saved game."
-                                                        "EXIT: close the game."])))
+(def stand (make-say-verb (_ "I was standing up already")))
+(def help (make-say-verb (clojure.string/join "\n    " [(_ "You're playing a text adventure game. You control the character by entering commands. Some available commands are:")
+                                                        (_ "GO <direction>: move in the given compass direction. For example: \"GO NORTH\". \"NORTH\" and \"N\" will work too.")
+                                                        (_ "TAKE <item>: add an item to your inventory.")
+                                                        (_ "INVENTORY: list your inventory contents. \"I\" will work too.")
+                                                        (_ "LOOK: look around.")
+                                                        (_ "LOOK AT <item>: look at some specific item.")
+                                                        (_ "LOOK IN <item>: look inside some container item.")
+                                                        (_ "UNLOCK <item> WITH <item>: unlock some item using another one. For example: UNLOCK door WITH key.")
+                                                        (_ "OPEN, CLOSE, READ, TURN ON, PUT IN, EAT, DRINK, KILL, etc. may work on some objects, just try.")
+                                                        (_ "SAVE: save your current progress.")
+                                                        (_ "RESTORE: restore a previously saved game.")
+                                                        (_ "EXIT: close the game.")])))

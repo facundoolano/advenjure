@@ -1,7 +1,8 @@
 (ns advenjure.verb-map
   (:require [advenjure.map :refer [print-map]]
             [advenjure.verbs :refer :all]
-            [advenjure.utils :refer [direction-mappings]]))
+            [advenjure.utils :refer [direction-mappings]]
+            [advenjure.text.gettext :refer [_]]))
 
 (defn add-verb
   "Adds the given function as the handler for every verb in the list."
@@ -20,35 +21,30 @@
 
 (def verb-map (-> {}
                   add-go-shortcuts
-                  (add-verb ["^go (?<dir>.*)" "^go$"] go)
-                  (add-verb ["^look$" "^look around$" "^l$"] look)
-                  (add-verb ["^map$" "^m$"] print-map)
-                  (add-verb ["^look at (?<item1>.*)" "^look at$" "^describe (?<item2>.*)"
-                             "^describe$"] look-at)
-                  (add-verb ["^look in (?<item1>.*)" "^look in$" "^look inside (?<item2>.*)"
-                             "^look inside$"] look-inside)
-                  (add-verb ["^take (?<item1>.*)" "^take$" "^get (?<item2>.*)" "^get$"
-                             "^pick (?<item1>.*)" "^pick$" "^pick up (?<item2>.*)"
-                             "^pick (?<item>.*) up$" "^pick up$"] take_)
-                  (add-verb ["^inventory$" "^i$"] inventory)
-                  (add-verb ["^read (?<item>.*)" "^read$"] read_)
-                  (add-verb ["^open (?<item>.*)" "^open$"] open)
-                  (add-verb ["^close (?<item>.*)" "^close$"] close)
-                  ; (add-verb ["^turn on (?<item>.*)" "^turn on$" "^turn (?<item>.*) on"] identity)
-                  ; (add-verb ["^turn off (?<item>.*)" "^turn off$" "^turn (?<item>.*) off"] identity)
-                  ; (add-verb ["^put (?<item>.*) in (?<item>.*)" "^put (?<item>.*) in$"
-                  ;            "^put$" "^put (?<item>.*)$" "^put (?<item>.*) inside (?<item>.*)"
-                  ;            "^put (?<item>.*) inside$"] identity)
-                  (add-verb ["^unlock (?<item1>.*) with (?<item2>.*)" "^unlock (?<item>.*)"
-                             "^unlock (?<item1>.*) with$" "^unlock$"
-                             "^open (?<item1>.*) with (?<item2>.*)" "^open (?<item>.*) with"] unlock)
-                  (add-verb ["^talk with (?<item>.*)" "^talk to (?<item>.*)" "^talk (?<item>.*)"]
+                  (add-verb [(_ "^go (?<dir>.*)") (_ "^go$")] go)
+                  (add-verb [(_ "^look$") (_ "^look around$") (_ "^l$")] look)
+                  (add-verb [(_ "^map$") (_ "^m$")] print-map)
+                  (add-verb [(_ "^look at (?<item1>.*)") (_ "^look at$") (_ "^describe (?<item2>.*)")
+                             (_ "^describe$")] look-at)
+                  (add-verb [(_ "^look in (?<item1>.*)") (_ "^look in$") (_ "^look inside (?<item2>.*)")
+                             (_ "^look inside$")] look-inside)
+                  (add-verb [(_ "^take (?<item1>.*)") (_ "^take$") (_ "^get (?<item2>.*)") (_ "^get$")
+                             (_ "^pick (?<item1>.*)") (_ "^pick$") (_ "^pick up (?<item2>.*)")
+                             (_ "^pick (?<item>.*) up$") (_ "^pick up$")] take_)
+                  (add-verb [(_ "^inventory$") (_ "^i$")] inventory)
+                  (add-verb [(_ "^read (?<item>.*)") (_ "^read$")] read_)
+                  (add-verb [(_ "^open (?<item>.*)") (_ "^open$")] open)
+                  (add-verb [(_ "^close (?<item>.*)") (_ "^close$")] close)
+                  (add-verb [(_ "^unlock (?<item1>.*) with (?<item2>.*)") (_ "^unlock (?<item>.*)")
+                             (_ "^unlock (?<item1>.*) with$") (_ "^unlock$")
+                             (_ "^open (?<item1>.*) with (?<item2>.*)") (_ "^open (?<item>.*) with")] unlock)
+                  (add-verb [(_ "^talk with (?<item>.*)") (_ "^talk to (?<item>.*)") (_ "^talk (?<item>.*)")]
                             talk)
-                  (add-verb ["^save$"] save)
-                  (add-verb ["^restore$" "^load$"] restore)
-                  (add-verb ["^exit$"] exit)
-                  (add-verb ["^help$"] help)
-                  (add-verb ["^get up$" "^stand up$" "^stand$"] stand)))
+                  (add-verb [(_ "^save$")] save)
+                  (add-verb [(_ "^restore$") (_ "^load$")] restore)
+                  (add-verb [(_ "^exit$")] exit)
+                  (add-verb [(_ "^help$")] help)
+                  (add-verb [(_ "^get up$") (_ "^stand up$") (_ "^stand$")] stand)))
 
 ;keep a sorted version to extract the longest possible form first
 (def sorted-verbs (reverse (sort-by count (keys verb-map))))
