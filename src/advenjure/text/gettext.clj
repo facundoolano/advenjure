@@ -1,27 +1,25 @@
 (ns advenjure.text.gettext
   (:require [advenjure.text.en-past]
+            [clojure.edn :as edn]
             [clojure.test :refer [function?]]))
 
-; Ok, not immutable, but I can't pass it around as an argument everywhere.
-; maybe some config propertie, but don't want to tie it to lein
-(def text-source (atom advenjure.text.en-past/dictionary))
-
-(defn settext
-  "Set the current text source to the given dictionary."
-  [dictionary]
-  (reset! text-source dictionary))
+; TODO think of a better way to handle this
+(def source (:text-source (edn/read-string (slurp "config.edn"))))
+(def source-ns (first (clojure.string/split source #"/")))
+(require `[~(symbol source-ns)])
+(def text-source (eval (symbol source)))
 
 (defn gettext
   "Look up the given key in the current text source dictionary.
   If not found return the key itself."
   [text-key & replacements]
-  (let [text-value (get @text-source text-key text-key)
+  (let [text-value (get text-source text-key text-key)
         text-value (if (function? text-value) (text-value nil) text-value)]
     (apply format text-value replacements)))
 
 (defn pgettext
   [ctx text-key & replacements]
-  (let [text-value (get @text-source text-key text-key)
+  (let [text-value (get text-source text-key text-key)
         text-value (if (function? text-value) (text-value ctx) text-value)]
     (apply format text-value replacements)))
 

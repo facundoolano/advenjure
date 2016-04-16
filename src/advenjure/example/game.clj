@@ -1,18 +1,11 @@
 (ns advenjure.example.game
-  (:require [advenjure.text.gettext :refer [settext]]
-            [advenjure.text.es-past])
+  (:require [advenjure.items :as item]
+            [advenjure.rooms :as room]
+            [advenjure.utils :as utils]
+            [advenjure.game :as game]
+            [advenjure.dialogs :refer [dialog]]
+            [advenjure.example.dialogs :refer [npc-dialog]])
   (:gen-class))
-
-; need to set text config before loading the game stuff
-(settext advenjure.text.es-past/dictionary)
-
-(require '[advenjure.items :as item]
-         '[advenjure.rooms :as room]
-         '[advenjure.utils :as utils]
-         '[advenjure.game :as game]
-         '[advenjure.dialogs :refer [dialog]]
-         '[advenjure.example.dialogs :refer [npc-dialog]])
-
 
 ;;; DEFINE ROOMS AND ITEMS
 (def magazine (item/make ["sports magazine" "magazine"]
