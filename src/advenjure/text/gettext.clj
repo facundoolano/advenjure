@@ -1,5 +1,6 @@
 (ns advenjure.text.gettext
-  (:require [advenjure.text.en-past]))
+  (:require [advenjure.text.en-past]
+            [clojure.tools.reader :as r]))
 
 ; Ok, not immutable, but I can't pass it around as an argument everywhere.
 ; maybe some config propertie, but don't want to tie it to lein
@@ -31,7 +32,7 @@
   (let [extract (fn [expr]
                   (if (and (seq? expr) (#{'_ 'gettext} (first expr)))
                     (second expr)))]
-    (filter not-empty (map extract (tree-seq list? rest expressions)))))
+    (filter not-empty (map extract (tree-seq coll? rest expressions)))))
 
 (defn- zipzip [s] (zipmap s s))
 
@@ -41,7 +42,7 @@
   [dir]
   (->>
     (get-files dir)
-    (mapcat (comp extract-text read-string #(str "(" % ")") slurp))
+    (mapcat (comp extract-text r/read-string #(str "(" % ")") slurp))
     zipzip))
 
 
