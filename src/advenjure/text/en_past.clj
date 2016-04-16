@@ -4,7 +4,7 @@
 (defn starts-with-vowel
   [ctx]
   (let [vowel? (set "aeiouAEIOU")]
-    (vowel? (first (first (:names ctx))))))
+    (vowel? (ffirst (:names ctx)))))
 
 ; this is the default so we can just use the key everywhere
 (def dictionary

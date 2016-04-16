@@ -14,7 +14,7 @@
   [size text]
   (let [text (or text " ")
         total-space (- size (count text))
-        single-space (+ (/ total-space 2) 1)
+        single-space (inc (/ total-space 2))
         spaces (string/join (repeat single-space " "))]
     (str spaces text spaces)))
 
