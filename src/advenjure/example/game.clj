@@ -1,22 +1,29 @@
 (ns advenjure.example.game
-  (:require [advenjure.items :as item]
-            [advenjure.rooms :as room]
-            [advenjure.utils :as utils]
-            [advenjure.game :as game]
-            [advenjure.dialogs :refer [dialog]]
-            [advenjure.example.dialogs :refer [npc-dialog]]
-            [advenjure.text.gettext :refer [settext]]
-            [advenjure.text.en-present])
+  (:require [advenjure.text.gettext :refer [settext]]
+            [advenjure.text.es-past])
   (:gen-class))
+
+; need to set text config before loading the game stuff
+(settext advenjure.text.es-past/dictionary)
+
+(require '[advenjure.items :as item]
+         '[advenjure.rooms :as room]
+         '[advenjure.utils :as utils]
+         '[advenjure.game :as game]
+         '[advenjure.dialogs :refer [dialog]]
+         '[advenjure.example.dialogs :refer [npc-dialog]])
+
 
 ;;; DEFINE ROOMS AND ITEMS
 (def magazine (item/make ["sports magazine" "magazine"]
                          "The cover read 'Sports Almanac 1950-2000'"
                          :read "Oh là là? Oh là là!?"
-                         :take true))
+                         :take true
+                         :gender :female))
 
 (def wallet (item/make ["wallet"] "It was made of cheap imitation leather."
                        :take true
+                       :gender :female
                        :open "I didn't have a dime."
                        :look-in "I didn't have a dime."
                        :dialog `(dialog ("ME" "Hi, wallet.")
@@ -86,9 +93,6 @@
                   (room/one-way-connect :living :east `can-leave?)
                   (room/one-way-connect :hallway :west :living)
                   (room/one-way-connect :hallway :east `npc-gone?)))
-
-; set text config
-; (settext advenjure.text.en-present/dictionary)
 
 ; RUN THE GAME
 (defn -main

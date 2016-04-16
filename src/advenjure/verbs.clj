@@ -4,7 +4,7 @@
             [advenjure.conditions :refer :all]
             [advenjure.items :refer [print-list describe-container iname]]
             [advenjure.rooms :as rooms]
-            [advenjure.text.gettext :refer [_]]))
+            [advenjure.text.gettext :refer [_ p_]]))
 
 ;;;; FUNCTIONS TO BUILD VERB HANDLERS
 ; there's some uglyness here, but it enables simple definitions for the verb handlers
@@ -63,7 +63,7 @@
 ;;; VERB HANDLER DEFINITIONS
 (defn go
   "Change the location if direction is valid"
-  ([game-state] (say "Go where?"))
+  ([game-state] (say (_ "Go where?")))
   ([game-state direction]
    (if-let [dir (get direction-mappings direction)]
      (let [dir-condition (dir (current-room game-state))
@@ -111,13 +111,13 @@
 
 (def look-at
   (make-item-handler
-   "look at" :look-at
+   (_ "look at") :look-at
    (fn [game-state item] (say (:description item)))
    :kw-required false))
 
 (def look-inside
   (make-item-handler
-   "look inside" :look-in
+   (_ "look inside") :look-in
    (fn [game-state item]
      (if (:items item)
        (say (describe-container item))
@@ -126,7 +126,7 @@
 
 (def take_
   (make-item-handler
-   "take" :take
+   (_ "take") :take
    (fn [game-state item]
      "Try to take an item from the current room or from a container object in the inventory.
       Won't allow taking an object already in the inventory (i.e. not in a container)."
@@ -139,11 +139,11 @@
 
 (def open
   (make-item-handler
-   "open" :open
+   (_ "open") :open
    (fn [game-state item]
      (cond
-       (not (:closed item)) (say (_ "It was already open."))
-       (:locked item) (say (_ "It was locked."))
+       (not (:closed item)) (say (p_ item "It was already open."))
+       (:locked item) (say (p_ item "It was locked."))
        :else (let [open-item (assoc item :closed false)]
                (if (:items open-item)
                 (say (describe-container open-item))
@@ -152,20 +152,20 @@
 
 (def close
   (make-item-handler
-   "close" :close
+   (_ "close") :close
    (fn [game-state item]
      (if (:closed item)
-       (say (_ "It was already closed."))
+       (say (p_ item "It was already closed."))
        (let [closed-item (assoc item :closed true)]
          (say (_ "Closed."))
          (replace-item game-state item closed-item))))))
 
 (def unlock
   (make-compound-item-handler
-   "unlock" :unlock
+   (_ "unlock") :unlock
    (fn [game-state locked key-item]
      (cond
-       (not (:locked locked)) (say (_ "It wasn't locked."))
+       (not (:locked locked)) (say (p_ locked "It wasn't locked."))
        (not= locked (:unlocks key-item)) (say (_ "That didn't work."))
        :else (let [unlocked (assoc locked :locked false)]
                (say (_ "Unlocked."))
@@ -175,13 +175,13 @@
 
 (def talk
   (make-item-handler
-   "talk to" :talk
+   (_ "talk to") :talk
    (fn [game-state item]
      (let [dialog (eval (:dialog item))]
        (dialog game-state)))))
 
 ;;; NOOP VERBS (rely entirely in pre/post conditions)
-(def read_ (make-item-handler "read" :read))
+(def read_ (make-item-handler (_ "read") :read))
 
 ;; SAY VERBS
 (defn make-say-verb [speech]

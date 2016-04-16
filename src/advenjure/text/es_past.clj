@@ -1,5 +1,10 @@
 (ns advenjure.text.es-past)
 
+(defn by-gender [ctx male-text female-text]
+  (if (= (:gender ctx) :female)
+    female-text
+    male-text))
+
 (def dictionary
   {"\nThe End." "\nFin.",
    "\nThere was %s there." "\nHabía %s acá.",
@@ -7,13 +12,14 @@
    "%s contained % and %" "%s contenía % y %",
    "%s contained %s" "%s contenía %s",
    "%s contained:%s" "%s contenía:%s",
-   "%s was closed." "%s estaba cerrado.", ;FIXME gender
-   "%s was empty." "%s estaba vacío.", ;FIXME gender
+   "%s was closed." #(by-gender % "%s estaba cerrado." "%s estaba cerrada.")
+   "%s was empty." #(by-gender % "%s estaba vacío." "%s estaba vacía.")
    "%s what?" "%s qué?",
    "Bye!" "Chau!",
-   "Closed." "Hecho.", ;FIXME gender
+   "Closed." "Hecho.",
    "Couldn't go in that direction" "No podía ir en esa dirección",
    "Done." "Hecho.",
+   "Go where?" "Ir hacia dónde?",
    "I already had that." "Ya tenía eso.",
    "I couldn't %s that." "No podía %s eso.",
    "I couldn't look inside a %s." "No podía mirar dentro de eso.",
@@ -22,34 +28,45 @@
    "I was carrying:" "Llevaba:",
    "I was standing up already" "Ya estaba levantado.",
    "I wasn't carrying anything." "No llevaba nada encima.",
-   "It was already closed." "Ya estaba cerrado.", ;FIXME gender
-   "It was already open." "Ya estaba abierto.", ;FIXME gender
-   "It was locked." "Estaba trabado con llave.", ;FIXME gender
-   "It wasn't locked." "No está trabado con llave.", ;FIXME gender
+   "It was already closed." #(by-gender % "Ya estaba cerrado." "Ya estaba cerrada.")
+   "It was already open." #(by-gender % "Ya estaba abierto." "Ya estaba abierta.")
+   "It was locked." #(by-gender % "Estaba trabado con llave." "Estaba trabada con llave.")
+   "It wasn't locked." #(by-gender % "No está trabado con llave." "No está trabada con llave.")
    "No saved game found." "No se encotró un juego guardado.",
    "Opened." "Abierto.",
    "Taken." "Hecho.",
    "That didn't work." "Eso no funcionaba.",
-   "The %s" "El %s", ;FIXME gender
+   "The %s" #(by-gender % "El %s" "La %s")
    "There was nothing special about it." "No tenía nada de especial.",
    "Unlocked." "Hecho.",
    "Which %s?" "Cuál %s?",
+   "^close (?<item>.*)" "^cerrar (?<item>.*)",
    "^close$" "^cerrar$",
    "^describe (?<item2>.*)" "^describir (?<item2>.*)",
    "^describe$" "^describir$",
+   "^exit$" "^salir$",
    "^get (?<item2>.*)" "^tomar (?<item2>.*)",
+   "^get up$" "^levantarse$",
    "^get$" "^tomar$",
+   "^go (?<dir>.*)" "^ir (?<dir>.*)",
    "^go$" "^ir$",
+   "^help$" "^ayuda$",
    "^i$" "^i$",
+   "^inventory$" "^inventario$",
    "^l$" "^mirar$",
    "^load$" "^cargar$",
    "^look around$" "^mirar alrededor$",
+   "^look at (?<item1>.*)" "^mirar a (?<item1>.*)",
    "^look at$" "^mirar a$",
+   "^look in (?<item1>.*)" "^mirar en (?<item1>.*)",
    "^look in$" "^mirar en$",
    "^look inside (?<item2>.*)" "^mirar dentro de (?<item2>.*)",
    "^look inside$" "^mirar dentro de$",
+   "^look$" "^mirar$",
    "^m$" "^m$",
+   "^map$" "^mapa$",
    "^open (?<item1>.*) with (?<item2>.*)" "^abrir (?<item1>.*) con (?<item2>.*)",
+   "^open (?<item>.*)" "^abrir (?<item>.*)",
    "^open (?<item>.*) with" "^abrir (?<item>.*) con",
    "^open$" "^abrir$",
    "^pick (?<item1>.*)" "^agarrar (?<item1>.*)",
@@ -57,13 +74,43 @@
    "^pick up (?<item2>.*)" "^agarrar (?<item2>.*)",
    "^pick up$" "^agarrar$",
    "^pick$" "^agarrar$",
+   "^read (?<item>.*)" "^leer (?<item>.*)",
    "^read$" "^leer$",
+   "^restore$" "^cargar$",
+   "^save$" "^guardar$",
    "^stand up$" "^levantarse$",
    "^stand$" "^levantar$",
+   "^take (?<item1>.*)" "^tomar (?<item1>.*)",
    "^take$" "^tomar$",
    "^talk (?<item>.*)" "^hablar (?<item>.*)",
    "^talk to (?<item>.*)" "^hablar con (?<item>.*)",
+   "^talk with (?<item>.*)" "^hanlar a (?<item>.*)",
+   "^unlock (?<item1>.*) with (?<item2>.*)" "^destrabar (?<item1>.*) con (?<item2>.*)",
    "^unlock (?<item1>.*) with$" "^destrabar (?<item1>.*) con$",
    "^unlock (?<item>.*)" "^destrabar (?<item>.*)",
    "^unlock$" "^destrabar$",
-   "a " "un "}) ;FIXME gender ;FIXME should be handled at the english dict
+   "a %s" #(by-gender % "un %s" "una %s")
+   "close" "cerrar",
+   "e" "e",
+   "east" "este",
+   "look at" "mirar a",
+   "look inside" "mirar en",
+   "n" "n",
+   "ne" "ne",
+   "north" "norte",
+   "northeast" "noreste",
+   "northwest" "noroeste",
+   "nw" "no",
+   "open" "abrir",
+   "read" "leer",
+   "s" "s",
+   "se" "se",
+   "south" "sur",
+   "southeast" "sureste",
+   "southwest" "suroeste",
+   "sw" "so",
+   "take" "agarrar",
+   "talk to" "hablar con",
+   "unlock" "destrabar",
+   "w" "o",
+   "west" "oeste"})

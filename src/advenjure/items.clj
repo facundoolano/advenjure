@@ -59,10 +59,10 @@
   ([container prefix] (describe-container container prefix 1))
   ([container prefix level]
    (if-let [items (:items container)]
-     (let [container-name (str prefix (_ "The %s" (iname container)))]
+     (let [container-name (str prefix (p_ container "The %s" (iname container)))] ; FIXME weird concatenation here
        (cond
-         (:closed container) (_ "%s was closed." container-name)
-         (empty? items) (_ "%s was empty." container-name)
+         (:closed container) (p_ container "%s was closed." container-name)
+         (empty? items) (p_ container "%s was empty." container-name)
          (= 1 (count items)) (_ "%s contained %s"
                                 container-name
                                 (print-list-item (first items)))

@@ -33,12 +33,15 @@
   [dir]
   (filter #(not (.isDirectory %)) (file-seq (clojure.java.io/file dir))))
 
+; fixme use pgettext
+; fixme won't consider entries in a vector
 (defn- extract-text
   [expressions]
   (let [extract (fn [expr]
-                  (if (and (seq? expr) (#{'_ 'gettext 'p_ 'pgettext} (first expr)))
-                    (second expr)))]
-    (filter not-empty (map extract (tree-seq coll? rest expressions)))))
+                  (cond
+                    (and (seq? expr) (#{'_ 'gettext} (first expr))) (second expr)
+                    (and (seq? expr) (#{'p_ 'pgettext} (first expr))) (second (rest expr))))]
+    (filter not-empty (map extract (tree-seq coll? identity expressions)))))
 
 (defn- zipzip [s] (zipmap s s))
 
@@ -49,6 +52,7 @@
   (->>
     (get-files dir)
     (mapcat (comp extract-text read-string #(str "(" % ")") slurp))
-    zipzip))
+    zipzip
+    (into (sorted-map))))
 
 
