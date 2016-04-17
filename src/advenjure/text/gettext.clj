@@ -1,25 +1,24 @@
 (ns advenjure.text.gettext
   (:require [advenjure.text.en-past]
-            [clojure.edn :as edn]
             [clojure.test :refer [function?]]))
 
-; TODO think of a better way to handle this
-(def source (:text-source (edn/read-string (slurp "config.edn"))))
-(def source-ns (first (clojure.string/split source #"/")))
+; Load text source from project.clj
+(def project-map (->> "project.clj" slurp read-string (drop 3) (partition 2) (map vec) (into {})))
+(def source-ns (first (clojure.string/split (str (:gettext-source project-map)) #"/")))
 (require `[~(symbol source-ns)])
-(def text-source (eval (symbol source)))
+(def ^:dynamic *text-source* (eval (:gettext-source project-map)))
 
 (defn gettext
   "Look up the given key in the current text source dictionary.
   If not found return the key itself."
   [text-key & replacements]
-  (let [text-value (get text-source text-key text-key)
+  (let [text-value (get *text-source* text-key text-key)
         text-value (if (function? text-value) (text-value nil) text-value)]
     (apply format text-value replacements)))
 
 (defn pgettext
   [ctx text-key & replacements]
-  (let [text-value (get text-source text-key text-key)
+  (let [text-value (get *text-source* text-key text-key)
         text-value (if (function? text-value) (text-value ctx) text-value)]
     (apply format text-value replacements)))
 

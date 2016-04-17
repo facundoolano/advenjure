@@ -7,5 +7,6 @@
                  [jline/jline "2.8"]]
   :main ^:skip-aot advenjure.example.game
   :target-path "target/%s"
-  :profiles {:uberjar {:aot :all}})
+  :profiles {:uberjar {:aot :all}}
+  :gettext-source advenjure.text.en-past/dictionary)
 
