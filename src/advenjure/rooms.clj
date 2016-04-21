@@ -1,7 +1,7 @@
 (ns advenjure.rooms
   (:require [advenjure.items :refer [iname describe-container print-list-item]]
             [clojure.string :as string]
-            [advenjure.text.gettext :refer [_]]))
+            [gettext.core :refer [_]]))
 
 (defrecord Room [name description])
 

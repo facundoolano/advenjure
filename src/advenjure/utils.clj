@@ -3,7 +3,7 @@
             [advenjure.items :refer :all]
             [advenjure.rooms :as rooms]
             [advenjure.ui.output :refer [print-line]]
-            [advenjure.text.gettext :refer [_]]))
+            [gettext.core :refer [_]]))
 
 (defn current-room
   "Get the current room spec from game state."

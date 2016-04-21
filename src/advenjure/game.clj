@@ -4,7 +4,7 @@
             [advenjure.verb-map :refer [find-verb verb-map]]
             [advenjure.ui.input :refer [get-input]]
             [advenjure.ui.output :refer [print-line init]]
-            [advenjure.text.gettext :refer [_]]))
+            [gettext.core :refer [_]]))
 
 (defn make
   "Make a new game state based on a room map and an optional initial inventory set."

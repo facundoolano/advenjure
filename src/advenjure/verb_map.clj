@@ -2,7 +2,7 @@
   (:require [advenjure.map :refer [print-map]]
             [advenjure.verbs :refer :all]
             [advenjure.utils :refer [direction-mappings]]
-            [advenjure.text.gettext :refer [_]]))
+            [gettext.core :refer [_]]))
 
 (defn add-verb
   "Adds the given function as the handler for every verb in the list."

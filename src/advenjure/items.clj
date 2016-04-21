@@ -1,6 +1,6 @@
 (ns advenjure.items
   (:require [clojure.string :as string]
-            [advenjure.text.gettext :refer [_ p_]]))
+            [gettext.core :refer [_ p_]]))
 
 (defrecord Item [names description])
 

@@ -4,7 +4,7 @@
             [advenjure.conditions :refer :all]
             [advenjure.items :refer [print-list describe-container iname]]
             [advenjure.rooms :as rooms]
-            [advenjure.text.gettext :refer [_ p_]]))
+            [gettext.core :refer [_ p_]]))
 
 ;;;; FUNCTIONS TO BUILD VERB HANDLERS
 ; there's some uglyness here, but it enables simple definitions for the verb handlers
