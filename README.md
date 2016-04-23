@@ -1,5 +1,7 @@
 # advenjure
 
+![Example game](example.gif)
+
 A text adventure engine I wrote to learn Clojure (and because it's fun!).
 Some of its distinctive features are:
 
