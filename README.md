@@ -129,7 +129,7 @@ The room keyword defines what room the player will be in when the game starts.
 If you want to start off the game with some items in the player's inventory,
 just pass them in a set as the third argument.
 
-Lastly, the `advenjure.game/room` takes a game state map, a boolean function
+Lastly, the `advenjure.game/run` takes a game state map, a boolean function
 to tell if the game has finished and an optional string to print before it starts.
 Putting it all together in a `-main` function:
 
