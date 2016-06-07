@@ -15,5 +15,5 @@
   [condition old-state new-state]
   (let [condition (eval (:post condition))]
     (if (function? condition)
-      (or (condition old-state new-state) new-state)
+      (or (condition old-state (or new-state old-state)) new-state)
       new-state)))
