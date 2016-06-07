@@ -19,7 +19,7 @@
       (let [regexp (str "^" dir "$")]
         (recur (add-verb new-map [regexp] #(go % dir)) remain)))))
 
-(def verb-map (-> {}
+(def default-map (-> {}
                   add-go-shortcuts
                   (add-verb [(_ "^go (?<dir>.*)") (_ "^go$")] go)
                   (add-verb [(_ "^look$") (_ "^look around$") (_ "^l$")] look)
@@ -46,8 +46,9 @@
                   (add-verb [(_ "^help$")] help)
                   (add-verb [(_ "^get up$") (_ "^stand up$") (_ "^stand$")] stand)))
 
-;keep a sorted version to extract the longest possible form first
-(def sorted-verbs (reverse (sort-by count (keys verb-map))))
+;use a sorted version to extract the longest possible form first
+(defn sort-verbs [verb-map] (reverse (sort-by count (keys verb-map))))
+(def msort-verbs (memoize sort-verbs))
 
 (defn match-verb [text verb]
   (let [[head & tokens :as full] (re-find (re-pattern verb) text)]
@@ -57,5 +58,5 @@
 
 (defn find-verb
   "Return [verb tokens] if there's a proper verb at the beginning of text."
-  [text]
-  (some (partial match-verb text) sorted-verbs))
+  [verb-map text]
+  (some (partial match-verb text) (msort-verbs verb-map)))
