@@ -14,7 +14,7 @@ Some of its distinctive features are:
 Add the following to your project map as a dependency:
 
 ```clojure
-[advenjure "0.1.0"]
+[advenjure "0.2.0"]
 ```
 
 ## Basic Usage
