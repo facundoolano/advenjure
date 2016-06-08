@@ -160,6 +160,7 @@ There are a number of advanced features available in the engine:
   * Post conditions: function hook to customize how the game state is modified after an action is performed.
   * Dialogs: interactive dialogs with 'character' items, in the style of the LucasArts graphic adventures.
   * Text customization and internationalization.
+  * Custom verbs/commands.
 
 But I'm not feeling like documenting those right now, specially since I doubt
 anyone other than me will ever use this. But if you *do* want to use it, just open an issue
