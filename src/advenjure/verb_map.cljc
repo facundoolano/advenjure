@@ -1,8 +1,9 @@
 (ns advenjure.verb-map
   (:require [advenjure.map :refer [print-map]]
-            [advenjure.verbs :refer :all]
+            [advenjure.verbs :refer [go look look-at look-inside take_ inventory read_ open close unlock talk
+                                     save restore exit help stand]]
             [advenjure.utils :refer [direction-mappings]]
-            [gettext.core :refer [_]]))
+            [advenjure.gettext.core :refer [_]]))
 
 (defn add-verb
   "Adds the given function as the handler for every verb in the list."
@@ -21,24 +22,24 @@
 
 (def default-map (-> {}
                   add-go-shortcuts
-                  (add-verb [(_ "^go (?<dir>.*)") (_ "^go$")] go)
+                  (add-verb [(_ "^go (.*)") (_ "^go$")] go)
                   (add-verb [(_ "^look$") (_ "^look around$") (_ "^l$")] look)
                   (add-verb [(_ "^map$") (_ "^m$")] print-map)
-                  (add-verb [(_ "^look at (?<item1>.*)") (_ "^look at$") (_ "^describe (?<item2>.*)")
+                  (add-verb [(_ "^look at (.*)") (_ "^look at$") (_ "^describe (.*)")
                              (_ "^describe$")] look-at)
-                  (add-verb [(_ "^look in (?<item1>.*)") (_ "^look in$") (_ "^look inside (?<item2>.*)")
+                  (add-verb [(_ "^look in (.*)") (_ "^look in$") (_ "^look inside (.*)")
                              (_ "^look inside$")] look-inside)
-                  (add-verb [(_ "^take (?<item1>.*)") (_ "^take$") (_ "^get (?<item2>.*)") (_ "^get$")
-                             (_ "^pick (?<item1>.*)") (_ "^pick$") (_ "^pick up (?<item2>.*)")
-                             (_ "^pick (?<item>.*) up$") (_ "^pick up$")] take_)
+                  (add-verb [(_ "^take (.*)") (_ "^take$") (_ "^get (.*)") (_ "^get$")
+                             (_ "^pick (.*)") (_ "^pick$") (_ "^pick up (.*)")
+                             (_ "^pick (.*) up$") (_ "^pick up$")] take_)
                   (add-verb [(_ "^inventory$") (_ "^i$")] inventory)
-                  (add-verb [(_ "^read (?<item>.*)") (_ "^read$")] read_)
-                  (add-verb [(_ "^open (?<item>.*)") (_ "^open$")] open)
-                  (add-verb [(_ "^close (?<item>.*)") (_ "^close$")] close)
-                  (add-verb [(_ "^unlock (?<item1>.*) with (?<item2>.*)") (_ "^unlock (?<item>.*)")
-                             (_ "^unlock (?<item1>.*) with$") (_ "^unlock$")
-                             (_ "^open (?<item1>.*) with (?<item2>.*)") (_ "^open (?<item>.*) with")] unlock)
-                  (add-verb [(_ "^talk with (?<item>.*)") (_ "^talk to (?<item>.*)") (_ "^talk (?<item>.*)")]
+                  (add-verb [(_ "^read (.*)") (_ "^read$")] read_)
+                  (add-verb [(_ "^open (.*)") (_ "^open$")] open)
+                  (add-verb [(_ "^close (.*)") (_ "^close$")] close)
+                  (add-verb [(_ "^unlock (.*) with (.*)") (_ "^unlock (.*)")
+                             (_ "^unlock (.*) with$") (_ "^unlock$")
+                             (_ "^open (.*) with (.*)") (_ "^open (.*) with")] unlock)
+                  (add-verb [(_ "^talk with (.*)") (_ "^talk to (.*)") (_ "^talk (.*)")]
                             talk)
                   (add-verb [(_ "^save$")] save)
                   (add-verb [(_ "^restore$") (_ "^load$")] restore)

@@ -1,10 +1,14 @@
 (ns advenjure.verbs
-  (:require [advenjure.utils :refer :all]
+  (:require [advenjure.utils :refer [say find-item direction-mappings current-room remove-item replace-item]]
             [advenjure.change-rooms :refer [change-rooms]]
-            [advenjure.conditions :refer :all]
+            [advenjure.conditions :refer [eval-precondition eval-postcondition]]
             [advenjure.items :refer [print-list describe-container iname]]
             [advenjure.rooms :as rooms]
-            [gettext.core :refer [_ p_]]))
+            [advenjure.gettext.core :refer [_ p_]]
+            #?(:cljs [advenjure.eval :refer [eval]])
+            #?(:cljs [advenjure.ui.input :refer [slurp]])
+            #?(:cljs [advenjure.ui.output :refer [spit]])
+            #?(:cljs [cljs.reader :refer [read-string]])))
 
 ;;;; FUNCTIONS TO BUILD VERB HANDLERS
 ; there's some uglyness here, but it enables simple definitions for the verb handlers
@@ -103,11 +107,12 @@
       loaded-state)
     (catch java.io.FileNotFoundException e (say (_ "No saved game found.")))))
 
+
 (defn exit
   "Close the game."
   [game-state]
   (say (_ "Bye!"))
-  (System/exit 0))
+  #?(:clj (System/exit 0)))
 
 (def look-at
   (make-item-handler
