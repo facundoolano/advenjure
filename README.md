@@ -1,4 +1,4 @@
-# advenjure
+# advenjure [![Build Status](https://secure.travis-ci.org/facundoolano/advenjure.png)](http://travis-ci.org/facundoolano/advenjure)
 
 ![Example game](example.gif)
 
