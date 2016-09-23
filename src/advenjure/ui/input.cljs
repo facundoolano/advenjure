@@ -26,10 +26,12 @@
 (defn slurp [file])
 
 (defn set-prompt [gs]
-  (let [room (:name (current-room gs))
+  (let [term (.terminal (.$ js/window "#terminal"))
+        room (:name (current-room gs))
         moves (:moves gs)
         p (str "\n@" room " [" moves "] > ")]
-    (.set_prompt (.terminal (.$ js/window "#terminal")) p)))
+    (.echo term " ")
+    (.set_prompt term p)))
 
 (defn get-input
   "Wait for input to be written in the input channel"

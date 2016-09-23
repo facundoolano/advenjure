@@ -21,7 +21,7 @@
 (defn print-line
   [& strs]
   (do
-    (echo (apply str strs))
+    (echo (apply str (or strs [" "])))
     nil))
 
 
