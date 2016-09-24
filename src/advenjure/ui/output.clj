@@ -5,3 +5,5 @@
   (.clearScreen (ConsoleReader.)))
 
 (def print-line println)
+
+(def save-file spit)

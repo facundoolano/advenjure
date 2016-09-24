@@ -25,4 +25,6 @@
     nil))
 
 
-(defn spit [file value])
+(defn save-file [file value]
+  (aset js/localStorage file (pr-str value)))
+

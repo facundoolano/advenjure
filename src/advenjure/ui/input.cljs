@@ -1,7 +1,6 @@
 (ns advenjure.ui.input
   (:require-macros [cljs.core.async.macros :refer [go]])
   (:require [cljs.reader :refer [read-string]]
-            [cljs.reader :refer [read-string]]
             [advenjure.ui.input-channel :refer [input-chan]]
             [advenjure.utils :refer [current-room]]
             [cljs.core.async :refer [<! >! chan]]))
@@ -23,7 +22,8 @@
 ; TODO
 (def read-key read-value)
 
-(defn slurp [file])
+(defn load-file [file]
+  (read-string (aget js/localStorage file)))
 
 (defn set-prompt [gs]
   (let [term (.terminal (.$ js/window "#terminal"))

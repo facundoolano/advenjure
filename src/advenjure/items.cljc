@@ -1,5 +1,6 @@
 (ns advenjure.items
   (:require [clojure.string :as string]
+            #?(:cljs [cljs.reader :refer [register-tag-parser!]])
             [advenjure.gettext.core :refer [_ p_]]))
 
 (defrecord Item [names description])
@@ -120,3 +121,6 @@
           inner-names (flatten (map #(all-item-names (visible-items %))
                                     item-set))]
       (concat this-names inner-names))))
+
+; Needed to properly persist in cljs
+#?(:cljs (register-tag-parser! "advenjure.items.Item" map->Item))

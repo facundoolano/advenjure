@@ -5,10 +5,9 @@
             [advenjure.items :refer [print-list describe-container iname]]
             [advenjure.rooms :as rooms]
             [advenjure.gettext.core :refer [_ p_]]
-            #?(:cljs [advenjure.eval :refer [eval]])
-            #?(:cljs [advenjure.ui.input :refer [slurp]])
-            #?(:cljs [advenjure.ui.output :refer [spit]])
-            #?(:cljs [cljs.reader :refer [read-string]])))
+            [advenjure.ui.input :refer [load-file]]
+            [advenjure.ui.output :refer [save-file]]
+            #?(:cljs [advenjure.eval :refer [eval]])))
 
 ;;;; FUNCTIONS TO BUILD VERB HANDLERS
 ; there's some uglyness here, but it enables simple definitions for the verb handlers
@@ -95,17 +94,17 @@
 (defn save
   "Save the current game state to a file."
   [game-state]
-  (spit "saved.game" game-state)
+  (save-file "saved.game" game-state)
   (say (_ "Done.")))
 
 (defn restore
   "Restore a previous game state from file."
   [game-state]
   (try
-    (let [loaded-state (read-string (slurp "saved.game"))]
+    (let [loaded-state (load-file "saved.game")]
       (say (rooms/describe (current-room loaded-state)))
       loaded-state)
-    (catch java.io.FileNotFoundException e (say (_ "No saved game found.")))))
+    (catch #?(:clj java.io.FileNotFoundException :cljs js/Object) e (say (_ "No saved game found.")))))
 
 
 (defn exit

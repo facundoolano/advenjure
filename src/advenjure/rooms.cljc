@@ -1,6 +1,7 @@
 (ns advenjure.rooms
   (:require [advenjure.items :refer [iname describe-container print-list-item]]
             [clojure.string :as string]
+            #?(:cljs [cljs.reader :refer [register-tag-parser!]])
             [advenjure.gettext.core :refer [_]]))
 
 (defrecord Room [name description])
@@ -70,3 +71,6 @@
   r2 can be a condition function or string to make a conditional connection."
   [room-map r1 direction r2]
   (assoc-in room-map [r1 direction] r2))
+
+; Needed to properly persist in cljs
+#?(:cljs (register-tag-parser! "advenjure.rooms.Room" map->Room))

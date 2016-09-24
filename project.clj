@@ -14,7 +14,6 @@
      [{:source-paths ["src"]
        :compiler {:output-dir "out"
                   :optimizations :none
-                  :jar true
                   :source-map true
                   :pretty-print true}}]}
   :target-path "target/%s"
