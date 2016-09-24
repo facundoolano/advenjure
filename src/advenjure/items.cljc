@@ -67,7 +67,7 @@
          (= 1 (count items)) (_ "%s contained %s"
                                 container-name
                                 (print-list-item (first items)))
-         (= 2 (count items)) (_ "%s contained % and %"
+         (= 2 (count items)) (_ "%s contained %s and %s"
                                 container-name
                                 (print-list-item (first items))
                                 (print-list-item (second items)))
