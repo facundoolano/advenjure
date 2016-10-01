@@ -1,20 +1,13 @@
-(ns advenjure.ui.output
-  (:require-macros [cljs.core.async.macros :refer [go]])
-  (:require [cljs.core.async :refer [>!]]
-            [advenjure.ui.input-channel :refer [input-chan]]))
+(ns advenjure.ui.output)
 
 (defn echo [text] (.echo (.terminal (.$ js/window "#terminal")) text))
 
-(defn process-command
-  "Write command to the input channel"
-  [command term]
-  (go (>! input-chan command)))
-
 (defn init []
   (.terminal (.$ js/window "#terminal")
-             process-command
+             (fn [])
              (js-obj
               "prompt" "advenjure> "
+              "completion" #(%3 (array "take", "open", "push")) ;FIXME just to test
               "greetings" false
               "outputLimit" 0)))
 
