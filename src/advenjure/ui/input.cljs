@@ -45,15 +45,15 @@
   (loop [[verb & next-verbs] verb-tokens
          [input & next-inputs] input-tokens]
     (cond
-      (nil? input) verb ; all input matched, suggest current verb
-      (= input verb) (recur next-verbs next-inputs)
+      (nil? input) (str verb " ") ; all input matched, suggest current verb
+      (= (string/trim input) (string/trim verb)) (recur next-verbs next-inputs)
       (string/starts-with? verb "(?<") (recur next-verbs next-inputs))))
 
 (defn expand-suggestion
   [token items dirs]
   (cond
-    (#{"(?<item>.*)" "(?<item1>.*)" "(?<item2>.*)"} token) items
-    (= token "(?<dir>.*)") dirs
+    (#{"(?<item>.*) " "(?<item1>.*) " "(?<item2>.*) "} token) items
+    (= token "(?<dir>.*) ") dirs
     :else [token]))
 
 (defn tokenize-verb
@@ -69,7 +69,8 @@
   completion is handled by jquery terminal).
   "
   [input]
-  (let [tokens (string/split input #"[\s|\u00A0]")]
+  (let [input (string/replace input #"[\s|\u00A0]" " ")
+        tokens (string/split input #" ")]
     (if (= (last input) \space)
       tokens
       (butlast tokens))))
@@ -86,9 +87,11 @@
     (fn [term input cb]
       (let [input (get-full-input)
             input-tokens (tokenize-input input)
-            suggested (distinct (map #(get-suggested-token % input-tokens) verb-tokens))
-            suggested (mapcat #(expand-suggestion % items dirs) suggested)]
-        (println input input-tokens)
+            suggested1 (distinct (map #(get-suggested-token % input-tokens) verb-tokens))
+            suggested (remove string/blank? (mapcat #(expand-suggestion % items dirs) suggested1))]
+        (println input-tokens)
+        (println suggested1)
+        (println suggested)
         (cb (apply array suggested))))))
 
 ; TODO pop if there's a prvevious interpreter
