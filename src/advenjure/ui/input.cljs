@@ -45,15 +45,17 @@
   (loop [[verb & next-verbs] verb-tokens
          [input & next-inputs] input-tokens]
     (cond
-      (nil? input) (str verb " ") ; all input matched, suggest current verb
+      (nil? input) (str verb " ") ; all input matched, suggest current verb token
+      (nil? verb) nil
       (= (string/trim input) (string/trim verb)) (recur next-verbs next-inputs)
+      ;FIXME this doesnt work for multiword items
       (string/starts-with? verb "(?<") (recur next-verbs next-inputs))))
 
 (defn expand-suggestion
   [token items dirs]
   (cond
-    (#{"(?<item>.*) " "(?<item1>.*) " "(?<item2>.*) "} token) items
-    (= token "(?<dir>.*) ") dirs
+    (#{"(?<item>.*) " "(?<item1>.*) " "(?<item2>.*) "} token) (map #(str % " ") items)
+    (= token "(?<dir>.*) ") (map #(str % " ") dirs)
     :else [token]))
 
 (defn tokenize-verb
