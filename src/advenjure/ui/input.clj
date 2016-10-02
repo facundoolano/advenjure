@@ -10,6 +10,8 @@
 (defn read-key []
   (str (char (.readCharacter console))))
 
+(def exit #(System/exit 0))
+
 (defn read-value
   "read a single key and eval its value. Return nil if no value entered."
   []

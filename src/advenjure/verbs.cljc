@@ -5,7 +5,7 @@
             [advenjure.items :refer [print-list describe-container iname]]
             [advenjure.rooms :as rooms]
             [advenjure.gettext.core :refer [_ p_]]
-            [advenjure.ui.input :refer [load-file]]
+            [advenjure.ui.input :as input :refer [load-file]]
             [advenjure.ui.output :refer [save-file]]
             #?(:cljs [advenjure.eval :refer [eval]])))
 
@@ -111,7 +111,7 @@
   "Close the game."
   [game-state]
   (say (_ "Bye!"))
-  #?(:clj (System/exit 0)))
+  (input/exit))
 
 (def look-at
   (make-item-handler

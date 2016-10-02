@@ -10,8 +10,7 @@
               "completion" #(%3 (array "take", "open", "push")) ;FIXME just to test
               "greetings" false
               "clear" false
-              "exit" false
-              "outputLimit" 0)))
+              "exit" false)))
 
 (defn print-line
   [& strs]

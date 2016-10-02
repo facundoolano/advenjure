@@ -9,6 +9,8 @@
 (def term #(.terminal (.$ js/window "#terminal")))
 (def input-chan (chan))
 
+(def exit #(.pause (term)))
+
 (defn read-value []
   (let [key-chan (chan)]
     (go

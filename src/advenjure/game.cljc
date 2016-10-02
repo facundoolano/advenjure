@@ -5,7 +5,7 @@
             [clojure.core.async.impl.protocols]
             [advenjure.change-rooms :refer [change-rooms]]
             [advenjure.verb-map :refer [find-verb default-map]]
-            [advenjure.ui.input :refer [get-input]]
+            [advenjure.ui.input :refer [get-input exit]]
             [advenjure.ui.output :refer [print-line init]]
             [advenjure.gettext.core :refer [_]]))
 
@@ -47,7 +47,8 @@
                new-state (process-input verb-map state input)]
            (if-not (finished? new-state)
              (recur new-state))))
-       (print-line (_ "\nThe End.")))))
+       (print-line (_ "\nThe End."))
+       (exit))))
 
 #?(:cljs
     (defn run
@@ -66,4 +67,6 @@
                new-state (if is-port (<! result) result)]
            (if-not (finished? new-state)
              (recur new-state)
-             (print-line (_ "\nThe End."))))))))
+             (do
+              (print-line (_ "\nThe End."))
+              (exit))))))))
