@@ -9,7 +9,6 @@
 (def term #(.terminal (.$ js/window "#terminal")))
 (def input-chan (chan))
 
-; FIXME on read value set a once listener, get value, unset
 (defn read-value []
   (let [key-chan (chan)]
     (go
@@ -18,12 +17,10 @@
         (fn [ev]
           (do
             (aset js/window "onkeydown" nil)
-            (println (aget ev "key"))
             (go (>! key-chan (aget ev "key")))
             (.resume (term)))))
       (read-string (<! key-chan)))))
 
-; TODO
 (def read-key read-value)
 
 (defn load-file [file]
@@ -67,12 +64,16 @@
 
 (defn tokenize-input
   "
-  get the finished tokens (partial tokens are ingnored, since that part of the
+  Get the finished tokens (partial tokens are ingnored, since that part of the
   completion is handled by jquery terminal).
+  Encodes/decodes item and dir names to avoid breaking them in separate tokens.
   "
-  [input]
-  (let [input (string/replace input #"[\s|\u00A0]" " ")
-        tokens (string/split input #" ")]
+  [input items dirs]
+  (let [encode #(string/replace %1 (re-pattern %2) (string/replace %2 #" " "%%W%%"))
+        input (string/replace input #"[\s|\u00A0]" " ")
+        input (reduce encode input (concat items dirs))
+        tokens (string/split input #" ")
+        tokens (map #(string/replace %1 #"%%W%%" " ") tokens)]
     (if (= (last input) \space)
       tokens
       (butlast tokens))))
@@ -88,20 +89,17 @@
         dirs (keys direction-mappings)]
     (fn [term input cb]
       (let [input (get-full-input)
-            input-tokens (tokenize-input input)
+            input-tokens (tokenize-input input items dirs)
             suggested1 (distinct (map #(get-suggested-token % input-tokens) verb-tokens))
             suggested (remove string/blank? (mapcat #(expand-suggestion % items dirs) suggested1))]
-        (println input-tokens)
-        (println suggested1)
-        (println suggested)
         (cb (apply array suggested))))))
 
-; TODO pop if there's a prvevious interpreter
 (defn set-interpreter
   [gs verb-map]
   (let [room (:name (current-room gs))
         moves (:moves gs)
         prompt (str "\n@" room " [" moves "] > ")]
+    (if (> (.level (term)) 1) (.pop (term))) ; if there's a previous interpreter, pop it
     (.push (term)
            process-command
            (js-obj "prompt" prompt
