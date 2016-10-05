@@ -6,4 +6,4 @@
 
 (def print-line println)
 
-(def save-file spit)
+(def write-file spit)

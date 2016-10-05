@@ -1,7 +1,7 @@
 (ns advenjure.change-rooms
   (:require [advenjure.rooms :as rooms]
             [advenjure.utils :refer [say]]
-            [advenjure.map :refer [print-map]]))
+            [advenjure.map :refer [print-map_]]))
 
 (defn change-rooms
   "Change room, say description, set visited."
@@ -11,6 +11,6 @@
                     (assoc :current-room new-room)
                     (assoc-in [:room-map new-room :visited] true))]
     (say (rooms/describe room-spec))
-    (if-not (:visited room-spec) (print-map new-state))
+    (if-not (:visited room-spec) (print-map_ new-state))
     new-state))
 

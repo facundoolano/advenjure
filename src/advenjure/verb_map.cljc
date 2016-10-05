@@ -1,5 +1,5 @@
 (ns advenjure.verb-map
-  (:require [advenjure.map :refer [print-map]]
+  (:require [advenjure.map :refer [print-map_]]
             [advenjure.verbs :refer [go look look-at look-inside take_ inventory read_ open close unlock talk
                                      save restore exit help stand]]
             [advenjure.utils :refer [direction-mappings]]
@@ -25,7 +25,7 @@
                   add-go-shortcuts
                   (add-verb [(_ "^go (?<dir>.*)") (_ "^go$")] go)
                   (add-verb [(_ "^look$") (_ "^look around$") (_ "^l$")] look)
-                  (add-verb [(_ "^map$") (_ "^m$")] print-map)
+                  (add-verb [(_ "^map$") (_ "^m$")] print-map_)
                   (add-verb [(_ "^look at (?<item1>.*)") (_ "^look at$") (_ "^describe (?<item2>.*)")
                              (_ "^describe$")] look-at)
                   (add-verb [(_ "^look in (?<item1>.*)") (_ "^look in$") (_ "^look inside (?<item2>.*)")

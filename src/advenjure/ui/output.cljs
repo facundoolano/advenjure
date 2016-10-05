@@ -20,6 +20,6 @@
     nil))
 
 
-(defn save-file [file value]
+(defn write-file [file value]
   (aset js/localStorage file (pr-str value)))
 

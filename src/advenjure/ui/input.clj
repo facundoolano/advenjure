@@ -59,4 +59,4 @@
      (update-completer verbs item-names)
      (prompt game-state))))
 
-(defn load-file [file] (read-string (slurp file)))
+(defn read-file [file] (read-string (slurp file)))

@@ -28,7 +28,7 @@
 
 (def read-key read-value)
 
-(defn load-file [file]
+(defn read-file [file]
   (read-string (aget js/localStorage file)))
 
 

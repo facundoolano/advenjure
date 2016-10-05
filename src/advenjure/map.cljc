@@ -35,7 +35,7 @@
         connected-kws (select-keys current directions)]
     (reduce #(assoc-room-name game-state %1 %2) {} connected-kws)))
 
-(defn print-map
+(defn print-map_
   "Print a map of the current room, with the connections in every direction."
   [game-state]
   (let [rooms (room-names game-state)]
