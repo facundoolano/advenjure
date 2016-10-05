@@ -3,6 +3,7 @@
             [advenjure.verbs :refer [go look look-at look-inside take_ inventory read_ open close unlock talk
                                      save restore exit help stand]]
             [advenjure.utils :refer [direction-mappings]]
+            #?(:cljs [xregexp])
             [advenjure.gettext.core :refer [_]]))
 
 (defn add-verb

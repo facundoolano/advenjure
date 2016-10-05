@@ -1,9 +1,10 @@
-(ns advenjure.ui.output)
+(ns advenjure.ui.output
+  (:require [jquery]))
 
-(defn echo [text] (.echo (.terminal (.$ js/window "#terminal")) text))
+(defn echo [text] (.echo (.terminal (js/$ "#terminal")) text))
 
 (defn init []
-  (.terminal (.$ js/window "#terminal")
+  (.terminal (js/$ "#terminal")
              (fn [])
              (js-obj
               "prompt" "advenjure> "

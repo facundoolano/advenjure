@@ -2,11 +2,14 @@
   (:require-macros [cljs.core.async.macros :refer [go]])
   (:require [cljs.reader :refer [read-string]]
             [clojure.string :as string]
+            [jquery]
+            [jquery.terminal]
+            [jquery.mousewheel]
             [advenjure.utils :refer [direction-mappings current-room]]
             [advenjure.items :refer [all-item-names]]
             [cljs.core.async :refer [<! >! chan]]))
 
-(def term #(.terminal (.$ js/window "#terminal")))
+(def term #(.terminal (js/$ "#terminal")))
 (def input-chan (chan))
 
 (def exit #(.pause (term)))
@@ -81,7 +84,7 @@
       (butlast tokens))))
 
 (defn get-full-input []
-  (.text (.next (.$ js/window ".prompt"))))
+  (.text (.next (js/$ ".prompt"))))
 
 (defn get-completion
   [game-state verb-map]
