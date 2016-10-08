@@ -59,6 +59,7 @@
       ([game-state finished? initial-msg verb-map]
        (init)
        (print-line initial-msg)
+       (print-line " ")
        (go-loop [state (change-rooms game-state (:current-room game-state))]
 
          (let [input (<! (get-input state verb-map))

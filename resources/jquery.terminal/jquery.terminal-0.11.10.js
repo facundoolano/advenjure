@@ -3628,7 +3628,7 @@
             if (matched.length === 1) {
                 self.insert(matched[0].replace(regex, ''));
             } else if (matched.length > 1) {
-                if (tab_count >= 2) {
+                if (tab_count >= 1) {
                     echo_command(command);
                     var text = matched.reverse().join('\t');
                     self.echo($.terminal.escape_brackets(text), {keepWords: true});
