@@ -5,7 +5,8 @@
 Advenjure is a text adventure (or interactive fiction) game engine. I wrote it as an excuse to learn Clojure.
 Some of its distinctive features are:
 
-  * Unix-like prompt with smart tab completion and command history (powered by [JLine](https://github.com/jline/jline2)).
+  * Target the terminal and the browser with the same codebase (powered by ClojureScript).
+  * Unix-like prompt with smart tab completion and command history (powered by [JLine](https://github.com/jline/jline2) and [jQuery Terminal](http://terminal.jcubic.pl/)).
   * Customizable and localizable texts and commands (powered by [clojure-gettext](https://github.com/facundoolano/clojure-gettext))
   * A domain specific language for dialog trees.
 
@@ -14,7 +15,7 @@ Some of its distinctive features are:
 Add the following to your project map as a dependency:
 
 ```clojure
-[advenjure "0.2.0"]
+[advenjure "0.3.0"]
 ```
 
 ## Basic Usage
@@ -166,6 +167,30 @@ But I'm not feeling like documenting those right now, specially since I doubt
 anyone other than me will ever use this. But if you *do* want to use it, just open an issue
 and I'll fill the rest of the README =)
 
+## Run on the browser
 
+The codebase is prepared to run both in the terminal with Clojure and the browser with ClojureScript.
+An example configuration, using lein-cljsbuild would be:
+
+```clojure
+:cljsbuild
+    {:builds
+     {:main {:source-paths ["src"]
+             :compiler {:output-to "main.js"
+                        :main example.core
+                        :optimizations :simple
+                        :pretty-print false
+                        :optimize-constants true
+                        :static-fns true}}}
+```
+
+Then the command `lein cljsbuild once` will output a `main.js` file that can be included in any web page to run the game. 
+The HTML should have a `#terminal` div and include the [jQuery Terminal CSS](https://github.com/facundoolano/advenjure-example/blob/master/resources/jquery.terminal-0.11.7.css) to properly render the terminal.
+
+The current limitations of the ClojureScript version of the library are:
+* No internationalization support (since clojure-gettext does not support ClojureScript).
+* Can use up to `:simple` optimizations (not `:advanced`), since [ClojureScript self-hosting](https://github.com/clojure/clojurescript/wiki/Optional-Self-hosting) is required for some of the advanced features.
+
+See the [advenjure-example](https://github.com/facundoolano/advenjure-example) for a game that targets both the terminal and the browser.
 
 
