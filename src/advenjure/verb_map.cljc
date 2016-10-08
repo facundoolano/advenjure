@@ -1,8 +1,10 @@
 (ns advenjure.verb-map
-  (:require [advenjure.map :refer [print-map]]
-            [advenjure.verbs :refer :all]
+  (:require [advenjure.map :refer [print-map_]]
+            [advenjure.verbs :refer [go look look-at look-inside take_ inventory read_ open close unlock talk
+                                     save restore exit help stand]]
             [advenjure.utils :refer [direction-mappings]]
-            [gettext.core :refer [_]]))
+            #?(:cljs [xregexp])
+            [advenjure.gettext.core :refer [_]]))
 
 (defn add-verb
   "Adds the given function as the handler for every verb in the list."
@@ -23,7 +25,7 @@
                   add-go-shortcuts
                   (add-verb [(_ "^go (?<dir>.*)") (_ "^go$")] go)
                   (add-verb [(_ "^look$") (_ "^look around$") (_ "^l$")] look)
-                  (add-verb [(_ "^map$") (_ "^m$")] print-map)
+                  (add-verb [(_ "^map$") (_ "^m$")] print-map_)
                   (add-verb [(_ "^look at (?<item1>.*)") (_ "^look at$") (_ "^describe (?<item2>.*)")
                              (_ "^describe$")] look-at)
                   (add-verb [(_ "^look in (?<item1>.*)") (_ "^look in$") (_ "^look inside (?<item2>.*)")
@@ -50,8 +52,10 @@
 (defn sort-verbs [verb-map] (reverse (sort-by count (keys verb-map))))
 (def msort-verbs (memoize sort-verbs))
 
+(def regexp #?(:clj re-pattern :cljs js/XRegExp))
+
 (defn match-verb [text verb]
-  (let [[head & tokens :as full] (re-find (re-pattern verb) text)]
+  (let [[head & tokens :as full] (re-find (regexp verb) text)]
     (cond
       (and (not (nil? full)) (not (coll? full))) [verb '()] ;single match, no params
       (not-empty head) [verb tokens]))) ; match with params

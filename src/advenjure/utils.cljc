@@ -1,9 +1,9 @@
 (ns advenjure.utils
   (:require [clojure.string :as string]
-            [advenjure.items :refer :all]
+            [advenjure.items :refer [get-from remove-from replace-from]]
             [advenjure.rooms :as rooms]
             [advenjure.ui.output :refer [print-line]]
-            [gettext.core :refer [_]]))
+            [advenjure.gettext.core :refer [_]]))
 
 (defn current-room
   "Get the current room spec from game state."

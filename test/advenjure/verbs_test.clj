@@ -112,7 +112,7 @@
 
 (deftest go-verb
   (with-redefs [say say-mock
-                advenjure.map/print-map identity]
+                advenjure.map/print-map_ identity]
     (let [new-state (go game-state "north")]
       (testing "go to an unvisited room"
         (is-output ["long description of living room"
@@ -367,7 +367,7 @@
 
 (deftest pre-post-conditions
   (with-redefs [say say-mock
-                advenjure.map/print-map identity]
+                advenjure.map/print-map_ identity]
     (testing "Override couldn't take message"
       (let [new-drawer (assoc drawer :take "It's too heavy to take.")
             new-bedroom (assoc bedroom :items #{new-drawer})

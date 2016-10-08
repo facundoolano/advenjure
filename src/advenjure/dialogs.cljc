@@ -1,11 +1,15 @@
 (ns advenjure.dialogs
+  #?(:cljs (:require-macros [cljs.core.async.macros :refer [go go-loop]]))
   (:require [advenjure.items :as items]
+            [clojure.core.async.impl.protocols]
+            [advenjure.ui.output :refer [print-line]]
             [advenjure.ui.input :refer [read-key read-value]]
-            [advenjure.ui.output :refer [print-line]]))
+            #?(:cljs [advenjure.eval :refer [eval]])
+            #?(:cljs [cljs.core.async :refer [<!]])))
 
 (defn print-dialog
   [game-state character speech]
-  (print-line (str character " —" speech))
+  (print-line (str character #?(:clj " —" :cljs " &mdash;") speech))
   (read-key)
   game-state)
 
@@ -14,7 +18,7 @@
   If it's a callable, return an expression that calls it."
   [line]
   (cond
-    (and (seq? line) (= (first line) 'dialog)) (list line) ; case (dialog (dialog ...))
+    (and (seq? line) (#{'dialog 'conditional 'random 'optional} (first line))) (eval line) ; case (dialog (dialog ...))
     (and (seq? line) (string? (eval (first line)))) `(print-dialog ~@line) ; case dialog literal
     :else (list line))) ; case function literal or symbol
 
@@ -74,7 +78,7 @@
   [game-state option]
   (and
     (or (:sticky option) (not (contains? (:executed-dialogs game-state) (:id option))))
-    ((eval (:show-if option)) game-state)))
+    ((:show-if option) game-state)))
 
 (defn filter-available
   [game-state options]
@@ -82,42 +86,82 @@
 
 (defn print-options
   [options]
-  (println)
+  (print-line)
   (dorun ; TODO maybe use a more readable loop instead
     (map-indexed (fn [i opt]
                    (print-line (str (inc i) ". " (:title opt))))
                  options))
-  (println))
+  (print-line))
 
-(defn select-option
-  "Present the player with a list of options, read input and return the
-  selected one. If only one option is available return that right away."
-  [options]
-  (let [amount (count options)
-        choices (set (range 1 (inc amount)))]
-    (if (= amount 1)
-      (first options)
-      (do
-        (print-options options)
-        (loop [i (read-value)] ;fails with empty string
-          (if-not (contains? choices i)
-            (recur (read-value))
-            (get options (dec i))))))))
+#?(:clj
+    (defn select-option
+      "Present the player with a list of options, read input and return the
+      selected one. If only one option is available return that right away."
+      [options]
+      (let [amount (count options)
+            choices (set (range 1 (inc amount)))]
+        (if (= amount 1)
+          (first options)
+          (do
+            (print-options options)
+            (loop [i (read-value)] ;fails with empty string
+              (if-not (contains? choices i)
+                (recur (read-value))
+                (get options (dec i)))))))))
 
-(defn execute-optional
-  [game-state options]
-  (loop [available (filter-available game-state options)
-         game-state game-state]
-    (let [option (select-option available)
-          dialog-fn (eval (:dialog option))
-          new-state (-> game-state
-                        (dialog-fn)
-                        (update-in [:executed-dialogs] conj (:id option)))
-          remaining (filter-available new-state options)]
+#?(:clj
+    (defn execute-optional
+      [game-state options]
+      (loop [available (filter-available game-state options)
+             game-state game-state]
+        (let [option (select-option available)
+              dialog-fn (:dialog option)
+              new-state (-> game-state
+                            (dialog-fn)
+                            (update-in [:executed-dialogs] conj (:id option)))
+              remaining (filter-available new-state options)]
 
-      (if (or (:go-back option) (empty? remaining))
-        new-state
-        (recur remaining new-state)))))
+          (if (or (:go-back option) (empty? remaining))
+            new-state
+            (recur remaining new-state))))))
+
+#?(:cljs
+    (defn select-option
+      "Present the player with a list of options, read input and return the
+      selected one. If only one option is available return that right away."
+      [options]
+      (let [amount (count options)
+            choices (set (range 1 (inc amount)))]
+        (if (= amount 1)
+          (go (first options))
+          (do
+            (print-options options)
+            (go-loop [i (<! (read-value))] ;fails with empty string
+              (if-not (contains? choices i)
+                (recur (<! (read-value)))
+                (get options (dec i)))))))))
+
+#?(:cljs
+    (defn execute-optional
+      [game-state options]
+      (go-loop [available (filter-available game-state options)
+                game-state game-state]
+        (let [option (<! (select-option available))
+              dialog-fn (:dialog option)
+              new-state (-> game-state
+                            (dialog-fn)
+                            (#(if
+                                (satisfies? clojure.core.async.impl.protocols/ReadPort %)
+                                (go (<! %))
+                                (go %)))
+                            (<!)
+                            (update-in [:executed-dialogs] conj (:id option)))
+              remaining (filter-available new-state options)]
+
+          (if (or (:go-back option) (empty? remaining))
+            new-state
+            (recur remaining new-state))))))
+
 
 (defmacro optional
   "Present dialog options to the user and execute the one selected."

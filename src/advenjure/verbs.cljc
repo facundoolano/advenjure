@@ -1,10 +1,13 @@
 (ns advenjure.verbs
-  (:require [advenjure.utils :refer :all]
+  (:require [advenjure.utils :refer [say find-item direction-mappings current-room remove-item replace-item]]
             [advenjure.change-rooms :refer [change-rooms]]
-            [advenjure.conditions :refer :all]
+            [advenjure.conditions :refer [eval-precondition eval-postcondition]]
             [advenjure.items :refer [print-list describe-container iname]]
             [advenjure.rooms :as rooms]
-            [gettext.core :refer [_ p_]]))
+            [advenjure.gettext.core :refer [_ p_]]
+            [advenjure.ui.input :as input :refer [read-file]]
+            [advenjure.ui.output :refer [write-file]]
+            #?(:cljs [advenjure.eval :refer [eval]])))
 
 ;;;; FUNCTIONS TO BUILD VERB HANDLERS
 ; there's some uglyness here, but it enables simple definitions for the verb handlers
@@ -91,23 +94,24 @@
 (defn save
   "Save the current game state to a file."
   [game-state]
-  (spit "saved.game" game-state)
+  (write-file "saved.game" game-state)
   (say (_ "Done.")))
 
 (defn restore
   "Restore a previous game state from file."
   [game-state]
   (try
-    (let [loaded-state (read-string (slurp "saved.game"))]
+    (let [loaded-state (read-file "saved.game")]
       (say (rooms/describe (current-room loaded-state)))
       loaded-state)
-    (catch java.io.FileNotFoundException e (say (_ "No saved game found.")))))
+    (catch #?(:clj java.io.FileNotFoundException :cljs js/Object) e (say (_ "No saved game found.")))))
+
 
 (defn exit
   "Close the game."
   [game-state]
   (say (_ "Bye!"))
-  (System/exit 0))
+  (input/exit))
 
 (def look-at
   (make-item-handler

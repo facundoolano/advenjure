@@ -14,7 +14,7 @@
   [size text]
   (let [text (or text " ")
         total-space (- size (count text))
-        single-space (inc (/ total-space 2))
+        single-space (inc (int (/ total-space 2)))
         spaces (string/join (repeat single-space " "))]
     (str spaces text spaces)))
 
@@ -35,7 +35,7 @@
         connected-kws (select-keys current directions)]
     (reduce #(assoc-room-name game-state %1 %2) {} connected-kws)))
 
-(defn print-map
+(defn print-map_
   "Print a map of the current room, with the connections in every direction."
   [game-state]
   (let [rooms (room-names game-state)]

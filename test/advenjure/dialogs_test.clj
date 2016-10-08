@@ -97,6 +97,7 @@
         (talk new-state "character")
         (is-output ["1. What's your name?"
                     "2. Where are you from?"
+                    ""
                     "ME —What's your name?"
                     "YOU —Emmett Brown."
                     "ME —Where are you from?" ; only one option, autoselects

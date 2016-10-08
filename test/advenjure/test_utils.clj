@@ -6,7 +6,7 @@
 
 (defn say-mock
   "Save the speech lines to output, separated by '\n'"
-  ([speech] (reset! output (clojure.string/join "\n" [@output speech])) nil))
+  ([& speech] (reset! output (clojure.string/join "\n" [@output (apply str speech)])) nil))
 
 (def clean-str (comp clojure.string/capitalize clojure.string/trim))
 
