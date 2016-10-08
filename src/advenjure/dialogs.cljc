@@ -133,7 +133,7 @@
       (let [amount (count options)
             choices (set (range 1 (inc amount)))]
         (if (= amount 1)
-          (go (first options)) ; FIXME
+          (go (first options))
           (do
             (print-options options)
             (go-loop [i (<! (read-value))] ;fails with empty string
