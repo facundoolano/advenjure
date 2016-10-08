@@ -11,6 +11,4 @@
    {:file "xregexp/xregexp-all.js"
     :file-min "xregexp/xregexp-all.min.js"
     :provides ["xregexp"]}]
- :externs ["jquery/externs.js" "xregexp/externs.js"]}
-
-; TODO check if other externs are needed
+ :externs ["jquery/externs.js" "jquery.terminal/externs.js" "xregexp/externs.js"]}
