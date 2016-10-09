@@ -12,3 +12,4 @@ pom.xml.asc
 *REPL*
 saved.game
 out/
+.DS_Store
