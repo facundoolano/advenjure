@@ -10,6 +10,10 @@ Some of its distinctive features are:
   * Customizable and localizable texts and commands (powered by [clojure-gettext](https://github.com/facundoolano/clojure-gettext))
   * A domain specific language for dialog trees.
 
+## Example game
+
+You can see the code for a working example in the [advenjure-example](https://github.com/facundoolano/advenjure-example) repository and play it online [here](https://facundoolano.github.io/advenjure).
+
 ## Installation
 
 Add the following to your project map as a dependency:
@@ -147,10 +151,6 @@ The game flows by taking the initial game state map, prompting the user for a co
 applying the command to produce a new game state and repeat the process until the
 `finished?` condition is met, which, in the example above means entering the
 `:outside` room.
-
-## Example game
-
-You can see a working example in the [advenjure-example](https://github.com/facundoolano/advenjure-example) repository.
 
 ## Advanced Usage
 
