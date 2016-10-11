@@ -154,7 +154,7 @@ applying the command to produce a new game state and repeat the process until th
 
 ## Advanced Usage
 
-There are a number of advanced features available in the engine:
+There is a number of advanced features available in the engine:
 
   * Overriding messages: use custom messages for a given action on a room or item.
   * Pre conditions: function hook to define whether an action can be performed.
