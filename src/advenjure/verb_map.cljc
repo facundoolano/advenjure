@@ -1,7 +1,7 @@
 (ns advenjure.verb-map
   (:require [advenjure.map :refer [print-map_]]
             [advenjure.verbs :refer [go look look-at look-inside take_ inventory read_ open close unlock talk
-                                     save restore exit help stand]]
+                                     save restore exit help stand move push pull take-all]]
             [advenjure.utils :refer [direction-mappings]]
             #?(:cljs [xregexp])
             [advenjure.gettext.core :refer [_]]))
@@ -28,11 +28,16 @@
                   (add-verb [(_ "^map$") (_ "^m$")] print-map_)
                   (add-verb [(_ "^look at (?<item1>.*)") (_ "^look at$") (_ "^describe (?<item2>.*)")
                              (_ "^describe$")] look-at)
+                  (add-verb [(_ "^take all$") (_ "^take everything$")
+                             (_ "^get all$") (_ "^get everything$")] take-all)
                   (add-verb [(_ "^look in (?<item1>.*)") (_ "^look in$") (_ "^look inside (?<item2>.*)")
                              (_ "^look inside$")] look-inside)
-                  (add-verb [(_ "^take (?<item1>.*)") (_ "^take$") (_ "^get (?<item2>.*)") (_ "^get$")
+                  (add-verb [(_ "^take (?!all|everything$)(?<item>.*)") (_ "^take$") (_ "^get (?!all|everything$)(?<item>.*)") (_ "^get$")
                              (_ "^pick (?<item1>.*)") (_ "^pick$") (_ "^pick up (?<item2>.*)")
                              (_ "^pick (?<item>.*) up$") (_ "^pick up$")] take_)
+                  (add-verb [(_ "^move (?<item>.*)") (_ "^move$")] move)
+                  (add-verb [(_"^pull (?<item>.*)") (_"^pull$")] pull)
+                  (add-verb [(_"^push (?<item>.*)") (_"^push$")] push)
                   (add-verb [(_ "^inventory$") (_ "^i$")] inventory)
                   (add-verb [(_ "^read (?<item>.*)") (_ "^read$")] read_)
                   (add-verb [(_ "^open (?<item>.*)") (_ "^open$")] open)
@@ -49,6 +54,7 @@
                   (add-verb [(_ "^get up$") (_ "^stand up$") (_ "^stand$")] stand)))
 
 ;use a sorted version to extract the longest possible form first
+; FIXME take all breakes this logic
 (defn sort-verbs [verb-map] (reverse (sort-by count (keys verb-map))))
 (def msort-verbs (memoize sort-verbs))
 

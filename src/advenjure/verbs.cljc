@@ -2,7 +2,7 @@
   (:require [advenjure.utils :refer [say find-item direction-mappings current-room remove-item replace-item]]
             [advenjure.change-rooms :refer [change-rooms]]
             [advenjure.conditions :refer [eval-precondition eval-postcondition]]
-            [advenjure.items :refer [print-list describe-container iname]]
+            [advenjure.items :refer [print-list describe-container iname all-items]]
             [advenjure.rooms :as rooms]
             [advenjure.gettext.core :refer [_ p_]]
             [advenjure.ui.input :as input :refer [read-file]]
@@ -141,6 +141,20 @@
          (say (_ "Taken."))
          (assoc new-state :inventory new-inventory))))))
 
+(defn take-all
+  "Go through every item in the room that defines a value for :take, and attempt
+  to take it."
+  [game-state]
+  (let [items (all-items (:items (current-room game-state)))
+        item-names (map #(first (:names %)) items)]
+    (reduce (fn [gs iname]
+              (say (str iname ":"))
+              (let [result (or (take_ gs iname) gs)]
+                (say " ")
+                result))
+
+       game-state item-names)))
+
 (def open
   (make-item-handler
    (_ "open") :open
@@ -206,3 +220,8 @@
                                                         (_ "RESTORE: restore a previously saved game.")
                                                         (_ "EXIT: close the game.")
                                                         (_ "You can use the TAB key to get completion suggestions for a command and the UP/DOWN arrows to search the command history.")])))
+
+(def move (make-item-handler "move" :move))
+(def pull (make-item-handler "pull" :pull))
+(def push (make-item-handler "push" :push))
+

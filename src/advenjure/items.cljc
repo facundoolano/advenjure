@@ -112,11 +112,8 @@
                            item))
               item-set))))
 
-(defn all-item-names
+(defn all-items
   [item-set]
-  (if (nil? item-set)
-    []
-    (let [this-names (flatten (map :names item-set))
-          inner-names (flatten (map #(all-item-names (visible-items %))
-                                    item-set))]
-      (concat this-names inner-names))))
+  (concat item-set (mapcat #(all-items (visible-items %)) item-set)))
+
+(def all-item-names (comp #(mapcat :names %) all-items))

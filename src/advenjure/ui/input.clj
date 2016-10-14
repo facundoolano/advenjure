@@ -28,7 +28,7 @@
   (let [verb (string/replace (subs verb 1) #"\$" "")
         tokens (string/split verb #" ")
         mapper (fn [token] (cond
-                             (#{"(?<item>.*)" "(?<item1>.*)" "(?<item2>.*)"} token) items-completer
+                             (string/includes? token "?<item") items-completer
                              (= token "(?<dir>.*)") dirs-completer
                              :else (StringsCompleter. [token])))]
     (ArgumentCompleter. (concat (map mapper tokens) [(NullCompleter.)]))))

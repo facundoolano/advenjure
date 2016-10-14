@@ -27,6 +27,8 @@
   (concat (get-from (:inventory game-state) token)
           (get-from (:items (current-room game-state)) token)))
 
+(def find-first (comp first find-item))
+
 (defn remove-item
   [game-state item]
   (let [room-kw (:current-room game-state)

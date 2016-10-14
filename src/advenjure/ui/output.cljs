@@ -1,5 +1,6 @@
 (ns advenjure.ui.output
-  (:require [jquery]))
+  (:require [jquery]
+            [clojure.string :as string]))
 
 (defn echo [text] (.echo (.terminal (js/$ "#terminal")) text))
 
@@ -8,16 +9,17 @@
              (fn [])
              (js-obj
               "prompt" "advenjure> "
-              "completion" #(%3 (array "take", "open", "push")) ;FIXME just to test
               "greetings" false
               "clear" false
               "exit" false)))
 
 (defn print-line
   [& strs]
-  (do
-    (echo (apply str (or strs [" "])))
-    nil))
+  (let [joined (apply str (or strs [" "]))
+        nonblank (if (string/blank? joined) " " joined)]
+    (do
+      (echo nonblank)
+      nil))) ; need to return nil, echo doesnt
 
 
 (defn write-file [file value]

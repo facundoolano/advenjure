@@ -60,7 +60,7 @@
 (defn expand-suggestion
   [token items dirs]
   (cond
-    (#{"(?<item>.*) " "(?<item1>.*) " "(?<item2>.*) "} token) (map #(str % " ") items)
+    (string/includes? token "?<item") (map #(str % " ") items)
     (= token "(?<dir>.*) ") (map #(str % " ") dirs)
     :else [token]))
 
@@ -99,8 +99,8 @@
     (fn [term input cb]
       (let [input (get-full-input)
             input-tokens (tokenize-input input items dirs)
-            suggested1 (distinct (map #(get-suggested-token % input-tokens) verb-tokens))
-            suggested (remove string/blank? (mapcat #(expand-suggestion % items dirs) suggested1))]
+            suggested1 (remove string/blank? (distinct (map #(get-suggested-token % input-tokens) verb-tokens)))
+            suggested (mapcat #(expand-suggestion % items dirs) suggested1)]
         (cb (apply array suggested))))))
 
 (defn set-interpreter
