@@ -198,6 +198,31 @@
         (is (nil? newer-state))
         (is-output "I didn't see that.")))))
 
+(deftest take-verb
+  (with-redefs [say say-mock]
+    (testing "take all items in the room with containers, ignore inventory"
+      (let [new-state (take-all game-state)
+            item-names (set (map #(first (:names %)) (:inventory new-state)))]
+        (is (= item-names #{"magazine" "pencil" "sock"}))
+        ;; lousy, assumes some order in items
+        (is-output ["Sock:" "Taken." ""
+                    "Pencil:" "Taken." ""])))
+
+    (testing "attempt taking items that define :take property"
+      (let [new-bedroom (-> bedroom
+                            (room/add-item (it/make "shoe" "a shoe" :take "I didn't want that."))
+                            (room/add-item (it/make "fridge" "a fridge" :take false)))
+            new-state (-> game-state
+                          (assoc-in [:room-map :bedroom] new-bedroom)
+                          (take-all))
+            item-names (set (map #(first (:names %)) (:inventory new-state)))]
+        (is (= item-names #{"magazine" "pencil" "sock"}))
+        ;; lousy, assumes some order in items
+        (is-output ["Sock:" "Taken." ""
+                    "Shoe:" "I didn't want that." ""
+                    "Fridge:" "I couldn't take that." ""
+                    "Pencil:" "Taken." ""])))))
+
 (deftest open-verb
   (with-redefs [say say-mock]
     (testing "open a closed item"

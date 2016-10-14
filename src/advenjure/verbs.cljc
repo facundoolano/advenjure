@@ -146,7 +146,8 @@
   to take it."
   [game-state]
   (let [items (all-items (:items (current-room game-state)))
-        item-names (map #(first (:names %)) items)]
+        takeable (remove (comp nil? :take) items)
+        item-names (map #(first (:names %)) takeable)]
     (reduce (fn [gs iname]
               (say (str iname ":"))
               (let [result (or (take_ gs iname) gs)]

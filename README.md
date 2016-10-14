@@ -19,7 +19,7 @@ You can see the code for a working example in the [advenjure-example](https://gi
 Add the following to your project map as a dependency:
 
 ```clojure
-[advenjure "0.3.0"]
+[advenjure "0.4.0"]
 ```
 
 ## Basic Usage
@@ -184,7 +184,7 @@ An example configuration, using lein-cljsbuild would be:
                         :static-fns true}}}
 ```
 
-Then the command `lein cljsbuild once` will output a `main.js` file that can be included in any web page to run the game. 
+Then the command `lein cljsbuild once` will output a `main.js` file that can be included in any web page to run the game.
 The HTML should have a `#terminal` div and include the [jQuery Terminal CSS](https://github.com/facundoolano/advenjure-example/blob/master/resources/jquery.terminal-0.11.7.css) to properly render the terminal.
 
 The current limitations of the ClojureScript version of the library are:
