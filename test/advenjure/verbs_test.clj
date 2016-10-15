@@ -199,14 +199,14 @@
         (is-output "I didn't see that.")))))
 
 (deftest take-verb
-  (with-redefs [say say-mock]
+  (with-redefs [say say-mock say-inline say-inline-mock]
     (testing "take all items in the room with containers, ignore inventory"
       (let [new-state (take-all game-state)
             item-names (set (map #(first (:names %)) (:inventory new-state)))]
         (is (= item-names #{"magazine" "pencil" "sock"}))
         ;; lousy, assumes some order in items
-        (is-output ["Sock:" "Taken." ""
-                    "Pencil:" "Taken." ""])))
+        (is-output ["Sock: Taken."
+                    "Pencil: Taken."])))
 
     (testing "attempt taking items that define :take property"
       (let [new-bedroom (-> bedroom
@@ -218,10 +218,10 @@
             item-names (set (map #(first (:names %)) (:inventory new-state)))]
         (is (= item-names #{"magazine" "pencil" "sock"}))
         ;; lousy, assumes some order in items
-        (is-output ["Sock:" "Taken." ""
-                    "Shoe:" "I didn't want that." ""
-                    "Fridge:" "I couldn't take that." ""
-                    "Pencil:" "Taken." ""])))))
+        (is-output ["Sock: Taken."
+                    "Shoe: I didn't want that."
+                    "Fridge: I couldn't take that."
+                    "Pencil: Taken."])))))
 
 (deftest open-verb
   (with-redefs [say say-mock]

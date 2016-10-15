@@ -1,5 +1,5 @@
 (ns advenjure.verbs
-  (:require [advenjure.utils :refer [say find-item direction-mappings current-room remove-item replace-item]]
+  (:require [advenjure.utils :refer [say say-inline find-item direction-mappings current-room remove-item replace-item]]
             [advenjure.change-rooms :refer [change-rooms]]
             [advenjure.conditions :refer [eval-precondition eval-postcondition]]
             [advenjure.items :refer [print-list describe-container iname all-items]]
@@ -149,9 +149,8 @@
         takeable (remove (comp nil? :take) items)
         item-names (map #(first (:names %)) takeable)]
     (reduce (fn [gs iname]
-              (say (str iname ":"))
+              (say-inline (str iname ": "))
               (let [result (or (take_ gs iname) gs)]
-                (say " ")
                 result))
 
        game-state item-names)))

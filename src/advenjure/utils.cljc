@@ -2,6 +2,7 @@
   (:require [clojure.string :as string]
             [advenjure.items :refer [get-from remove-from replace-from]]
             [advenjure.rooms :as rooms]
+            #?(:cljs [advenjure.ui.output :refer [print]])
             [advenjure.ui.output :refer [print-line]]
             [advenjure.gettext.core :refer [_]]))
 
@@ -68,3 +69,8 @@
   (print-line
     (string-wrap (str (string/capitalize (first speech))
                       (subs speech 1)))))
+
+(defn say-inline
+  [speech]
+  (print
+    (str (string/capitalize (first speech)) (subs speech 1))))

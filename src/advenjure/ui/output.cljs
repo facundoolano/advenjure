@@ -13,12 +13,21 @@
               "clear" false
               "exit" false)))
 
+(defn print
+  [& strs]
+  (let [joined (apply str (or strs [" "]))
+        previous (or (aget js/window "_term_buffer") "")]
+    (aset js/window "_term_buffer" (str previous joined)))) ;ugly hack, dont tell on me
+
+
 (defn print-line
   [& strs]
   (let [joined (apply str (or strs [" "]))
-        nonblank (if (string/blank? joined) " " joined)]
+        nonblank (if (string/blank? joined) " " joined)
+        previous (or (aget js/window "_term_buffer") "")]
     (do
-      (echo nonblank)
+      (aset js/window "_term_buffer" "")
+      (echo (str previous nonblank))
       nil))) ; need to return nil, echo doesnt
 
 
