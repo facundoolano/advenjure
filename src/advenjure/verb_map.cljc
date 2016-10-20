@@ -1,7 +1,7 @@
 (ns advenjure.verb-map
   (:require [advenjure.map :refer [print-map_]]
             [advenjure.verbs :refer [go look look-at look-inside take_ inventory read_ open close unlock talk
-                                     save restore exit help stand move push pull take-all]]
+                                     save restore exit help stand move push pull take-all use_]]
             [advenjure.utils :refer [direction-mappings]]
             #?(:cljs [xregexp])
             [advenjure.gettext.core :refer [_]]))
@@ -42,6 +42,7 @@
                   (add-verb [(_ "^read (?<item>.*)") (_ "^read$")] read_)
                   (add-verb [(_ "^open (?<item>.*)") (_ "^open$")] open)
                   (add-verb [(_ "^close (?<item>.*)") (_ "^close$")] close)
+                  (add-verb [(_ "^use (?<item>.*)") (_ "^use$")] use_)
                   (add-verb [(_ "^unlock (?<item1>.*) with (?<item2>.*)") (_ "^unlock (?<item>.*)")
                              (_ "^unlock (?<item1>.*) with$") (_ "^unlock$")
                              (_ "^open (?<item1>.*) with (?<item2>.*)") (_ "^open (?<item>.*) with")] unlock)

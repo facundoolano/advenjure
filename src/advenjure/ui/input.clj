@@ -60,3 +60,8 @@
      (prompt game-state))))
 
 (defn read-file [file] (read-string (slurp file)))
+
+(defn prompt-value
+  "Ask the user to enter a value"
+  [prompt]
+  (.readLine console prompt))

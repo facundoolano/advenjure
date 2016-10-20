@@ -200,6 +200,7 @@
 
 ;;; NOOP VERBS (rely entirely in pre/post conditions)
 (def read_ (make-item-handler (_ "read") :read))
+(def use_ (make-item-handler (_ "use") :use))
 
 ;; SAY VERBS
 (defn make-say-verb [speech]

@@ -121,3 +121,7 @@
     (set-interpreter state verb-map)
     (.echo (term) " ")
     (<! input-chan)))
+
+(defn prompt-value
+  "Ask the user to enter a value"
+  [prompt])
