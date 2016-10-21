@@ -1,7 +1,7 @@
 (ns advenjure.game
-  #?(:cljs (:require-macros [advenjure.async :refer [<!? aloop]]))
+  #?(:cljs (:require-macros [cljs.core.async.macros :refer[go]][advenjure.async :refer [aloop alet let!?]]))
   (:require [advenjure.rooms :as room]
-            #?(:clj [advenjure.async :refer [<!? aloop]])
+            #?(:clj [advenjure.async :refer [let!? aloop alet]])
             [advenjure.change-rooms :refer [change-rooms]]
             [advenjure.verb-map :refer [find-verb default-map]]
             [advenjure.ui.input :refer [get-input exit]]
@@ -27,8 +27,9 @@
         [verb tokens] (find-verb verb-map clean)
         handler (get verb-map verb)]
     (if handler
-      (let [new-state (update-in game-state [:moves] inc)]
-        (or (apply handler new-state tokens) new-state))
+      (alet [new-state (update-in game-state [:moves] inc)
+             handler-state (apply handler new-state tokens)]
+        (or handler-state new-state))
       (do (print-line (_ "I didn't know how to do that.")) game-state))))
 
 (defn run
@@ -41,9 +42,8 @@
    (print-line initial-msg)
    (print-line " ")
    (aloop [state (change-rooms game-state (:current-room game-state))]
-
-     (let [input (<!? (get-input state verb-map))
-           new-state (<!? (process-input verb-map state input))]
+     (let!? [input (get-input state verb-map)
+             new-state (process-input verb-map state input)]
        (if-not (finished? new-state)
          (recur new-state)
          (do

@@ -1,9 +1,9 @@
 (ns advenjure.dialogs
-  #?(:cljs (:require-macros [advenjure.async :refer [<!? aloop]]))
+  #?(:cljs (:require-macros [advenjure.async :refer [let!? <!? aloop]]))
   (:require [advenjure.items :as items]
             [advenjure.ui.output :refer [print-line]]
             [advenjure.ui.input :refer [read-key read-value]]
-            #?(:clj [advenjure.async :refer [<!? aloop]])
+            #?(:clj [advenjure.async :refer [let!? <!? aloop]])
             #?(:cljs [advenjure.eval :refer [eval]])))
 
 (defn print-dialog
@@ -111,13 +111,11 @@
   [game-state options]
   (aloop [available (filter-available game-state options)
           game-state game-state]
-    (let [option (<!? (select-option available))
-          dialog-fn (:dialog option)
-          new-state (-> game-state
-                        (dialog-fn)
-                        (<!?)
-                        (update-in [:executed-dialogs] conj (:id option)))
-          remaining (filter-available new-state options)]
+    (let!? [option (select-option available)
+            dialog-fn (:dialog option)
+            dialog-state (dialog-fn game-state)
+            new-state (update-in dialog-state [:executed-dialogs] conj (:id option))
+            remaining (filter-available new-state options)]
 
       (if (or (:go-back option) (empty? remaining))
         new-state

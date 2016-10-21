@@ -1,4 +1,5 @@
 (ns advenjure.verbs
+  #?(:cljs (:require-macros [advenjure.async :refer [alet]]))
   (:require [advenjure.utils :refer [say say-inline find-item direction-mappings current-room remove-item replace-item]]
             [advenjure.change-rooms :refer [change-rooms]]
             [advenjure.conditions :refer [eval-precondition eval-postcondition]]
@@ -7,6 +8,7 @@
             [advenjure.gettext.core :refer [_ p_]]
             [advenjure.ui.input :as input :refer [read-file]]
             [advenjure.ui.output :refer [write-file]]
+            #?(:clj [advenjure.async :refer [alet]])
             #?(:cljs [advenjure.eval :refer [eval]])))
 
 ;;;; FUNCTIONS TO BUILD VERB HANDLERS
@@ -24,18 +26,20 @@
    (fn
      ([game-state] (say (_ "%s what?" verb-name)))
      ([game-state item-name]
-      (let [items (find-item game-state item-name)
-            item (first items)
-            conditions (verb-kw item)
-            value (eval-precondition conditions game-state)]
+      (alet [items (find-item game-state item-name)
+             item (first items)
+             conditions (verb-kw item)
+             value (eval-precondition conditions game-state)]
         (cond
           (empty? items) (say (_ "I didn't see that."))
           (> (count items) 1) (say (_ "Which %s?" item-name))
           (string? value) (say value)
           (false? value) (say (_ "I couldn't %s that." verb-name))
           (and kw-required (nil? value)) (say (_ "I couldn't %s that." verb-name))
-          :else (let [new-state (handler game-state item)]
-                  (eval-postcondition conditions game-state new-state))))))))
+          :else (alet [new-state (handler game-state item)
+                       post-state (eval-postcondition conditions game-state new-state)]
+                  post-state)))))))
+
 
 (defn make-compound-item-handler
   ; some copy pasta, but doesn't seem worth to refactor
@@ -47,12 +51,12 @@
      ([game-state] (say (_ "%s what?" verb-name)))
      ([game-state item1] (say (_ "%s %s with what?" verb-name item1)))
      ([game-state item1-name item2-name]
-      (let [items1 (find-item game-state item1-name)
-            item1 (first items1)
-            items2 (find-item game-state item2-name)
-            item2 (first items2)
-            conditions (verb-kw item1)
-            value (eval-precondition conditions game-state item2)]
+      (alet [items1 (find-item game-state item1-name)
+             item1 (first items1)
+             items2 (find-item game-state item2-name)
+             item2 (first items2)
+             conditions (verb-kw item1)
+             value (eval-precondition conditions game-state item2)]
         (cond
           (or (empty? items1) (empty? items2)) (say (_ "I didn't see that."))
           (> (count items1) 1) (say (_ "Which %s?" item1-name))
@@ -60,7 +64,7 @@
           (string? value) (say value)
           (false? value) (say (str "I couldn't " verb-name " that."))
           (and kw-required (nil? value)) (say (_ "I couldn't %s that." verb-name))
-          :else (let [new-state (handler game-state item1 item2)]
+          :else (alet [new-state (handler game-state item1 item2)]
                   (eval-postcondition conditions game-state new-state))))))))
 
 ;;; VERB HANDLER DEFINITIONS
@@ -69,12 +73,12 @@
   ([game-state] (say (_ "Go where?")))
   ([game-state direction]
    (if-let [dir (get direction-mappings direction)]
-     (let [dir-condition (dir (current-room game-state))
-           dir-value (eval-precondition dir-condition game-state)]
+     (alet [dir-condition (dir (current-room game-state))
+            dir-value (eval-precondition dir-condition game-state)]
        (cond
          (string? dir-value) (say dir-value)
          (not dir-value) (say (_ "Couldn't go in that direction"))
-         :else (let [new-state (change-rooms game-state dir-value)]
+         :else (alet [new-state (change-rooms game-state dir-value)]
                  (eval-postcondition dir-condition game-state new-state))))
 
      (say "Go where?"))))
@@ -105,7 +109,6 @@
       (say (rooms/describe (current-room loaded-state)))
       loaded-state)
     (catch #?(:clj java.io.FileNotFoundException :cljs js/Object) e (say (_ "No saved game found.")))))
-
 
 (defn exit
   "Close the game."
@@ -149,10 +152,11 @@
         takeable (remove (comp nil? :take) items)
         item-names (map #(first (:names %)) takeable)]
     (reduce (fn [gs iname]
-              (say-inline (str iname ": "))
-              (let [result (or (take_ gs iname) gs)]
+              (alet [gs gs
+                     _ (say-inline (str iname ": "))
+                     new-state (take_ gs iname)
+                     result (or new-state gs)]
                 result))
-
        game-state item-names)))
 
 (def open
