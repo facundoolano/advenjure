@@ -100,7 +100,7 @@
       (let [input (get-full-input)
             input-tokens (tokenize-input input items dirs)
             suggested1 (remove string/blank? (distinct (map #(get-suggested-token % input-tokens) verb-tokens)))
-            suggested (mapcat #(expand-suggestion % items dirs) suggested1)]
+            suggested (distinct (mapcat #(expand-suggestion % items dirs) suggested1))]
         (cb (apply array suggested))))))
 
 (defn set-interpreter
@@ -121,3 +121,11 @@
     (set-interpreter state verb-map)
     (.echo (term) " ")
     (<! input-chan)))
+
+(defn prompt-value
+  "Ask the user to enter a value"
+  [prompt]
+  (go
+    (.set_prompt (term) prompt)
+    (<! input-chan)))
+

@@ -221,7 +221,14 @@
         (is-output ["Sock: Taken."
                     "Shoe: I didn't want that."
                     "Fridge: I couldn't take that."
-                    "Pencil: Taken."])))))
+                    "Pencil: Taken."])))
+
+    (testing "take all when no items left"
+      (let [empty-state (assoc-in game-state [:room-map :bedroom :items] #{})
+            new-state (take-all empty-state)]
+        (is-output "I saw nothing worth taking.")
+        (is (nil? new-state))))))
+
 
 (deftest open-verb
   (with-redefs [say say-mock]
