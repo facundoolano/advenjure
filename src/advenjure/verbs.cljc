@@ -151,13 +151,15 @@
   (let [items (all-items (:items (current-room game-state)))
         takeable (remove (comp nil? :take) items)
         item-names (map #(first (:names %)) takeable)]
-    (reduce (fn [gs iname]
-              (alet [gs gs
-                     _ (say-inline (str iname ": "))
-                     new-state (take_ gs iname)
-                     result (or new-state gs)]
-                result))
-       game-state item-names)))
+    (if (empty? item-names)
+      (say (_ "I saw nothing worth taking."))
+      (reduce (fn [gs iname]
+                (alet [gs gs ; wait for the channel value before printing the next item name
+                       _ (say-inline (str iname ": "))
+                       new-state (take_ gs iname)
+                       result (or new-state gs)]
+                  result))
+         game-state item-names))))
 
 (def open
   (make-item-handler
