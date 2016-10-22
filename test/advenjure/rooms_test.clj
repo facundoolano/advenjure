@@ -45,3 +45,24 @@
                               :description "This is a kitchen."
                               :item-descriptions {"microwave" "In the corner is a microwave"}))
              "This is a kitchen.\nThere was an oven there.")))))
+
+(deftest visible-name-mappings-test
+  (let [bedroom (make "bedroom" "" :north :living :south :bathroom :west :dressing :visited true)
+        dressing (make "dressing" "" :east :bedroom :synonyms ["dressing room"])
+        living (make "living room" "" :south :bedroom :synonyms ["living" "livingroom"] :visited true)
+        kitchen (make "living room" "" :east :living)
+        bathroom (make "bathroom" "" :north :bedroom :visited true)
+        room-map {:living living
+                  :bedroom bedroom
+                  :dressing dressing
+                  :kitchen kitchen
+                  :bathroom bathroom}
+        names (visible-name-mappings room-map :bedroom)]
+
+    (testing "should map visible, visited rooms including all synonyms"
+      (is (= {"living room" :living
+              "living" :living
+              "livingroom" :living
+              "bathroom" :bathroom}
+             names)))))
+

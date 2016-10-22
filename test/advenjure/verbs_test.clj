@@ -127,7 +127,16 @@
                       "There was a sock there."
                       "There was a drawer there. The drawer contained a pencil"])
           (is (= (:current-room newer-state) :bedroom))
-          (is (get-in newer-state [:room-map :bedroom :visited])))))
+          (is (get-in newer-state [:room-map :bedroom :visited]))))
+
+      (testing "go to a visited room name"
+        (let [newer-state (go new-state "bedroom")]
+            (is-output ["short description of bedroom"
+                        "There was a bed there."
+                        "There was a sock there."
+                        "There was a drawer there. The drawer contained a pencil"])
+            (is (= (:current-room newer-state) :bedroom))
+            (is (get-in newer-state [:room-map :bedroom :visited])))))
 
     (testing "go to a blocked direction"
       (go game-state "west")

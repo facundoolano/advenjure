@@ -81,7 +81,13 @@
          :else (alet [new-state (change-rooms game-state dir-value)]
                  (eval-postcondition dir-condition game-state new-state))))
 
-     (say "Go where?"))))
+     (let [rmap (:room-map game-state)
+           current (:current-room game-state)
+           name-mappings (rooms/visible-name-mappings rmap current)
+           roomkw (get name-mappings direction)]
+      (if roomkw
+        (change-rooms game-state roomkw)
+        (say "Go where?"))))))
 
 (defn go-back
   "Go to the previous room, if possible."

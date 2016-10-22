@@ -10,6 +10,10 @@
                     {:items #{} :item-descriptions {} :visited false} ;default args, can be overriden by extras
                     extras)))
 
+(defn names
+  [room]
+  (map clojure.string/lower-case (concat (vector (:name room)) (:synonyms room))))
+
 (defn add-item
   "Add the item to the room with an optional custom description.
   Returns the updated room."
@@ -73,11 +77,20 @@
   [room-map r1 direction r2]
   (assoc-in room-map [r1 direction] r2))
 
-
 (defn connection-dir
   "Check if the given room has a connection to a room with the given kw. If it
   does, return the direction."
   [room-spec roomkw]
   (some #(and (= (% room-spec) roomkw) %) directions))
 
+(defn visible-name-mappings
+  "Given a room-map and a current room kw return a map of room name (including
+  synonyms) to room keyword, considering only accesible and visited rooms."
+  [room-map current]
+  (->> (current room-map)
+    (filter (comp directions first)) ; direction pairs
+    (map second) ; room kws
+    (filter #(get-in room-map [% :visited])) ; keep visited
+    (map #(zipmap (names (% room-map)) (repeat %))) ; map room names to room kws
+    (apply merge))) ;merge per room mappings
 
