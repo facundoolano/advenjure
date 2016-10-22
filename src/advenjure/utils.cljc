@@ -18,7 +18,9 @@
                          (_ "south") :south, (_ "s") :south
                          (_ "southwest") :southwest, (_ "sw") :southwest
                          (_ "west") :west, (_ "w") :west
-                         (_ "northwest") :northwest, (_ "nw") :northwest})
+                         (_ "northwest") :northwest, (_ "nw") :northwest
+                         (_ "up") :up, (_ "u") :up
+                         (_ "down") :down, (_ "d") :down})
 
 (def directions (set (vals direction-mappings)))
 
