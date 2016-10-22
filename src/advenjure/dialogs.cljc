@@ -8,7 +8,7 @@
 
 (defn print-dialog
   [game-state character speech]
-  (print-line (str character #?(:clj " —" :cljs " &mdash;") speech))
+  (print-line (str character " —" speech))
   (read-key)
   game-state)
 

@@ -2,7 +2,11 @@
   (:require [jquery]
             [clojure.string :as string]))
 
-(defn echo [text] (.echo (.terminal (js/$ "#terminal")) text))
+(defn escape
+  [text]
+  (string/escape text {\↑ "&uarr;" \↓ "&darr;" \— "&mdash;"}))
+
+(defn echo [text] (.echo (.terminal (js/$ "#terminal")) (escape text)))
 
 (defn clear []
   (.clear (.terminal (js/$ "#terminal"))))
