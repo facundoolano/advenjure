@@ -30,7 +30,9 @@
       (alet [new-state (update-in game-state [:moves] inc)
              handler-state (apply handler new-state tokens)]
         (or handler-state new-state))
-      (do (print-line (_ "I didn't know how to do that.")) game-state))))
+
+      (do (if-not (clojure.string/blank? clean) (print-line (_ "I didn't know how to do that.")))
+        game-state))))
 
 (defn run
   "Run the game loop. Requires a finished? function to decide when to terminate the loop."

@@ -1,6 +1,7 @@
 (ns advenjure.change-rooms
   (:require [advenjure.rooms :as rooms]
             [advenjure.utils :refer [say]]
+            [advenjure.ui.output :refer [clear]]
             [advenjure.map :refer [print-map_]]))
 
 (defn change-rooms
@@ -11,8 +12,10 @@
         new-state (-> game-state
                     (assoc :previous-room previous)
                     (assoc :current-room new-room)
-                    (assoc-in [:room-map new-room :visited] true))]
+                    (assoc-in [:room-map new-room :visited] true))
+        visited? (:visited room-spec)]
+    (if-not visited? (clear))
     (say (rooms/describe room-spec))
-    (if-not (:visited room-spec) (print-map_ new-state))
+    (if-not visited? (print-map_ new-state))
     new-state))
 

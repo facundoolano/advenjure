@@ -4,12 +4,16 @@
 
 (defn echo [text] (.echo (.terminal (js/$ "#terminal")) text))
 
+(defn clear []
+  (.clear (.terminal (js/$ "#terminal"))))
+
 (defn init []
   (.terminal (js/$ "#terminal")
              (fn [])
              (js-obj
               "prompt" "advenjure> "
               "greetings" false
+              "scrollOnEcho" true
               "clear" false
               "exit" false)))
 
