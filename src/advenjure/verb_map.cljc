@@ -23,7 +23,7 @@
 
 (def default-map (-> {}
                   add-go-shortcuts
-                  (add-verb [(_ "^go (?<dir>.*)") (_ "^go$")] go)
+                  (add-verb [(_ "^go (?!back$)(?<dir>.*)") (_ "^go to (?<dir>.*)") (_ "^go$")] go)
                   (add-verb [(_ "^go back$") (_ "^back$") (_ "^b$")] go-back)
                   (add-verb [(_ "^look$") (_ "^look around$") (_ "^l$")] look)
                   (add-verb [(_ "^map$") (_ "^m$")] print-map_)

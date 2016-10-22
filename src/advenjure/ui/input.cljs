@@ -7,7 +7,7 @@
             [jquery.mousewheel]
             [advenjure.utils :refer [direction-mappings current-room]]
             [advenjure.items :refer [map->Item all-item-names]]
-            [advenjure.rooms :refer [map->Room]]
+            [advenjure.rooms :refer [map->Room visible-name-mappings]]
             [cljs.core.async :refer [<! >! chan]]))
 
 (def term #(.terminal (js/$ "#terminal")))
@@ -61,7 +61,7 @@
   [token items dirs]
   (cond
     (string/includes? token "?<item") (map #(str % " ") items)
-    (= token "(?<dir>.*) ") (map #(str % " ") dirs)
+    (string/includes? token "?<dir") (map #(str % " ") dirs)
     :else [token]))
 
 (defn tokenize-verb
@@ -95,7 +95,8 @@
   (let [verb-tokens (map tokenize-verb (keys verb-map))
         room (current-room game-state)
         items (all-item-names (into (:inventory game-state) (:items room)))
-        dirs (keys direction-mappings)]
+        name-mappings (visible-name-mappings (:room-map game-state) (:current-room game-state))
+        dirs (concat (keys direction-mappings) (keys name-mappings))]
     (fn [term input cb]
       (let [input (get-full-input)
             input-tokens (tokenize-input input items dirs)

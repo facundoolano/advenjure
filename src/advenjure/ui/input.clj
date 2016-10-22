@@ -1,6 +1,7 @@
 (ns advenjure.ui.input
   (:require [clojure.string :as string]
             [advenjure.items :refer [all-item-names]]
+            [advenjure.rooms :refer [visible-name-mappings]]
             [advenjure.utils :refer [direction-mappings current-room]])
   (:import [jline.console ConsoleReader]
            [jline.console.completer StringsCompleter ArgumentCompleter NullCompleter AggregateCompleter]))
@@ -29,15 +30,15 @@
         tokens (string/split verb #" ")
         mapper (fn [token] (cond
                              (string/includes? token "?<item") items-completer
-                             (= token "(?<dir>.*)") dirs-completer
+                             (string/includes? token "?<dir") dirs-completer
                              :else (StringsCompleter. [token])))]
     (ArgumentCompleter. (concat (map mapper tokens) [(NullCompleter.)]))))
 
 (defn update-completer
-  [verbs items]""
+  [verbs items room-names]
   (let [current (first (.getCompleters console))
         items (StringsCompleter. items)
-        dirs (StringsCompleter. (keys direction-mappings))
+        dirs (StringsCompleter. (concat (keys direction-mappings) room-names))
         arguments (map #(verb-to-completer % items dirs) verbs)
         aggregate (AggregateCompleter. arguments)]
     (.removeCompleter console current)
@@ -54,9 +55,10 @@
   ([game-state verb-map]
    (let [verbs (keys verb-map)
          room (current-room game-state)
+         room-names (keys (visible-name-mappings (:room-map game-state) (:current-room game-state)))
          all-items (into (:inventory game-state) (:items room))
          item-names (all-item-names all-items)]
-     (update-completer verbs item-names)
+     (update-completer verbs item-names room-names)
      (prompt game-state))))
 
 (defn read-file [file] (read-string (slurp file)))
