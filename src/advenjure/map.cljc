@@ -9,6 +9,16 @@
 (def square (count "+--- N ---+"))
 (def side (/ (- full square) 2))
 
+; no idea how the fucking closure escaping works, patch it
+(defn uarr [room]
+  #?(:clj (str room " ↑")
+     :cljs (str "     " room " &uarr;")))
+
+(defn darr [room]
+  #?(:clj (str room " ↓")
+     :cljs (str "     " room " &darr;")))
+
+
 (defn pad
   "Sorround the given text with spaces so the total size is the requested"
   [size text]
@@ -40,7 +50,7 @@
   [game-state]
   (let [rooms (room-names game-state)]
     (print-line)
-    (print-line (pad full (and (:up rooms) (str (:up rooms) " ↑"))))
+    (print-line (pad full (and (:up rooms) (uarr (:up rooms)))))
     (print-line)
     (print-line (pad full (:north rooms)))
     (print-line (str (pad half (:northwest rooms)) (pad half (:northeast rooms))))
@@ -52,4 +62,4 @@
     (print-line (str (pad half (:southwest rooms)) (pad half (:southeast rooms))))
     (print-line (pad full (:south rooms)))
     (print-line)
-    (print-line (pad full (and (:down rooms) (str (:down rooms) " ↓"))))))
+    (print-line (pad full (and (:down rooms) (darr (:down rooms)))))))
