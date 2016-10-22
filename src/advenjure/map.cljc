@@ -40,6 +40,8 @@
   [game-state]
   (let [rooms (room-names game-state)]
     (print-line)
+    (print-line (pad full (and (:up rooms) (str (:up rooms) " ↑"))))
+    (print-line)
     (print-line (pad full (:north rooms)))
     (print-line (str (pad half (:northwest rooms)) (pad half (:northeast rooms))))
     (print-line (pad full "+--- N ---+"))
@@ -48,4 +50,6 @@
     (print-line (pad full "|         |"))
     (print-line (pad full "+--- S ---+"))
     (print-line (str (pad half (:southwest rooms)) (pad half (:southeast rooms))))
-    (print-line (pad full (:south rooms)))))
+    (print-line (pad full (:south rooms)))
+    (print-line)
+    (print-line (pad full (and (:down rooms) (str (:down rooms) " ↓"))))))
