@@ -57,6 +57,8 @@
                           :up :down
                           :down :up})
 
+(def directions (set (vals matching-directions)))
+
 (defn connect
   "Connect r1 with r2 in the given direction and make the corresponding
   connection in r2."
@@ -70,4 +72,12 @@
   r2 can be a condition function or string to make a conditional connection."
   [room-map r1 direction r2]
   (assoc-in room-map [r1 direction] r2))
+
+
+(defn connection-dir
+  "Check if the given room has a connection to a room with the given kw. If it
+  does, return the direction."
+  [room-spec roomkw]
+  (some #(and (= (% room-spec) roomkw) %) directions))
+
 

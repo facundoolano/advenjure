@@ -1,6 +1,6 @@
 (ns advenjure.verb-map
   (:require [advenjure.map :refer [print-map_]]
-            [advenjure.verbs :refer [go look look-at look-inside take_ inventory read_ open close unlock talk
+            [advenjure.verbs :refer [go go-back look look-at look-inside take_ inventory read_ open close unlock talk
                                      save restore exit help stand move push pull take-all use_]]
             [advenjure.utils :refer [direction-mappings]]
             #?(:cljs [xregexp])
@@ -24,6 +24,7 @@
 (def default-map (-> {}
                   add-go-shortcuts
                   (add-verb [(_ "^go (?<dir>.*)") (_ "^go$")] go)
+                  (add-verb [(_ "^go back$") (_ "^back$") (_ "^b$")] go-back)
                   (add-verb [(_ "^look$") (_ "^look around$") (_ "^l$")] look)
                   (add-verb [(_ "^map$") (_ "^m$")] print-map_)
                   (add-verb [(_ "^look at (?<item1>.*)") (_ "^look at$") (_ "^describe (?<item2>.*)")
@@ -55,7 +56,6 @@
                   (add-verb [(_ "^get up$") (_ "^stand up$") (_ "^stand$")] stand)))
 
 ;use a sorted version to extract the longest possible form first
-; FIXME take all breakes this logic
 (defn sort-verbs [verb-map] (reverse (sort-by count (keys verb-map))))
 (def msort-verbs (memoize sort-verbs))
 

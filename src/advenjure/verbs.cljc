@@ -83,6 +83,15 @@
 
      (say "Go where?"))))
 
+(defn go-back
+  "Go to the previous room, if possible."
+  [game-state]
+  (if-let [roomkw (:previous-room game-state)]
+    (if (rooms/connection-dir (current-room game-state) roomkw)
+      (change-rooms game-state roomkw)
+      (say (_ "Where would back be?")))
+    (say (_ "Where would back be?"))))
+
 (defn look
   "Look around (describe room). If tokens is defined, show error phrase."
   [game-state]

@@ -139,6 +139,27 @@
       (go game-state "crazy")
       (is-output "Go where?"))))
 
+(deftest go-back-verb
+  (with-redefs [say say-mock
+                advenjure.map/print-map_ identity]
+    (testing "Should remember previous room and go back"
+      (let [new-state (-> game-state
+                          (go "north")
+                          (go-back))]
+        (is (:current-room new-state) :bedroom)
+        (is (:previous-room new-state) :living)
+        (is-output ["long description of living room"
+                    "There was a sofa there."
+                    "short description of bedroom"
+                    "There was a bed there."
+                    "There was a sock there."
+                    "There was a drawer there. The drawer contained a pencil"])))
+
+    (testing "Should say can't go back if not known previous location")
+
+    (testing "Should say can't go back if previous room not currently accesible")))
+
+
 (deftest take-verb
   (with-redefs [say say-mock]
     (testing "take an item from the room"
