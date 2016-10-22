@@ -219,6 +219,18 @@
      (let [dialog (eval (:dialog item))]
        (dialog game-state)))))
 
+;;; VERBS THAT USE ITEMS TO CHANGE ROOMS
+(defn make-move-item-handler
+  [verb-name verb-kw]
+  (make-item-handler verb-name verb-kw
+    (fn [game-state item]
+      (change-rooms game-state (verb-kw item)))))
+
+(def climb (make-move-item-handler (_ "climb") :climb))
+(def climb-up (make-move-item-handler (_ "climb up") :climb-up))
+(def climb-down (make-move-item-handler (_ "climb down") :climb-down))
+(def enter (make-move-item-handler (_ "enter") :enter))
+
 ;;; NOOP VERBS (rely entirely in pre/post conditions)
 (def read_ (make-item-handler (_ "read") :read))
 (def use_ (make-item-handler (_ "use") :use))

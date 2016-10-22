@@ -16,6 +16,13 @@
   (if (or (:unlock item) (contains? item :locked))
     {:unlock true :locked true :close true :closed true :open true}))
 
+(defn climb-defaults
+  [item]
+  (if-let [room (or (:climb-up item) (:climb-down item))]
+    {:climb room
+     :climb-up (_ "Not up.")
+     :climb-down (_ "Not down.")}))
+
 (defn talk-defaults [item] (if (:dialog item) {:talk true}))
 
 (defn make
@@ -25,6 +32,7 @@
                        (open-defaults extras)
                        (unlock-defaults extras)
                        (talk-defaults extras)
+                       (climb-defaults extras)
                        extras))))
   ([names]
    (make names (_ "There was nothing special about it."))))
