@@ -19,7 +19,7 @@ You can see the code for a working example in the [advenjure-example](https://gi
 Add the following to your project map as a dependency:
 
 ```clojure
-[advenjure "0.6.2"]
+[advenjure "0.6.3"]
 ```
 
 ## Basic Usage
