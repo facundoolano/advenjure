@@ -8,10 +8,20 @@
             [advenjure.utils :refer [direction-mappings current-room]]
             [advenjure.items :refer [map->Item all-item-names]]
             [advenjure.rooms :refer [map->Room visible-name-mappings]]
-            [cljs.core.async :refer [<! >! chan]]))
+            [cljs.core.async :refer [<! >! chan close!]]))
 
 (def term #(.terminal (js/$ "#terminal")))
-(def input-chan (chan))
+
+; put it inside an atom so it can be reset on figwheel restart
+(def input-chan (atom (chan)))
+
+(defn figwheel-cleanup
+  "Need to recreate input chan so previous game loop doesnt receive input anymore."
+  []
+  (println "resetting input channel for figwheel cleanup")
+  (close! @input-chan)
+  (reset! input-chan (chan)))
+
 
 (def exit #(.pause (term)))
 
@@ -36,11 +46,10 @@
 (defn read-file [file]
   (read-string (aget js/localStorage file)))
 
-
 (defn process-command
   "Write command to the input channel"
   [command term]
-  (go (>! input-chan command)))
+  (go (>! @input-chan command)))
 
 
 (defn get-suggested-token
@@ -121,12 +130,12 @@
   (go
     (set-interpreter state verb-map)
     (.echo (term) " ")
-    (<! input-chan)))
+    (<! @input-chan)))
 
 (defn prompt-value
   "Ask the user to enter a value"
   [prompt]
   (go
     (.set_prompt (term) prompt)
-    (<! input-chan)))
+    (<! @input-chan)))
 
