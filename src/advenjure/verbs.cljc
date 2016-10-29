@@ -73,11 +73,12 @@
   ([game-state] (say (_ "Go where?")))
   ([game-state direction]
    (if-let [dir (get direction-mappings direction)]
-     (alet [dir-condition (dir (current-room game-state))
+     (alet [room (current-room game-state)
+            dir-condition (dir room)
             dir-value (eval-precondition dir-condition game-state)]
        (cond
          (string? dir-value) (say dir-value)
-         (not dir-value) (say (_ "Couldn't go in that direction"))
+         (not dir-value) (say (or (:default-go room) (_ "Couldn't go in that direction")))
          :else (alet [new-state (change-rooms game-state dir-value)]
                  (eval-postcondition dir-condition game-state new-state))))
 
