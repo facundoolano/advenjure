@@ -25,8 +25,9 @@
   (let [text (or text " ")
         total-space (- size (count text))
         single-space (inc (int (/ total-space 2)))
-        spaces (string/join (repeat single-space " "))]
-    (str spaces text spaces)))
+        lspaces (string/join (repeat single-space " "))
+        rspaces (if (even? (count text)) (subs lspaces 1) lspaces)]
+    (str lspaces text rspaces)))
 
 (defn assoc-room-name
   "Add the name of the room in the given direction to the name map. Uses '?'
@@ -35,7 +36,7 @@
   (let [room-kw (eval-precondition condition game-state)
         room (get-in game-state [:room-map room-kw])
         rname (cond (string? room-kw) "X"
-                    (:visited room) (:name room)
+                    (or (:known room) (:visited room)) (:name room)
                     :else "?")]
     (assoc name-map dir rname)))
 

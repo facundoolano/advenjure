@@ -12,10 +12,9 @@
         new-state (-> game-state
                     (assoc :previous-room previous)
                     (assoc :current-room new-room)
-                    (assoc-in [:room-map new-room :visited] true))
-        visited? (:visited room-spec)]
-    (if-not visited? (clear))
+                    (assoc-in [:room-map new-room :visited] true))]
+    (clear)
     (say (rooms/describe room-spec))
-    (if-not visited? (print-map_ new-state))
+    (print-map_ new-state)
     new-state))
 
