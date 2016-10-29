@@ -3,8 +3,9 @@
   (:require [advenjure.rooms :as room]
             #?(:clj [advenjure.async :refer [let!? aloop alet]])
             [advenjure.change-rooms :refer [change-rooms]]
+            [advenjure.utils :as utils]
             [advenjure.verb-map :refer [find-verb default-map]]
-            [advenjure.ui.input :refer [get-input exit]]
+            [advenjure.ui.input :refer [get-input exit read-key]]
             [advenjure.ui.output :refer [print-line init]]
             [advenjure.gettext.core :refer [_]]))
 
@@ -41,13 +42,13 @@
    (run game-state finished? initial-msg default-map))
   ([game-state finished? initial-msg verb-map]
    (init)
-   (print-line initial-msg)
-   (print-line " ")
-   (aloop [state (change-rooms game-state (:current-room game-state))]
-     (let!? [input (get-input state verb-map)
-             new-state (process-input verb-map state input)]
-       (if-not (finished? new-state)
-         (recur new-state)
-         (do
-          (print-line (_ "\nThe End."))
-          (exit)))))))
+   (utils/say initial-msg)
+   (alet [k (read-key)]
+     (aloop [state (change-rooms game-state (:current-room game-state))]
+       (let!? [input (get-input state verb-map)
+               new-state (process-input verb-map state input)]
+         (if-not (finished? new-state)
+           (recur new-state)
+           (do
+            (print-line (_ "\nThe End."))
+            (exit))))))))
