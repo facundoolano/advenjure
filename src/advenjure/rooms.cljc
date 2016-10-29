@@ -90,7 +90,6 @@
   (->> (current room-map)
     (filter (comp directions first)) ; direction pairs
     (map second) ; room kws
-    (filter #(get-in room-map [% :visited])) ; keep visited
+    (filter #(or (get-in room-map [% :known]) (get-in room-map [% :visited]))) ; keep visited
     (map #(zipmap (names (% room-map)) (repeat %))) ; map room names to room kws
     (apply merge))) ;merge per room mappings
-
