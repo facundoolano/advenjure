@@ -50,7 +50,7 @@
                   (add-verb [(_"^climb (?<item>.*)") (_"^climb$")] climb)
                   (add-verb [(_"^climb up (?<item>.*)") (_"^climb (?<item>.*) up$") (_"^climb up$")] climb-up)
                   (add-verb [(_"^climb down (?<item>.*)") (_"^climb (?<item>.*) down$") (_"^climb down$")] climb-down)
-                  (add-verb [(_"^enter (?<item>.*)") (_"^enter$")] climb-up)
+                  (add-verb [(_"^enter (?<item>.*)") (_"^enter$")] enter)
                   (add-verb [(_ "^unlock (?<item1>.*) with (?<item2>.*)") (_ "^unlock (?<item>.*)")
                              (_ "^unlock (?<item1>.*) with$") (_ "^unlock$")
                              (_ "^open (?<item1>.*) with (?<item2>.*)") (_ "^open (?<item>.*) with")] unlock)
