@@ -358,7 +358,6 @@
               new-chest (it/get-from (:inventory newer-state) "chest")]
           (is-output "Unlocked.")
           (is (not (:locked new-chest)))
-          (is (empty? (it/get-from (:inventory newer-state) "key"))) ; ASSUMING THE KEY IS DESTROYED AFTER USING
           (open newer-state "chest")
           (is-output "Opened.")))
 

@@ -12,15 +12,20 @@
             #?(:cljs [advenjure.eval :refer [eval]])))
 
 ;;;; FUNCTIONS TO BUILD VERB HANDLERS
-; there's some uglyness here, but it enables simple definitions for the verb handlers
-(defn noop [& args])
+
+; the noop handler does nothing except optionally saying something, the item specific
+; behavior is defined in the item spec
+(defn noop [kw]
+  (fn [gs item & etc]
+    (if-let [speech (get-in item [kw :say])]
+      (say speech))))
 
 (defn make-item-handler
   "Takes the verb name, the kw to look up at the item at the handler function,
   wraps the function with the common logic such as trying to find the item,
   executing pre/post conditions, etc."
   ; this one uses a noop handler, solely based on post/preconditions (i.e. read)
-  ([verb-name verb-kw] (make-item-handler verb-name verb-kw noop))
+  ([verb-name verb-kw] (make-item-handler verb-name verb-kw (noop verb-kw)))
   ([verb-name verb-kw handler &
     {:keys [kw-required] :or {kw-required true}}]
    (fn
@@ -44,7 +49,7 @@
 (defn make-compound-item-handler
   ; some copy pasta, but doesn't seem worth to refactor
   "The same as above but adapted to compund verbs."
-  ([verb-name verb-kw] (make-compound-item-handler verb-name verb-kw noop))
+  ([verb-name verb-kw] (make-compound-item-handler verb-name verb-kw (noop verb-kw)))
   ([verb-name verb-kw handler &
     {:keys [kw-required] :or {kw-required true}}]
    (fn
@@ -209,9 +214,7 @@
        (not= locked (:unlocks key-item)) (say (_ "That didn't work."))
        :else (let [unlocked (assoc locked :locked false)]
                (say (get-in locked [:unlock :say] (_ "Unlocked.")))
-               (-> game-state
-                   (remove-item key-item)
-                   (replace-item locked unlocked)))))))
+               (replace-item game-state locked unlocked))))))
 
 (def talk
   (make-item-handler
