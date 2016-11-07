@@ -157,7 +157,7 @@
        (say (_ "I already had that."))
        (let [new-state (remove-item game-state item)
              new-inventory (conj (:inventory new-state) item)]
-         (say (_ "Taken."))
+         (say (get-in item [:take :say] (_ "Taken.")))
          (assoc new-state :inventory new-inventory))))))
 
 (defn take-all
@@ -187,7 +187,7 @@
        :else (let [open-item (assoc item :closed false)]
                (if (:items open-item)
                 (say (describe-container open-item))
-                (say (_ "Opened.")))
+                (say (get-in item [:open :say] (_ "Opened."))))
                (replace-item game-state item open-item))))))
 
 (def close
@@ -197,7 +197,7 @@
      (if (:closed item)
        (say (p_ item "It was already closed."))
        (let [closed-item (assoc item :closed true)]
-         (say (_ "Closed."))
+         (say (get-in item [:close :say] (_ "Closed.")))
          (replace-item game-state item closed-item))))))
 
 (def unlock
@@ -208,7 +208,7 @@
        (not (:locked locked)) (say (p_ locked "It wasn't locked."))
        (not= locked (:unlocks key-item)) (say (_ "That didn't work."))
        :else (let [unlocked (assoc locked :locked false)]
-               (say (_ "Unlocked."))
+               (say (get-in locked [:unlock :say] (_ "Unlocked.")))
                (-> game-state
                    (remove-item key-item)
                    (replace-item locked unlocked)))))))
