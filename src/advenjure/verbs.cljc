@@ -44,7 +44,7 @@
 (defn make-compound-item-handler
   ; some copy pasta, but doesn't seem worth to refactor
   "The same as above but adapted to compund verbs."
-  ([verb-name verb-kw] (make-item-handler verb-name verb-kw noop))
+  ([verb-name verb-kw] (make-compound-item-handler verb-name verb-kw noop))
   ([verb-name verb-kw handler &
     {:keys [kw-required] :or {kw-required true}}]
    (fn
@@ -225,7 +225,7 @@
   [verb-name verb-kw]
   (make-item-handler verb-name verb-kw
     (fn [game-state item]
-      (change-rooms game-state (verb-kw item)))))
+      (change-rooms game-state (eval-precondition (verb-kw item))))))
 
 (def climb (make-move-item-handler (_ "climb") :climb))
 (def climb-up (make-move-item-handler (_ "climb up") :climb-up))
@@ -235,6 +235,8 @@
 ;;; NOOP VERBS (rely entirely in pre/post conditions)
 (def read_ (make-item-handler (_ "read") :read))
 (def use_ (make-item-handler (_ "use") :use))
+
+(def use-with (make-compound-item-handler (_ "use") :use-with))
 
 ;; SAY VERBS
 (defn make-say-verb [speech]

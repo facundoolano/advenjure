@@ -23,6 +23,10 @@
      :climb-up (_ "Not up.")
      :climb-down (_ "Not down.")}))
 
+(defn use-with-defaults
+  [item]
+  (if (:use-with item) {:use (_ "Use with what?")}))
+
 (defn talk-defaults [item] (if (:dialog item) {:talk true}))
 
 (defn make
@@ -33,6 +37,7 @@
                        (unlock-defaults extras)
                        (talk-defaults extras)
                        (climb-defaults extras)
+                       (use-with-defaults extras)
                        extras))))
   ([names]
    (make names (_ "There was nothing special about it."))))

@@ -4,7 +4,7 @@
                                      inventory read_ open close unlock talk save
                                      restore exit help stand move push pull
                                      take-all use_ climb climb-up climb-down
-                                     enter]]
+                                     enter use-with]]
             [advenjure.utils :refer [direction-mappings]]
             #?(:cljs [xregexp])
             [advenjure.gettext.core :refer [_]]))
@@ -30,14 +30,14 @@
                   (add-verb [(_ "^go back$") (_ "^back$") (_ "^b$")] go-back)
                   (add-verb [(_ "^look$") (_ "^look around$") (_ "^l$")] look)
                   (add-verb [(_ "^map$") (_ "^m$")] print-map_)
-                  (add-verb [(_ "^look at (?<item1>.*)") (_ "^look at$") (_ "^describe (?<item2>.*)")
+                  (add-verb [(_ "^look at (?<item>.*)") (_ "^look at$") (_ "^describe (?<item>.*)")
                              (_ "^describe$")] look-at)
                   (add-verb [(_ "^take all$") (_ "^take everything$")
                              (_ "^get all$") (_ "^get everything$")] take-all)
-                  (add-verb [(_ "^look in (?<item1>.*)") (_ "^look in$") (_ "^look inside (?<item2>.*)")
+                  (add-verb [(_ "^look in (?<item>.*)") (_ "^look in$") (_ "^look inside (?<item>.*)")
                              (_ "^look inside$")] look-inside)
                   (add-verb [(_ "^take (?!all|everything$)(?<item>.*)") (_ "^take$") (_ "^get (?!all|everything$)(?<item>.*)") (_ "^get$")
-                             (_ "^pick (?<item1>.*)") (_ "^pick$") (_ "^pick up (?<item2>.*)")
+                             (_ "^pick (?<item>.*)") (_ "^pick$") (_ "^pick up (?<item>.*)")
                              (_ "^pick (?<item>.*) up$") (_ "^pick up$")] take_)
                   (add-verb [(_ "^move (?<item>.*)") (_ "^move$")] move)
                   (add-verb [(_"^pull (?<item>.*)") (_"^pull$")] pull)
@@ -46,7 +46,11 @@
                   (add-verb [(_ "^read (?<item>.*)") (_ "^read$")] read_)
                   (add-verb [(_ "^open (?<item>.*)") (_ "^open$")] open)
                   (add-verb [(_ "^close (?<item>.*)") (_ "^close$")] close)
-                  (add-verb [(_ "^use (?<item>.*)") (_ "^use$")] use_)
+                  (add-verb [(_ "^use (?<item>.*)$") (_ "^use$")] use_)
+                  (add-verb [(_ "^use (?<item1>.*) with (?<item2>.*)")
+                             (_ "^use (?<item1>.*) with$")
+                             (_ "^use (?<item1>.*) on (?<item2>.*)")
+                             (_ "^use (?<item>.*) on")] use-with)
                   (add-verb [(_"^climb (?<item>.*)") (_"^climb$")] climb)
                   (add-verb [(_"^climb up (?<item>.*)") (_"^climb (?<item>.*) up$") (_"^climb up$")] climb-up)
                   (add-verb [(_"^climb down (?<item>.*)") (_"^climb (?<item>.*) down$") (_"^climb down$")] climb-down)
