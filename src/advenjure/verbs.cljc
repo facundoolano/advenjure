@@ -216,6 +216,20 @@
                (say (get-in locked [:unlock :say] (_ "Unlocked.")))
                (replace-item game-state locked unlocked))))))
 
+(def open-with
+  (make-compound-item-handler
+   (_ "open") :open-with
+   (fn [game-state closed key-item]
+     "An unlock + open of sorts."
+     (cond
+       (not (:closed closed)) (say (p_ closed "It was already open."))
+       (or (and (:locked closed) (= closed (:unlocks key-item)))
+           (= closed (:opens key-item))) (let [opened (merge closed {:locked false :closed false})]
+                                          (say (get-in closed [:open-with :say] (_ "Opened.")))
+                                          (replace-item game-state closed opened))
+       :else (say (_ "That didn't work."))))
+   :kw-required false))
+
 (def talk
   (make-item-handler
    (_ "talk to") :talk

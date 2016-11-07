@@ -4,7 +4,7 @@
                                      inventory read_ open close unlock talk save
                                      restore exit help stand move push pull
                                      take-all use_ climb climb-up climb-down
-                                     enter use-with]]
+                                     enter use-with open-with]]
             [advenjure.utils :refer [direction-mappings]]
             #?(:cljs [xregexp])
             [advenjure.gettext.core :refer [_]]))
@@ -56,8 +56,8 @@
                   (add-verb [(_"^climb down (?<item>.*)") (_"^climb (?<item>.*) down$") (_"^climb down$")] climb-down)
                   (add-verb [(_"^enter (?<item>.*)") (_"^enter$")] enter)
                   (add-verb [(_ "^unlock (?<item1>.*) with (?<item2>.*)") (_ "^unlock (?<item>.*)")
-                             (_ "^unlock (?<item1>.*) with$") (_ "^unlock$")
-                             (_ "^open (?<item1>.*) with (?<item2>.*)") (_ "^open (?<item>.*) with")] unlock)
+                             (_ "^unlock (?<item1>.*) with$") (_ "^unlock$")] unlock)
+                  (add-verb [(_ "^open (?<item1>.*) with (?<item2>.*)") (_ "^open (?<item>.*) with")] open-with)
                   (add-verb [(_ "^talk with (?<item>.*)") (_ "^talk to (?<item>.*)") (_ "^talk (?<item>.*)")]
                             talk)
                   (add-verb [(_ "^save$")] save)
