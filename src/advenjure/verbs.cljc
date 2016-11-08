@@ -189,10 +189,12 @@
      (cond
        (not (:closed item)) (say (p_ item "It was already open."))
        (:locked item) (say (p_ item "It was locked."))
-       :else (let [open-item (assoc item :closed false)]
-               (if (:items open-item)
-                (say (describe-container open-item))
-                (say (get-in item [:open :say] (_ "Opened."))))
+       :else (let [open-item (assoc item :closed false)
+                   custom-say (get-in item [:open :say])]
+               (cond
+                custom-say (say custom-say)
+                (:items open-item) (say (describe-container open-item))
+                :else (say (_ "Opened.")))
                (replace-item game-state item open-item))))))
 
 (def close
