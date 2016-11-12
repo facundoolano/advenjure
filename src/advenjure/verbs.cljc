@@ -1,6 +1,7 @@
 (ns advenjure.verbs
   #?(:cljs (:require-macros [advenjure.async :refer [alet]]))
-  (:require [advenjure.utils :refer [say say-inline find-item direction-mappings current-room remove-item replace-item]]
+  (:require [advenjure.utils :refer [say say-inline find-item direction-mappings
+                                     current-room remove-item replace-item capfirst]]
             [advenjure.change-rooms :refer [change-rooms]]
             [advenjure.conditions :refer [eval-precondition eval-postcondition]]
             [advenjure.items :refer [print-list describe-container iname all-items]]
@@ -20,6 +21,15 @@
     (if-let [speech (get-in item [kw :say])]
       (say speech))))
 
+(defn ask-ambiguous
+  [item-name items]
+  (let [first-different (fn [spec] (first (filter #(not= % item-name) (:names spec))))
+        names (map first-different items)
+        names (map #(str "the " %) names)
+        first-names (clojure.string/join ", " (butlast names))]
+    (str "Which " item-name "? "
+      (capfirst first-names) " or " (last names) "?")))
+
 (defn make-item-handler
   "Takes the verb name, the kw to look up at the item at the handler function,
   wraps the function with the common logic such as trying to find the item,
@@ -37,7 +47,7 @@
              value (eval-precondition conditions game-state)]
         (cond
           (empty? items) (say (_ "I didn't see that."))
-          (> (count items) 1) (say (_ "Which %s?" item-name))
+          (> (count items) 1) (say (ask-ambiguous item-name items))
           (string? value) (say value)
           (false? value) (say (_ "I couldn't %s that." verb-name))
           (and kw-required (nil? value)) (say (_ "I couldn't %s that." verb-name))

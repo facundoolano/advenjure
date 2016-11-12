@@ -81,7 +81,15 @@
             brown-shoe (it/make ["shoe" "brown shoe"] "an old brown shoe")
             new-state (assoc game-state :inventory #{red-shoe brown-shoe})]
         (look-at new-state "shoe")
-        (is-output "Which shoe?")
+        (is-output "Which shoe? The brown shoe or the red shoe?")
+        (look-at new-state "brown shoe")
+        (is-output "an old brown shoe"))
+      (let [red-shoe (it/make ["shoe" "red shoe"] "it's red")
+            brown-shoe (it/make ["shoe" "brown shoe"] "an old brown shoe")
+            green-shoe (it/make ["shoe" "green shoe"] "an old green shoe")
+            new-state (assoc game-state :inventory #{red-shoe brown-shoe green-shoe})]
+        (look-at new-state "shoe")
+        (is-output "Which shoe? The brown shoe, the green shoe or the red shoe?")
         (look-at new-state "brown shoe")
         (is-output "an old brown shoe")))
 
