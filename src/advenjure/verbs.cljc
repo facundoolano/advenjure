@@ -157,9 +157,11 @@
   (make-item-handler
    (_ "look inside") :look-in
    (fn [game-state item]
-     (if (:items item)
-       (say (describe-container item))
-       (say (_ "I couldn't look inside a %s." (iname item)))))
+    (if-let [custom-say (get-in item [:look-in :say])]
+      (say custom-say)
+      (if (:items item)
+        (say (describe-container item))
+        (say (_ "I couldn't look inside a %s." (iname item))))))
    :kw-required false))
 
 (def take_
