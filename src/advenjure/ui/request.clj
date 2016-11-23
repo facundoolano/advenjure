@@ -1,7 +1,6 @@
 (ns advenjure.ui.request
   (:require [clojure.data.json :as json]))
 
-; FIXME handle errors
 (defn request
   ([url] (request url {}))
   ([url params]
