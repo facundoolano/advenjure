@@ -62,8 +62,8 @@
       (alet [before-state (-> game-state
                             (update-in [:moves] inc)
                             (hooks/execute :before-handler))
-             handler-state (or (apply handler before-state tokens) before-state)
-             after-state (hooks/execute handler-state :after-handler)]
+             handler-state (apply handler before-state tokens)
+             after-state (hooks/execute (or handler-state before-state) :after-handler)]
         after-state)
 
       (do (if-not (clojure.string/blank? clean) (print-line (_ "I didn't know how to do that.")))
