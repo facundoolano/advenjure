@@ -1,9 +1,7 @@
 (ns advenjure.change-rooms
   (:require [advenjure.rooms :as rooms]
             [advenjure.hooks :as hooks]
-            [advenjure.utils :refer [say]]
-            [advenjure.ui.output :refer [clear]]
-            [advenjure.map :refer [print-map_]]))
+            [advenjure.utils :refer [say]]))
 
 (defn change-rooms
   "Change room, say description, set visited."

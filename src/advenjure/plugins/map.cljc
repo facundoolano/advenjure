@@ -6,6 +6,9 @@
             [advenjure.ui.output :refer [print-line clear]]
             [advenjure.hooks :refer [eval-precondition]]))
 
+;;; Plugin that adds a MAP verb to display an ASCII map of the room connections
+;;; and shows it upon room change
+
 (def full 60)
 (def half (/ full 2))
 (def square (count "+--- N ---+"))

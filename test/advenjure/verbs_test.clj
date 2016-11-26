@@ -119,8 +119,7 @@
       (is-output "I couldn't look inside a bed."))))
 
 (deftest go-verb
-  (with-redefs [say say-mock
-                advenjure.map/print-map_ identity]
+  (with-redefs [say say-mock]
     (let [new-state (go game-state "north")]
       (testing "go to an unvisited room"
         (is-output ["long description of living room"
@@ -157,8 +156,7 @@
       (is-output "Go where?"))))
 
 (deftest go-back-verb
-  (with-redefs [say say-mock
-                advenjure.map/print-map_ identity]
+  (with-redefs [say say-mock]
     (testing "Should remember previous room and go back"
       (let [new-state (-> game-state
                           (go "north")
@@ -435,8 +433,7 @@
                     "A sack. The sack contained a bottle"])))))
 
 (deftest pre-post-conditions
-  (with-redefs [say say-mock
-                advenjure.map/print-map_ identity]
+  (with-redefs [say say-mock]
     (testing "Override couldn't take message"
       (let [new-drawer (assoc drawer :take "It's too heavy to take.")
             new-bedroom (assoc bedroom :items #{new-drawer})

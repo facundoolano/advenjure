@@ -28,8 +28,7 @@
                     (assoc :counter 0)))
 
 (deftest before-room-test
-  (with-redefs [advenjure.ui.output/print-line say-mock
-                advenjure.map/print-map_ identity]
+  (with-redefs [advenjure.ui.output/print-line say-mock]
 
     (testing "modify the game state before changing room"
       (let [hook (fn [gs] (-> gs (update-in [:counter] inc)
@@ -58,8 +57,7 @@
         (is (= true (:second game-state)))))))
 
 (deftest after-room-test
-  (with-redefs [advenjure.ui.output/print-line say-mock
-                advenjure.map/print-map_ identity]
+  (with-redefs [advenjure.ui.output/print-line say-mock]
     (testing "modify the game state after changing room"
       (let [hook (fn [gs] (-> gs (update-in [:counter] inc)
                                  (assoc :called-in (:current-room gs))
@@ -76,8 +74,7 @@
           (is (= 1 (:counter after-look2)))))))
 
 (deftest before-handler-test
-  (with-redefs [advenjure.ui.output/print-line say-mock
-                advenjure.map/print-map_ identity]
+  (with-redefs [advenjure.ui.output/print-line say-mock]
     (testing "modify the game state before executing a verb handler"
       (let [hook (fn [gs] (-> gs (update-in [:counter] inc)
                                  (assoc :called-in (:current-room gs))))
@@ -92,8 +89,7 @@
           (is (= 3 (:counter after-look2)))))))
 
 (deftest after-handler-test
-  (with-redefs [advenjure.ui.output/print-line say-mock
-                advenjure.map/print-map_ identity]
+  (with-redefs [advenjure.ui.output/print-line say-mock]
     (testing "modify the game state after executing a verb handler"
       (let [hook (fn [gs] (-> gs (update-in [:counter] inc)
                                  (assoc :called-in (:current-room gs))))
@@ -108,8 +104,7 @@
           (is (= 3 (:counter after-look2)))))))
 
 (deftest before-item-test
-  (with-redefs [advenjure.ui.output/print-line say-mock
-                advenjure.map/print-map_ identity]
+  (with-redefs [advenjure.ui.output/print-line say-mock]
     (testing "modify the game state before executing an item handler"
       (let [hook (fn [gs kw]
                    (-> gs (update-in [:counter] inc)
@@ -144,8 +139,7 @@
           (is (= :unlock (:received after-unlock)))))))
 
 (deftest after-item-test
-  (with-redefs [advenjure.ui.output/print-line say-mock
-                advenjure.map/print-map_ identity]
+  (with-redefs [advenjure.ui.output/print-line say-mock]
     (testing "modify the game state after executing an item handler"
       (let [hook (fn [gs kw]
                    (-> gs (update-in [:counter] inc)
