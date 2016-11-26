@@ -283,7 +283,7 @@
             new-state (assoc game-state :inventory #{sack})
             newer-state (open new-state "sack")]
         (is-output "It was already open.")
-        (is (nil? newer-state))))
+        (is (= new-state newer-state))))
 
     (testing "open a non openable item"
       (let [sack (it/make ["sack"] "a sack" :items #{})
@@ -323,7 +323,7 @@
             new-state (assoc game-state :inventory #{sack})
             newer-state (close new-state "sack")]
         (is-output "It was already closed.")
-        (is (nil? newer-state))))
+        (is (= new-state newer-state))))
 
     (testing "close a non openable item"
       (let [sack (it/make ["sack"] "a sack" :items #{})
@@ -359,7 +359,7 @@
       (testing "open a locked item"
         (let [newer-state (open new-state "chest")]
           (is-output "It was locked.")
-          (is (nil? newer-state))))
+          (is (= new-state newer-state))))
 
       (testing "unlock a locked item"
         (let [newer-state (unlock new-state "chest" "key")
@@ -374,7 +374,7 @@
               new-chest (it/get-from (:inventory newer-state) "chest")
               last-state (unlock newer-state "chest" "other key")]
           (is-output "It wasn't locked.")
-          (is (nil? last-state))))
+          (is (= newer-state last-state))))
 
       (testing "unlock what?"
         (let [newer-state (unlock new-state)]
@@ -394,12 +394,12 @@
       (testing "unlock with item that didn't unlock"
         (let [newer-state (unlock new-state "chest" "sock")]
           (is-output "That didn't work.")
-          (is (nil? newer-state))))
+          (is (= new-state newer-state))))
 
       (testing "unlock with item that unlocks another thing"
         (let [newer-state (unlock new-state "chest" "other key")]
           (is-output "That didn't work.")
-          (is (nil? newer-state)))))))
+          (is (= new-state newer-state)))))))
 
 (deftest read-verb
   (with-redefs [say say-mock]

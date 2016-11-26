@@ -3,7 +3,7 @@
   (:require [advenjure.utils :refer [say say-inline find-item direction-mappings
                                      current-room remove-item replace-item capfirst]]
             [advenjure.change-rooms :refer [change-rooms]]
-            [advenjure.conditions :refer [eval-precondition eval-postcondition]]
+            [advenjure.hooks :refer [execute eval-precondition eval-postcondition]]
             [advenjure.items :refer [print-list describe-container iname all-items]]
             [advenjure.rooms :as rooms]
             [advenjure.gettext.core :refer [_ p_]]
@@ -51,9 +51,10 @@
           (string? value) (say value)
           (false? value) (say (_ "I couldn't %s that." verb-name))
           (and kw-required (nil? value)) (say (_ "I couldn't %s that." verb-name))
-          :else (alet [new-state (handler game-state item)
-                       post-state (eval-postcondition conditions game-state new-state)]
-                  post-state)))))))
+          :else (alet [before-state (execute game-state :before-item-handler verb-kw)
+                       handler-state (handler before-state item)
+                       post-state (eval-postcondition conditions before-state handler-state)]
+                  (execute post-state :after-item-handler verb-kw))))))))
 
 
 (defn make-compound-item-handler
@@ -79,8 +80,11 @@
           (string? value) (say value)
           (false? value) (say (str "I couldn't " verb-name " that."))
           (and kw-required (nil? value)) (say (_ "I couldn't %s that." verb-name))
-          :else (alet [new-state (handler game-state item1 item2)]
-                  (eval-postcondition conditions game-state new-state))))))))
+          :else (alet [before-state (execute game-state :before-item-handler verb-kw)
+                       handler-state (handler before-state item1 item2)
+                       post-state (eval-postcondition conditions before-state handler-state)]
+                  (execute post-state :after-item-handler verb-kw))))))))
+
 
 ;;; VERB HANDLER DEFINITIONS
 (defn go

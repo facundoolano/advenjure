@@ -4,6 +4,7 @@
             #?(:clj [advenjure.async :refer [let!? aloop alet]])
             [advenjure.change-rooms :refer [change-rooms]]
             [advenjure.utils :as utils]
+            [advenjure.hooks :as hooks]
             [advenjure.verb-map :refer [find-verb default-map]]
             [advenjure.ui.input :refer [get-input exit read-key]]
             [advenjure.ui.output :refer [print-line init]]
@@ -31,8 +32,8 @@
     :executed-dialogs #{}
     :points 0
     :moves 0
-    :configuration {:start-message "" ; FIXME can be a function that takes game state
-                    :end-message "\nThe End." ; FIXME can be a function that takes game state
+    :configuration {:start-message ""
+                    :end-message "\nThe End."
                     :verb-map default-map
                     :prompt default-prompt
                     :hooks (zipmap hooks (repeat []))}}))
@@ -58,9 +59,12 @@
         [verb tokens] (find-verb verb-map clean)
         handler (get verb-map verb)]
     (if handler
-      (alet [new-state (update-in game-state [:moves] inc)
-             handler-state (apply handler new-state tokens)]
-        (or handler-state new-state))
+      (alet [before-state (-> game-state
+                            (update-in [:moves] inc)
+                            (hooks/execute :before-handler))
+             handler-state (or (apply handler before-state tokens) before-state)
+             after-state (hooks/execute handler-state :after-handler)]
+        after-state)
 
       (do (if-not (clojure.string/blank? clean) (print-line (_ "I didn't know how to do that.")))
         game-state))))
