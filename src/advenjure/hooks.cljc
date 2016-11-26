@@ -6,7 +6,7 @@
   passing the extra parameters in each step."
   [game-state hook-kw & extra]
   (let [hooks (get-in game-state [:configuration :hooks hook-kw])
-        apply-hook (fn [gs hook] (apply hook (cons gs extra)))]
+        apply-hook (fn [gs hook] (or (apply hook (cons gs extra)) gs))]
     (reduce apply-hook game-state hooks)))
 
 (defn eval-precondition
