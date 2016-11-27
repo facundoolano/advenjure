@@ -3,7 +3,7 @@
   (:require [advenjure.utils :refer [say say-inline find-item direction-mappings
                                      current-room remove-item replace-item capfirst]]
             [advenjure.change-rooms :refer [change-rooms]]
-            [advenjure.conditions :refer [eval-precondition eval-postcondition]]
+            [advenjure.hooks :refer [execute eval-precondition eval-postcondition]]
             [advenjure.items :refer [print-list describe-container iname all-items]]
             [advenjure.rooms :as rooms]
             [advenjure.gettext.core :refer [_ p_]]
@@ -51,9 +51,10 @@
           (string? value) (say value)
           (false? value) (say (_ "I couldn't %s that." verb-name))
           (and kw-required (nil? value)) (say (_ "I couldn't %s that." verb-name))
-          :else (alet [new-state (handler game-state item)
-                       post-state (eval-postcondition conditions game-state new-state)]
-                  post-state)))))))
+          :else (alet [before-state (execute game-state :before-item-handler verb-kw)
+                       handler-state (handler before-state item)
+                       post-state (eval-postcondition conditions before-state handler-state)]
+                  (execute post-state :after-item-handler verb-kw))))))))
 
 
 (defn make-compound-item-handler
@@ -74,13 +75,16 @@
              value (eval-precondition conditions game-state item2)]
         (cond
           (or (empty? items1) (empty? items2)) (say (_ "I didn't see that."))
-          (> (count items1) 1) (say (_ "Which %s?" item1-name))
-          (> (count items2) 1) (say (_ "Which %s?" item2-name))
+          (> (count items1) 1) (say (ask-ambiguous item1-name items1))
+          (> (count items2) 1) (say (ask-ambiguous item2-name items2))
           (string? value) (say value)
           (false? value) (say (str "I couldn't " verb-name " that."))
           (and kw-required (nil? value)) (say (_ "I couldn't %s that." verb-name))
-          :else (alet [new-state (handler game-state item1 item2)]
-                  (eval-postcondition conditions game-state new-state))))))))
+          :else (alet [before-state (execute game-state :before-item-handler verb-kw)
+                       handler-state (handler before-state item1 item2)
+                       post-state (eval-postcondition conditions before-state handler-state)]
+                  (execute post-state :after-item-handler verb-kw))))))))
+
 
 ;;; VERB HANDLER DEFINITIONS
 (defn go
@@ -129,14 +133,14 @@
 (defn save
   "Save the current game state to a file."
   [game-state]
-  (write-file "saved.game" game-state)
+  (write-file "saved.game" (dissoc game-state :configuration))
   (say (_ "Done.")))
 
 (defn restore
   "Restore a previous game state from file."
   [game-state]
   (try
-    (let [loaded-state (read-file "saved.game")]
+    (let [loaded-state (assoc (read-file "saved.game") :configuration (:configuration game-state))]
       (say (rooms/describe (current-room loaded-state)))
       loaded-state)
     (catch #?(:clj java.io.FileNotFoundException :cljs js/Object) e (say (_ "No saved game found.")))))

@@ -1,6 +1,5 @@
 (ns advenjure.verb-map
-  (:require [advenjure.map :refer [print-map_]]
-            [advenjure.verbs :refer [go go-back look look-at look-inside take_
+  (:require [advenjure.verbs :refer [go go-back look look-at look-inside take_
                                      inventory read_ open close unlock talk save
                                      restore exit help stand move push pull
                                      take-all use_ climb climb-up climb-down
@@ -29,7 +28,6 @@
                   (add-verb [(_ "^go (?!back$)(?<dir>.*)") (_ "^go to (?<dir>.*)") (_ "^go$")] go)
                   (add-verb [(_ "^go back$") (_ "^back$") (_ "^b$")] go-back)
                   (add-verb [(_ "^look$") (_ "^look around$") (_ "^l$")] look)
-                  (add-verb [(_ "^map$") (_ "^m$")] print-map_)
                   (add-verb [(_ "^look at (?<item>.*)") (_ "^look at$") (_ "^describe (?<item>.*)")
                              (_ "^describe$")] look-at)
                   (add-verb [(_ "^take all$") (_ "^take everything$")

@@ -1,8 +1,13 @@
-(ns advenjure.map
+(ns advenjure.plugins.map
   (:require [clojure.string :as string]
+            [advenjure.verb-map :refer [add-verb]]
+            [advenjure.gettext.core :refer [_]]
             [advenjure.utils :refer [current-room directions]]
-            [advenjure.ui.output :refer [print-line]]
-            [advenjure.conditions :refer [eval-precondition]]))
+            [advenjure.ui.output :refer [print-line clear]]
+            [advenjure.hooks :refer [eval-precondition]]))
+
+;;; Plugin that adds a MAP verb to display an ASCII map of the room connections
+;;; and shows it upon room change
 
 (def full 60)
 (def half (/ full 2))
@@ -64,3 +69,24 @@
     (print-line (pad full (:south rooms)))
     (print-line)
     (print-line (pad full (and (:down rooms) (darr (:down rooms)))))))
+
+
+
+;; PLUGIN DEFINITIONS
+(def verb-map (add-verb {} [(_ "^map$") (_ "^m$")] print-map_))
+
+(def map-on-unvisited
+  {:verb-map verb-map
+   :hooks {:before-change-room (fn [gs]
+                                  (let [visited? (:visited (current-room gs))]
+                                    (if-not visited? (clear))
+                                    (assoc gs :__show-map (not visited?))))
+
+           :after-change-room (fn [gs]
+                                (if (:__show-map gs) (print-map_ gs))
+                                (dissoc gs :__show-map))}})
+
+(def map-on-every-room
+  {:verb-map verb-map
+   :hooks {:before-change-room (fn [gs] (clear) gs)
+           :after-change-room (fn [gs] (print-map_ gs))}})

@@ -119,8 +119,7 @@
       (is-output "I couldn't look inside a bed."))))
 
 (deftest go-verb
-  (with-redefs [say say-mock
-                advenjure.map/print-map_ identity]
+  (with-redefs [say say-mock]
     (let [new-state (go game-state "north")]
       (testing "go to an unvisited room"
         (is-output ["long description of living room"
@@ -157,8 +156,7 @@
       (is-output "Go where?"))))
 
 (deftest go-back-verb
-  (with-redefs [say say-mock
-                advenjure.map/print-map_ identity]
+  (with-redefs [say say-mock]
     (testing "Should remember previous room and go back"
       (let [new-state (-> game-state
                           (go "north")
@@ -283,7 +281,7 @@
             new-state (assoc game-state :inventory #{sack})
             newer-state (open new-state "sack")]
         (is-output "It was already open.")
-        (is (nil? newer-state))))
+        (is (= new-state newer-state))))
 
     (testing "open a non openable item"
       (let [sack (it/make ["sack"] "a sack" :items #{})
@@ -323,7 +321,7 @@
             new-state (assoc game-state :inventory #{sack})
             newer-state (close new-state "sack")]
         (is-output "It was already closed.")
-        (is (nil? newer-state))))
+        (is (= new-state newer-state))))
 
     (testing "close a non openable item"
       (let [sack (it/make ["sack"] "a sack" :items #{})
@@ -359,7 +357,7 @@
       (testing "open a locked item"
         (let [newer-state (open new-state "chest")]
           (is-output "It was locked.")
-          (is (nil? newer-state))))
+          (is (= new-state newer-state))))
 
       (testing "unlock a locked item"
         (let [newer-state (unlock new-state "chest" "key")
@@ -374,7 +372,7 @@
               new-chest (it/get-from (:inventory newer-state) "chest")
               last-state (unlock newer-state "chest" "other key")]
           (is-output "It wasn't locked.")
-          (is (nil? last-state))))
+          (is (= newer-state last-state))))
 
       (testing "unlock what?"
         (let [newer-state (unlock new-state)]
@@ -394,12 +392,12 @@
       (testing "unlock with item that didn't unlock"
         (let [newer-state (unlock new-state "chest" "sock")]
           (is-output "That didn't work.")
-          (is (nil? newer-state))))
+          (is (= new-state newer-state))))
 
       (testing "unlock with item that unlocks another thing"
         (let [newer-state (unlock new-state "chest" "other key")]
           (is-output "That didn't work.")
-          (is (nil? newer-state)))))))
+          (is (= new-state newer-state)))))))
 
 (deftest read-verb
   (with-redefs [say say-mock]
@@ -435,8 +433,7 @@
                     "A sack. The sack contained a bottle"])))))
 
 (deftest pre-post-conditions
-  (with-redefs [say say-mock
-                advenjure.map/print-map_ identity]
+  (with-redefs [say say-mock]
     (testing "Override couldn't take message"
       (let [new-drawer (assoc drawer :take "It's too heavy to take.")
             new-bedroom (assoc bedroom :items #{new-drawer})

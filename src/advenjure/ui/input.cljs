@@ -114,10 +114,10 @@
         (cb (apply array suggested))))))
 
 (defn set-interpreter
-  [gs verb-map]
-  (let [room (:name (current-room gs))
-        moves (:moves gs)
-        prompt (str "\n@" room " [" moves "] > ")]
+  [gs]
+  (let [verb-map (get-in gs [:configuration :verb-map])
+        prompt-fn (get-in gs [:configuration :prompt])
+        prompt (prompt-fn gs)]
     (if (> (.level (term)) 1) (.pop (term))) ; if there's a previous interpreter, pop it
     (.push (term)
            process-command
@@ -126,9 +126,9 @@
 
 (defn get-input
   "Wait for input to be written in the input channel"
-  [state verb-map]
+  [state]
   (go
-    (set-interpreter state verb-map)
+    (set-interpreter state)
     (.echo (term) " ")
     (<! @input-chan)))
 
