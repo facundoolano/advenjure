@@ -133,14 +133,14 @@
 (defn save
   "Save the current game state to a file."
   [game-state]
-  (write-file "saved.game" game-state)
+  (write-file "saved.game" (dissoc game-state :configuration))
   (say (_ "Done.")))
 
 (defn restore
   "Restore a previous game state from file."
   [game-state]
   (try
-    (let [loaded-state (read-file "saved.game")]
+    (let [loaded-state (assoc (read-file "saved.game") :configuration (:configuration game-state))]
       (say (rooms/describe (current-room loaded-state)))
       loaded-state)
     (catch #?(:clj java.io.FileNotFoundException :cljs js/Object) e (say (_ "No saved game found.")))))

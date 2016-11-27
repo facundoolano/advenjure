@@ -1,7 +1,7 @@
-(ns advenjure.plugins.map
+(ns advenjure.plugins.dark
   (:require [advenjure.rooms :as rooms]
             [advenjure.items :as items]
-            [advenjure.change-rooms :refer change-rooms]
+            [advenjure.change-rooms :refer [change-rooms]]
             [advenjure.utils :refer [directions current-room]]
             [advenjure.verb-map :refer [add-verb]]
             [advenjure.gettext.core :refer [_]]))
@@ -16,7 +16,7 @@
   [game-state]
   (let [room-spec (current-room game-state)
         previous-kw (:previous-room game-state)
-        rname (get room-spec :dark-name (:names room-spec))
+        rname (get room-spec :dark-name (:name room-spec))
         description (get room-spec :dark-description (_ "It was completely dark."))
         is-known-connection (fn [[k v]] (and (directions k) (= v previous-kw)))
         known-connections (filter is-known-connection room-spec)]
@@ -42,7 +42,7 @@
         light? (light-available? game-state)
         is-generated-room (= :__dark-room (:current-room game-state))]
     (cond
-      (and (:dark room) (not light?)) (let [dark-room (build-dark-room room (:previous-room game-state))]
+      (and (:dark room) (not light?)) (let [dark-room (build-dark-room game-state)]
                                           (-> game-state
                                             (assoc-in [:room-map :__dark-room] dark-room)
                                             (assoc :current-room :__dark-room)))

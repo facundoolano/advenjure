@@ -6,13 +6,15 @@
 (defn change-rooms
   "Change room, say description, set visited."
   [game-state new-room]
-  (let [room-spec (get-in game-state [:room-map new-room])
-        previous (:current-room game-state)
+  (let [previous (:current-room game-state)
         new-state (-> game-state
                     (assoc :previous-room previous)
                     (assoc :current-room new-room)
                     (hooks/execute :before-change-room)
-                    (assoc-in [:room-map new-room :visited] true))]
+                    (assoc-in [:room-map new-room :visited] true))
+
+        ; read from state again, in case hooks modified it
+        room-spec (get-in new-state [:room-map (:current-room new-state)])]
     (say (rooms/describe room-spec))
     (hooks/execute new-state :after-change-room)))
 
