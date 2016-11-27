@@ -75,8 +75,8 @@
              value (eval-precondition conditions game-state item2)]
         (cond
           (or (empty? items1) (empty? items2)) (say (_ "I didn't see that."))
-          (> (count items1) 1) (say (_ "Which %s?" item1-name))
-          (> (count items2) 1) (say (_ "Which %s?" item2-name))
+          (> (count items1) 1) (say (ask-ambiguous item1-name items1))
+          (> (count items2) 1) (say (ask-ambiguous item2-name items2))
           (string? value) (say value)
           (false? value) (say (str "I couldn't " verb-name " that."))
           (and kw-required (nil? value)) (say (_ "I couldn't %s that." verb-name))
