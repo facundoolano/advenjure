@@ -11,8 +11,9 @@
                     (assoc :previous-room previous)
                     (assoc :current-room new-room)
                     (hooks/execute :before-change-room))
-        ; read from state again, in case hooks modified it
-        room-spec (get-in new-state [:room-map (:current-room new-state)])
+        ; override in case hooks modified it
+        new-room (:current-room new-state)
+        room-spec (get-in new-state [:room-map new-room])
         ; set as visited when all of the rest done
         new-state (assoc-in new-state [:room-map new-room :visited] true)]
     (say (rooms/describe room-spec))
