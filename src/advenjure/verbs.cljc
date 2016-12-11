@@ -97,7 +97,7 @@
             dir-value (eval-precondition dir-condition game-state)]
        (cond
          (string? dir-value) (say dir-value)
-         (not dir-value) (say (or (:default-go room) (_ "Couldn't go in that direction")))
+         (not dir-value) (say (or (:default-go room) (_ "Couldn't go in that direction.")))
          :else (alet [new-state (change-rooms game-state dir-value)]
                  (eval-postcondition dir-condition game-state new-state))))
 

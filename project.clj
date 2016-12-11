@@ -1,4 +1,4 @@
-(defproject advenjure "0.6.4"
+(defproject advenjure "0.7.0"
   :description "A text adveture engine"
   :url "https://github.com/facundoolano/advenjure"
   :license {:name "Eclipse Public License"

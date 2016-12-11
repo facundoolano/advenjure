@@ -79,14 +79,14 @@
   "Run the game loop. Requires a finished? function to decide when to terminate
   the loop. The rest of the parameters are configuration key/values."
   [game-state finished? & {:as extras}]
-  (let [game-state (use-plugin game-state extras)]
+  (let [game-state (use-plugin game-state (merge extras {:finished finished?}))]
     (init)
     (say-message game-state :start-message)
     (alet [k (read-key)]
       (aloop [state (change-rooms game-state (:current-room game-state))]
         (let!? [input (get-input state)
                 new-state (process-input state input)]
-          (if-not (finished? new-state)
+          (if-not ((get-in new-state [:configuration :finished]) new-state)
             (recur new-state)
             (do
              (say-message game-state :end-message)

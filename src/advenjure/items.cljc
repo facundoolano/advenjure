@@ -94,8 +94,8 @@
 
 
 (defn get-from
-  "Get the spec for the item with the given name, if it's in the given set,
-  or is contained by one of its items."
+  "Get the spec for the items with the given name, if it's in the given set,
+  or is contained by one of its items. Returns a sequence (not a single item)."
   [item-set item-name]
   (concat (filter #(some #{item-name} (:names %)) item-set)
           (flatten (map #(get-from (:items %) item-name)

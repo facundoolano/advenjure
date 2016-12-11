@@ -147,7 +147,7 @@
 
     (testing "go to a blocked direction"
       (go game-state "west")
-      (is-output "couldn't go in that direction"))
+      (is-output "couldn't go in that direction."))
 
     (testing "go to an invalid direction"
       (go game-state nil)

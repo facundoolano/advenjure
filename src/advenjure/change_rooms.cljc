@@ -15,7 +15,12 @@
         new-room (:current-room new-state)
         room-spec (get-in new-state [:room-map new-room])
         ; set as visited when all of the rest done
-        new-state (assoc-in new-state [:room-map new-room :visited] true)]
-    (say (rooms/describe room-spec))
-    (hooks/execute new-state :after-change-room)))
+        new-state (assoc-in new-state [:room-map new-room :visited] true)
+        finished? (get-in new-state [:configuration :finished])]
+
+    (if-not (and finished? (finished? new-state))
+      (do
+        (say (rooms/describe room-spec))
+        (hooks/execute new-state :after-change-room))
+      new-state)))
 
