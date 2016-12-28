@@ -19,7 +19,7 @@ You can see the code for a working example in the [advenjure-example](https://gi
 Add the following to your project map as a dependency:
 
 ```clojure
-[advenjure "0.6.3"]
+[advenjure "0.7.0"]
 ```
 
 ## Basic Usage
@@ -144,7 +144,7 @@ Putting it all together in a `-main` function:
   [& args]
   (let [game-state (game/make room-map :bedroom)
         finished? #(= (:current-room %) :outside)]
-    (game/run game-state finished? "Welcome to the advenjure!")))
+    (game/run game-state finished? :start-message "Welcome to the advenjure!")))
 ```
 
 The game flows by taking the initial game state map, prompting the user for a command,
@@ -162,10 +162,10 @@ There is a number of advanced features available in the engine:
   * Dialogs: interactive dialogs with 'character' items, in the style of the LucasArts graphic adventures.
   * Text customization and internationalization.
   * Custom verbs/commands.
+  * Plugin hooks to customize behavior without modifying the library.
 
-But I'm not feeling like documenting those right now, specially since I doubt
-anyone other than me will ever use this. But if you *do* want to use it, just open an issue
-and I'll fill the rest of the README =)
+I'm waiting for the APIs to stabilize (and get a lot of free time) before fully documenting all those features,
+but I'd be happy to write something up if you need help with something specific, just file an issue!
 
 ## Run on the browser
 
@@ -192,5 +192,3 @@ The current limitations of the ClojureScript version of the library are:
 * Can use up to `:simple` optimizations (not `:advanced`), since [ClojureScript self-hosting](https://github.com/clojure/clojurescript/wiki/Optional-Self-hosting) is required for some of the advanced features.
 
 See the [advenjure-example](https://github.com/facundoolano/advenjure-example) for a game that targets both the terminal and the browser.
-
-
