@@ -3,7 +3,6 @@
             [advenjure.test-utils :refer :all]
             [advenjure.utils :refer [say current-room]]
             [advenjure.game :refer :all]
-            [advenjure.verb-map :refer [default-map]]
             [advenjure.rooms :as room]
             [advenjure.items :as it]))
 
@@ -26,24 +25,19 @@
                        :items #{(it/make ["sofa"] "just a sofa")}
                        :south :bedroom))
 
-(def game-state {:current-room :bedroom
-                 :room-map {:bedroom bedroom, :living living}
-                 :inventory #{magazine}
-                 :moves 0
-                 :points 0})
+(def game-state (make {:bedroom bedroom, :living living} :bedroom #{magazine}))
 
 
 (deftest process-input-test
-  (with-redefs [advenjure.ui.output/print-line say-mock
-                advenjure.map/print-map_ identity]
+  (with-redefs [advenjure.ui.output/print-line say-mock]
 
     (testing "unknown command"
-      (let [new-state (process-input default-map game-state "dance around")]
+      (let [new-state (process-input game-state "dance around")]
         (is-output "I didn't know how to do that.")
         (is (= new-state game-state))))
 
     (testing "look verb"
-      (let [new-state (process-input default-map game-state "look ")]
+      (let [new-state (process-input game-state "look ")]
         (is-output ["short description of bedroom"
                     "There was a bed there."
                     "There was a sock there."
@@ -51,26 +45,26 @@
         (is (= new-state (update-in game-state [:moves] inc)))))
 
     (testing "invalid look with parameters"
-      (let [new-state (process-input default-map game-state "look something")]
+      (let [new-state (process-input game-state "look something")]
         (is-output "I didn't know how to do that.")
         (is (= new-state game-state))))
 
     (testing "look at item"
-      (let [new-state (process-input default-map game-state "look at bed")]
+      (let [new-state (process-input game-state "look at bed")]
         (is-output "just a bed")
         (is (= new-state (update-in game-state [:moves] inc)))))
 
     (testing "take item"
-      (let [new-state (process-input default-map game-state "take sock")]
+      (let [new-state (process-input game-state "take sock")]
         (is-output "Taken.")
         (is (contains? (:inventory new-state) sock))
         (is (not (contains? (:items (current-room new-state)) sock)))))
 
     (testing "go shortcuts"
-      (process-input default-map game-state "north")
+      (process-input game-state "north")
       (is-output ["long description of living room"
                   "There was a sofa there."])
-      (process-input default-map game-state "n")
+      (process-input game-state "n")
       (is-output ["long description of living room"
                   "There was a sofa there."]))
 
@@ -79,11 +73,11 @@
           inventory (conj #{} chest ckey)
           new-state (assoc game-state :inventory inventory)]
       (testing "unlock with item"
-        (process-input default-map new-state "unlock chest with key")
+        (process-input new-state "unlock chest with key")
         (is-output "Unlocked."))
 
       (testing "unlock with no item specified"
-        (process-input default-map new-state "unlock")
+        (process-input new-state "unlock")
         (is-output "Unlock what?")
-        (process-input default-map new-state "unlock chest")
+        (process-input new-state "unlock chest")
         (is-output "Unlock chest with what?")))))

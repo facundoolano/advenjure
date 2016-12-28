@@ -45,15 +45,14 @@
     (.addCompleter console aggregate)))
 
 (defn prompt [gs]
-  (let [room (:name (current-room gs))
-        moves (:moves gs)
-        points (:points gs)
-        p (str "\n@" room " [" moves "] > ")]
+  (let [prompt-fn (get-in gs [:configuration :prompt])
+        p (prompt-fn gs)]
     (.readLine console p)))
 
 (defn get-input
-  ([game-state verb-map]
-   (let [verbs (keys verb-map)
+  ([game-state]
+   (let [verb-map (get-in game-state [:configuration :verb-map])
+         verbs (keys verb-map)
          room (current-room game-state)
          room-names (keys (visible-name-mappings (:room-map game-state) (:current-room game-state)))
          all-items (into (:inventory game-state) (:items room))

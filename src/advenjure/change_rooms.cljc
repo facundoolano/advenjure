@@ -1,21 +1,26 @@
 (ns advenjure.change-rooms
   (:require [advenjure.rooms :as rooms]
-            [advenjure.utils :refer [say]]
-            [advenjure.ui.output :refer [clear]]
-            [advenjure.map :refer [print-map_]]))
+            [advenjure.hooks :as hooks]
+            [advenjure.utils :refer [say]]))
 
 (defn change-rooms
   "Change room, say description, set visited."
   [game-state new-room]
-  (let [room-spec (get-in game-state [:room-map new-room])
-        previous (:current-room game-state)
+  (let [previous (:current-room game-state)
         new-state (-> game-state
                     (assoc :previous-room previous)
                     (assoc :current-room new-room)
-                    (assoc-in [:room-map new-room :visited] true))
-        visited? (:visited room-spec)]
-    (if-not visited? (clear))
-    (say (rooms/describe room-spec))
-    (if-not visited? (print-map_ new-state))
-    new-state))
+                    (hooks/execute :before-change-room))
+        ; override in case hooks modified it
+        new-room (:current-room new-state)
+        room-spec (get-in new-state [:room-map new-room])
+        ; set as visited when all of the rest done
+        new-state (assoc-in new-state [:room-map new-room :visited] true)
+        finished? (get-in new-state [:configuration :finished])]
+
+    (if-not (and finished? (finished? new-state))
+      (do
+        (say (rooms/describe room-spec))
+        (hooks/execute new-state :after-change-room))
+      new-state)))
 

@@ -1,8 +1,9 @@
 (ns advenjure.verbs
   #?(:cljs (:require-macros [advenjure.async :refer [alet]]))
-  (:require [advenjure.utils :refer [say say-inline find-item direction-mappings current-room remove-item replace-item]]
+  (:require [advenjure.utils :refer [say say-inline find-item direction-mappings
+                                     current-room remove-item replace-item capfirst]]
             [advenjure.change-rooms :refer [change-rooms]]
-            [advenjure.conditions :refer [eval-precondition eval-postcondition]]
+            [advenjure.hooks :refer [execute eval-precondition eval-postcondition]]
             [advenjure.items :refer [print-list describe-container iname all-items]]
             [advenjure.rooms :as rooms]
             [advenjure.gettext.core :refer [_ p_]]
@@ -12,15 +13,29 @@
             #?(:cljs [advenjure.eval :refer [eval]])))
 
 ;;;; FUNCTIONS TO BUILD VERB HANDLERS
-; there's some uglyness here, but it enables simple definitions for the verb handlers
-(defn noop [& args])
+
+; the noop handler does nothing except optionally saying something, the item specific
+; behavior is defined in the item spec
+(defn noop [kw]
+  (fn [gs item & etc]
+    (if-let [speech (get-in item [kw :say])]
+      (say speech))))
+
+(defn ask-ambiguous
+  [item-name items]
+  (let [first-different (fn [spec] (first (filter #(not= % item-name) (:names spec))))
+        names (map first-different items)
+        names (map #(str "the " %) names)
+        first-names (clojure.string/join ", " (butlast names))]
+    (str "Which " item-name "? "
+      (capfirst first-names) " or " (last names) "?")))
 
 (defn make-item-handler
   "Takes the verb name, the kw to look up at the item at the handler function,
   wraps the function with the common logic such as trying to find the item,
   executing pre/post conditions, etc."
   ; this one uses a noop handler, solely based on post/preconditions (i.e. read)
-  ([verb-name verb-kw] (make-item-handler verb-name verb-kw noop))
+  ([verb-name verb-kw] (make-item-handler verb-name verb-kw (noop verb-kw)))
   ([verb-name verb-kw handler &
     {:keys [kw-required] :or {kw-required true}}]
    (fn
@@ -32,19 +47,20 @@
              value (eval-precondition conditions game-state)]
         (cond
           (empty? items) (say (_ "I didn't see that."))
-          (> (count items) 1) (say (_ "Which %s?" item-name))
+          (> (count items) 1) (say (ask-ambiguous item-name items))
           (string? value) (say value)
           (false? value) (say (_ "I couldn't %s that." verb-name))
           (and kw-required (nil? value)) (say (_ "I couldn't %s that." verb-name))
-          :else (alet [new-state (handler game-state item)
-                       post-state (eval-postcondition conditions game-state new-state)]
-                  post-state)))))))
+          :else (alet [before-state (execute game-state :before-item-handler verb-kw)
+                       handler-state (handler before-state item)
+                       post-state (eval-postcondition conditions before-state handler-state)]
+                  (execute post-state :after-item-handler verb-kw))))))))
 
 
 (defn make-compound-item-handler
   ; some copy pasta, but doesn't seem worth to refactor
   "The same as above but adapted to compund verbs."
-  ([verb-name verb-kw] (make-item-handler verb-name verb-kw noop))
+  ([verb-name verb-kw] (make-compound-item-handler verb-name verb-kw (noop verb-kw)))
   ([verb-name verb-kw handler &
     {:keys [kw-required] :or {kw-required true}}]
    (fn
@@ -59,13 +75,16 @@
              value (eval-precondition conditions game-state item2)]
         (cond
           (or (empty? items1) (empty? items2)) (say (_ "I didn't see that."))
-          (> (count items1) 1) (say (_ "Which %s?" item1-name))
-          (> (count items2) 1) (say (_ "Which %s?" item2-name))
+          (> (count items1) 1) (say (ask-ambiguous item1-name items1))
+          (> (count items2) 1) (say (ask-ambiguous item2-name items2))
           (string? value) (say value)
           (false? value) (say (str "I couldn't " verb-name " that."))
           (and kw-required (nil? value)) (say (_ "I couldn't %s that." verb-name))
-          :else (alet [new-state (handler game-state item1 item2)]
-                  (eval-postcondition conditions game-state new-state))))))))
+          :else (alet [before-state (execute game-state :before-item-handler verb-kw)
+                       handler-state (handler before-state item1 item2)
+                       post-state (eval-postcondition conditions before-state handler-state)]
+                  (execute post-state :after-item-handler verb-kw))))))))
+
 
 ;;; VERB HANDLER DEFINITIONS
 (defn go
@@ -73,11 +92,12 @@
   ([game-state] (say (_ "Go where?")))
   ([game-state direction]
    (if-let [dir (get direction-mappings direction)]
-     (alet [dir-condition (dir (current-room game-state))
+     (alet [room (current-room game-state)
+            dir-condition (dir room)
             dir-value (eval-precondition dir-condition game-state)]
        (cond
          (string? dir-value) (say dir-value)
-         (not dir-value) (say (_ "Couldn't go in that direction"))
+         (not dir-value) (say (or (:default-go room) (_ "Couldn't go in that direction.")))
          :else (alet [new-state (change-rooms game-state dir-value)]
                  (eval-postcondition dir-condition game-state new-state))))
 
@@ -113,14 +133,14 @@
 (defn save
   "Save the current game state to a file."
   [game-state]
-  (write-file "saved.game" game-state)
+  (write-file "saved.game" (dissoc game-state :configuration))
   (say (_ "Done.")))
 
 (defn restore
   "Restore a previous game state from file."
   [game-state]
   (try
-    (let [loaded-state (read-file "saved.game")]
+    (let [loaded-state (assoc (read-file "saved.game") :configuration (:configuration game-state))]
       (say (rooms/describe (current-room loaded-state)))
       loaded-state)
     (catch #?(:clj java.io.FileNotFoundException :cljs js/Object) e (say (_ "No saved game found.")))))
@@ -141,9 +161,11 @@
   (make-item-handler
    (_ "look inside") :look-in
    (fn [game-state item]
-     (if (:items item)
-       (say (describe-container item))
-       (say (_ "I couldn't look inside a %s." (iname item)))))
+    (if-let [custom-say (get-in item [:look-in :say])]
+      (say custom-say)
+      (if (:items item)
+        (say (describe-container item))
+        (say (_ "I couldn't look inside a %s." (iname item))))))
    :kw-required false))
 
 (def take_
@@ -156,7 +178,7 @@
        (say (_ "I already had that."))
        (let [new-state (remove-item game-state item)
              new-inventory (conj (:inventory new-state) item)]
-         (say (_ "Taken."))
+         (say (get-in item [:take :say] (_ "Taken.")))
          (assoc new-state :inventory new-inventory))))))
 
 (defn take-all
@@ -183,10 +205,12 @@
      (cond
        (not (:closed item)) (say (p_ item "It was already open."))
        (:locked item) (say (p_ item "It was locked."))
-       :else (let [open-item (assoc item :closed false)]
-               (if (:items open-item)
-                (say (describe-container open-item))
-                (say (_ "Opened.")))
+       :else (let [open-item (assoc item :closed false)
+                   custom-say (get-in item [:open :say])]
+               (cond
+                custom-say (say custom-say)
+                (:items open-item) (say (describe-container open-item))
+                :else (say (_ "Opened.")))
                (replace-item game-state item open-item))))))
 
 (def close
@@ -196,7 +220,7 @@
      (if (:closed item)
        (say (p_ item "It was already closed."))
        (let [closed-item (assoc item :closed true)]
-         (say (_ "Closed."))
+         (say (get-in item [:close :say] (_ "Closed.")))
          (replace-item game-state item closed-item))))))
 
 (def unlock
@@ -207,10 +231,22 @@
        (not (:locked locked)) (say (p_ locked "It wasn't locked."))
        (not= locked (:unlocks key-item)) (say (_ "That didn't work."))
        :else (let [unlocked (assoc locked :locked false)]
-               (say (_ "Unlocked."))
-               (-> game-state
-                   (remove-item key-item)
-                   (replace-item locked unlocked)))))))
+               (say (get-in locked [:unlock :say] (_ "Unlocked.")))
+               (replace-item game-state locked unlocked))))))
+
+(def open-with
+  (make-compound-item-handler
+   (_ "open") :open-with
+   (fn [game-state closed key-item]
+     "An unlock + open of sorts."
+     (cond
+       (not (:closed closed)) (say (p_ closed "It was already open."))
+       (or (and (:locked closed) (= closed (:unlocks key-item)))
+           (= closed (:opens key-item))) (let [opened (merge closed {:locked false :closed false})]
+                                          (say (get-in closed [:open-with :say] (_ "Opened.")))
+                                          (replace-item game-state closed opened))
+       :else (say (_ "That didn't work."))))
+   :kw-required false))
 
 (def talk
   (make-item-handler
@@ -224,7 +260,7 @@
   [verb-name verb-kw]
   (make-item-handler verb-name verb-kw
     (fn [game-state item]
-      (change-rooms game-state (verb-kw item)))))
+      (change-rooms game-state (eval-precondition (verb-kw item))))))
 
 (def climb (make-move-item-handler (_ "climb") :climb))
 (def climb-up (make-move-item-handler (_ "climb up") :climb-up))
@@ -234,6 +270,8 @@
 ;;; NOOP VERBS (rely entirely in pre/post conditions)
 (def read_ (make-item-handler (_ "read") :read))
 (def use_ (make-item-handler (_ "use") :use))
+
+(def use-with (make-compound-item-handler (_ "use") :use-with))
 
 ;; SAY VERBS
 (defn make-say-verb [speech]

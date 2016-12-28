@@ -23,6 +23,10 @@
      :climb-up (_ "Not up.")
      :climb-down (_ "Not down.")}))
 
+(defn use-with-defaults
+  [item]
+  (if (:use-with item) {:use (_ "Use with what?")}))
+
 (defn talk-defaults [item] (if (:dialog item) {:talk true}))
 
 (defn make
@@ -33,6 +37,7 @@
                        (unlock-defaults extras)
                        (talk-defaults extras)
                        (climb-defaults extras)
+                       (use-with-defaults extras)
                        extras))))
   ([names]
    (make names (_ "There was nothing special about it."))))
@@ -89,8 +94,8 @@
 
 
 (defn get-from
-  "Get the spec for the item with the given name, if it's in the given set,
-  or is contained by one of its items."
+  "Get the spec for the items with the given name, if it's in the given set,
+  or is contained by one of its items. Returns a sequence (not a single item)."
   [item-set item-name]
   (concat (filter #(some #{item-name} (:names %)) item-set)
           (flatten (map #(get-from (:items %) item-name)

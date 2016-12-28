@@ -66,13 +66,15 @@
            (recur others word (conj lines current))))
        (string/triml (string/join "\n" (conj lines current)))))))
 
+(defn capfirst
+  "Converts first character to upper-case, leaves the rest untouched."
+  [s]
+  (str (string/capitalize (first s)) (subs s 1)))
+
 (defn say
   [speech]
-  (print-line
-    (string-wrap (str (string/capitalize (first speech))
-                      (subs speech 1)))))
+  (print-line (string-wrap (capfirst speech))))
 
 (defn say-inline
   [speech]
-  (print
-    (str (string/capitalize (first speech)) (subs speech 1))))
+  (print (str (capfirst speech))))
