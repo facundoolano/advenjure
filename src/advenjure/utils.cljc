@@ -22,7 +22,28 @@
                          (_ "up") :up, (_ "u") :up
                          (_ "down") :down, (_ "d") :down})
 
+(def direction-names {:north (_ "north")
+                      :northeast (_ "northeast")
+                      :east (_ "east")
+                      :southeast (_ "southeast")
+                      :south (_ "south")
+                      :southwest (_ "southwest")
+                      :west (_ "west")
+                      :northwest (_ "northwest")
+                      :up (_ "up")
+                      :down (_ "down")})
+
 (def directions (set (vals direction-mappings)))
+
+(defn get-visible-room
+  "Returns the spec of the room by the given name, if it's connected and visible
+  (i.e. known or visited) current one."
+  [game-state room-name]
+  (let [current (:current-room game-state)
+        rmap (:room-map game-state)
+        name-mappings (rooms/visible-name-mappings rmap current)
+        room-name (if room-name (clojure.string/lower-case room-name))]
+    (get name-mappings room-name)))
 
 (defn room-as-item
   "Adapt the room record to be used as an item. For now it just removes :items

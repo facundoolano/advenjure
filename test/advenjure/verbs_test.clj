@@ -20,13 +20,15 @@
                         :north :living
                         :visited true))
 
-(def living (room/make "Bedroom" "short description of living room"
+(def living (room/make "Living" "short description of living room"
+                       :synonyms ["Living room"]
                        :initial-description "long description of living room"
                        :items #{(it/make ["sofa"] "just a sofa")}
                        :south :bedroom))
 
 (def game-state {:current-room :bedroom
-                 :room-map {:bedroom bedroom, :living living}
+                 :room-map (-> {:bedroom bedroom, :living living}
+                               (room/connect :bedroom :north :living))
                  :inventory #{magazine}})
 
 ;;;;;;; da tests
@@ -154,6 +156,45 @@
       (is-output "Go where?")
       (go game-state "crazy")
       (is-output "Go where?"))))
+
+(deftest look-to-verb
+  (with-redefs [say say-mock]
+    (testing "Look to a known direction"
+      (let [new-state (assoc-in game-state [:room-map :living :known] true)]
+        (look-to new-state "north")
+        (is-output ["The Living was in that direction."])))
+
+    (testing "Look to a visited direction"
+      (let [new-state (assoc-in game-state [:room-map :living :visited] true)]
+        (look-to new-state "north")
+        (is-output ["The Living was in that direction."])))
+
+    (testing "Look to an unknown direction"
+      (look-to game-state "north")
+      (is-output ["I didn't know what was in that direction."]))
+
+    (testing "Look to a blocked direction"
+      (let [new-state (assoc-in game-state [:room-map :bedroom :north] "The door was on fire")]
+        (look-to new-state "north")
+        (is-output ["That direction was blocked."])))
+
+    (testing "Look to a valid direction where there's nothing"
+      (look-to game-state "southwest")
+      (is-output ["There was nothing in that direction."]))
+
+    (testing "Look to an invalid direction"
+      (look-to game-state "noplace")
+      (is-output ["Look to where?"]))
+
+    (testing "Look to a room name"
+      (let [new-state (assoc-in game-state [:room-map :living :visited] true)]
+        (look-to new-state "Living")
+        (is-output ["The Living was toward north."])))
+
+    (testing "Look to a secondary room name"
+     (let [new-state (assoc-in game-state [:room-map :living :visited] true)]
+       (look-to new-state "living room")
+       (is-output ["The Living was toward north."])))))
 
 (deftest go-back-verb
   (with-redefs [say say-mock]

@@ -26,3 +26,11 @@
     (if (fn? condition)
       (or (condition old-state new-state) new-state)
       new-state)))
+
+(defn eval-direction
+  "Eval the precondition found in the given direction of the current room."
+  [game-state direction]
+  (let [roomkw (:current-room game-state)
+        room (get-in game-state [:room-map roomkw])
+        dir-condition (direction room)]
+    (eval-precondition dir-condition game-state)))

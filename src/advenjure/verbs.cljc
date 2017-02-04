@@ -1,9 +1,11 @@
 (ns advenjure.verbs
   #?(:cljs (:require-macros [advenjure.async :refer [alet]]))
   (:require [advenjure.utils :refer [say say-inline find-item direction-mappings
-                                     current-room remove-item replace-item capfirst]]
+                                     current-room remove-item replace-item capfirst
+                                     direction-names get-visible-room]]
             [advenjure.change-rooms :refer [change-rooms]]
-            [advenjure.hooks :refer [execute eval-precondition eval-postcondition]]
+            [advenjure.hooks :refer [execute eval-precondition eval-postcondition
+                                     eval-direction]]
             [advenjure.items :refer [print-list describe-container iname all-items]]
             [advenjure.rooms :as rooms]
             [advenjure.gettext.core :refer [_ p_]]
@@ -88,26 +90,42 @@
 
 ;;; VERB HANDLER DEFINITIONS
 (defn go
-  "Change the location if direction is valid"
+  "Change the location if direction is valid."
   ([game-state] (say (_ "Go where?")))
   ([game-state direction]
-   (if-let [dir (get direction-mappings direction)]
-     (alet [room (current-room game-state)
-            dir-condition (dir room)
-            dir-value (eval-precondition dir-condition game-state)]
-       (cond
-         (string? dir-value) (say dir-value)
-         (not dir-value) (say (or (:default-go room) (_ "Couldn't go in that direction.")))
-         :else (alet [new-state (change-rooms game-state dir-value)]
-                 (eval-postcondition dir-condition game-state new-state))))
+   (let [current (current-room game-state)]
+     (if-let [dir (get direction-mappings direction)]
+       (alet [dir-value (eval-direction game-state dir)]
+             (cond
+               (string? dir-value) (say dir-value)
+               (not dir-value) (say (or (:default-go current) (_ "Couldn't go in that direction.")))
+               :else (alet [new-state (change-rooms game-state dir-value)]
+                           (eval-postcondition (dir current) game-state new-state))))
+       ;; it's not a direction name, maybe it's a room name
+       (if-let [roomkw (get-visible-room game-state direction)]
+         (change-rooms game-state roomkw)
+         (say "Go where?"))))))
 
-     (let [rmap (:room-map game-state)
-           current (:current-room game-state)
-           name-mappings (rooms/visible-name-mappings rmap current)
-           roomkw (get name-mappings direction)]
-      (if roomkw
-        (change-rooms game-state roomkw)
-        (say "Go where?"))))))
+(defn look-to
+  "Describe what's in the given direction."
+  ([game-state] (say (_ "Look to where?")))
+  ([game-state direction]
+   (if-let [dir (get direction-mappings direction)]
+     (alet [dir-value (eval-direction game-state dir)
+            dir-room (get-in game-state [:room-map dir-value])]
+           (cond
+             (string? dir-value) (say (_ "That direction was blocked."))
+             (not dir-value) (say (_ "There was nothing in that direction."))
+             (or (:known dir-room) (:visited dir-room)) (say (_ "The %s was in that direction." (:name dir-room)))
+             :else (say (_ "I didn't know what was in that direction."))))
+     ;; it's not a direction name, maybe it's a room name
+     (if-let [roomkw (get-visible-room game-state direction)]
+       (let [room-name (get-in game-state [:room-map roomkw :name])
+             ;; this feels kinda ugly:
+             dir-kw (roomkw (clojure.set/map-invert (current-room game-state)))
+             dir-name (dir-kw direction-names)]
+        (say (_ "The %s was toward %s." room-name dir-name)))
+       (say (_ "Look to where?"))))))
 
 (defn go-back
   "Go to the previous room, if possible."
@@ -119,7 +137,7 @@
     (say (_ "Where would back be?"))))
 
 (defn look
-  "Look around (describe room). If tokens is defined, show error phrase."
+  "Look around (describe room)."
   [game-state]
   (say (rooms/describe (current-room game-state))))
 
@@ -296,4 +314,3 @@
 (def move (make-item-handler "move" :move))
 (def pull (make-item-handler "pull" :pull))
 (def push (make-item-handler "push" :push))
-
