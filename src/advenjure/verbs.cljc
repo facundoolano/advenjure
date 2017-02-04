@@ -1,6 +1,7 @@
 (ns advenjure.verbs
   #?(:cljs (:require-macros [advenjure.async :refer [alet]]))
-  (:require [advenjure.utils :refer [say say-inline find-item direction-mappings
+  (:require [clojure.set]
+            [advenjure.utils :refer [say say-inline find-item direction-mappings
                                      current-room remove-item replace-item capfirst
                                      direction-names get-visible-room]]
             [advenjure.change-rooms :refer [change-rooms]]
