@@ -2,7 +2,7 @@
   (:require [clojure.string :as string]
             [advenjure.items :refer [all-item-names]]
             [advenjure.rooms :refer [visible-name-mappings]]
-            [advenjure.utils :refer [direction-mappings current-room]])
+            [advenjure.utils :refer [direction-mappings current-room room-as-item]])
   (:import [jline.console ConsoleReader]
            [jline.console.completer StringsCompleter ArgumentCompleter NullCompleter AggregateCompleter]))
 
@@ -55,7 +55,7 @@
          verbs (keys verb-map)
          room (current-room game-state)
          room-names (keys (visible-name-mappings (:room-map game-state) (:current-room game-state)))
-         all-items (into (:inventory game-state) (:items room))
+         all-items (concat (:inventory game-state) (:items room) [(room-as-item room)])
          item-names (all-item-names all-items)]
      (update-completer verbs item-names room-names)
      (prompt game-state))))

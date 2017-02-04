@@ -5,7 +5,7 @@
             [jquery]
             [jquery.terminal]
             [jquery.mousewheel]
-            [advenjure.utils :refer [direction-mappings current-room]]
+            [advenjure.utils :refer [direction-mappings current-room room-as-item]]
             [advenjure.items :refer [map->Item all-item-names]]
             [advenjure.rooms :refer [map->Room visible-name-mappings]]
             [cljs.core.async :refer [<! >! chan close!]]))
@@ -103,7 +103,7 @@
   [game-state verb-map]
   (let [verb-tokens (map tokenize-verb (keys verb-map))
         room (current-room game-state)
-        items (all-item-names (into (:inventory game-state) (:items room)))
+        items (all-item-names (concat (:inventory game-state) (:items room) [(room-as-item room)]))
         name-mappings (visible-name-mappings (:room-map game-state) (:current-room game-state))
         dirs (concat (keys direction-mappings) (keys name-mappings))]
     (fn [term input cb]
@@ -138,4 +138,3 @@
   (go
     (.set_prompt (term) prompt)
     (<! @input-chan)))
-

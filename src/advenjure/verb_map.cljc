@@ -61,7 +61,7 @@
                   (add-verb [(_ "^save$")] save)
                   (add-verb [(_ "^restore$") (_ "^load$")] restore)
                   (add-verb [(_ "^exit$")] exit)
-                  (add-verb [(_ "^help$")] help)
+                  (add-verb [(_ "^help$") (_ "^info$")] help)
                   (add-verb [(_ "^get up$") (_ "^stand up$") (_ "^stand$")] stand)))
 
 ;use a sorted version to extract the longest possible form first

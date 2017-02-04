@@ -24,10 +24,19 @@
 
 (def directions (set (vals direction-mappings)))
 
+(defn room-as-item
+  "Adapt the room record to be used as an item. For now it just removes :items
+  to avoid conflicts."
+  [room]
+  (-> room
+      (assoc :names (rooms/names room))
+      (dissoc :items)))
+
 (defn find-item
   "Try to find the given item name either in the inventory or the current room."
   [game-state token]
-  (concat (get-from (:inventory game-state) token)
+  (concat (get-from #{(room-as-item (current-room game-state))} token)
+          (get-from (:inventory game-state) token)
           (get-from (:items (current-room game-state)) token)))
 
 (def find-first (comp first find-item))
