@@ -48,7 +48,7 @@
                   "There was a sock there."
                   "There was a drawer there. The drawer contained a pencil"
                   ""
-                  "North: I didn't know what was in that direction."]))))
+                  "North: ???"]))))
 
 (deftest look-at-verb
   (with-redefs [say say-mock]

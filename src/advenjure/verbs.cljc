@@ -144,12 +144,15 @@
   (say " ")
   (reduce (fn [gs dirkw]
             (let [dir-value (eval-direction game-state dirkw)
-                  dir-name (dirkw direction-names)]
+                  dir-name (dirkw direction-names)
+                  dir-room (get-in game-state [:room-map dir-value])]
               (if dir-value
                 (alet [gs gs ; wait for the channel value before printing the next item name
-                       _ (say-inline (str dir-name ": "))
-                       ;; FIXME doesnt seem to be much win in reusing the verb, maybe better to just print a shorter version?
-                       gs (look-to game-state dir-name)]
+                       unused (say-inline (str dir-name ": "))]
+                      (cond
+                        (string? dir-value) (say (_ "blocked."))
+                        (or (:visited dir-room) (:known dir-room)) (say (str (:name dir-room) "."))
+                        :else (say "???"))
                       gs)
                 gs)))
           game-state

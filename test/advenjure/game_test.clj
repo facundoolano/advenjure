@@ -43,7 +43,7 @@
                     "There was a sock there."
                     "There was a drawer there. The drawer contained a pencil"
                     ""
-                    "North: I didn't know what was in that direction."])
+                    "North: ???"])
         (is (= new-state (update-in game-state [:moves] inc)))))
 
     (testing "invalid look with parameters"
