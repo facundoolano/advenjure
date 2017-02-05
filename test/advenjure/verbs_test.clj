@@ -39,14 +39,16 @@
     (is-output "this should be outputed")))
 
 (deftest look-verb
-  (with-redefs [say say-mock]
+  (with-redefs [say say-mock say-inline say-inline-mock]
 
     (testing "look at room"
       (look game-state)
       (is-output ["short description of bedroom"
                   "There was a bed there."
                   "There was a sock there."
-                  "There was a drawer there. The drawer contained a pencil"]))))
+                  "There was a drawer there. The drawer contained a pencil"
+                  ""
+                  "North: I didn't know what was in that direction."]))))
 
 (deftest look-at-verb
   (with-redefs [say say-mock]
@@ -192,9 +194,9 @@
         (is-output ["The Living was toward north."])))
 
     (testing "Look to a secondary room name"
-     (let [new-state (assoc-in game-state [:room-map :living :visited] true)]
-       (look-to new-state "living room")
-       (is-output ["The Living was toward north."])))))
+      (let [new-state (assoc-in game-state [:room-map :living :visited] true)]
+        (look-to new-state "living room")
+        (is-output ["The Living was toward north."])))))
 
 (deftest go-back-verb
   (with-redefs [say say-mock]

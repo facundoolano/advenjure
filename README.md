@@ -14,6 +14,8 @@ Some of its distinctive features are:
 
 You can see the code for a working example in the [advenjure-example](https://github.com/facundoolano/advenjure-example) repository and play it online [here](https://facundoolano.github.io/advenjure).
 
+For a fully fledged game see [House Taken Over](https://github.com/facundoolano/house-taken-over).
+
 ## Installation
 
 Add the following to your project map as a dependency:

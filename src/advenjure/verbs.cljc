@@ -3,7 +3,7 @@
   (:require [clojure.set]
             [advenjure.utils :refer [say say-inline find-item direction-mappings
                                      current-room remove-item replace-item capfirst
-                                     direction-names get-visible-room]]
+                                     directions direction-names get-visible-room]]
             [advenjure.change-rooms :refer [change-rooms]]
             [advenjure.hooks :refer [execute eval-precondition eval-postcondition
                                      eval-direction]]
@@ -138,9 +138,23 @@
     (say (_ "Where would back be?"))))
 
 (defn look
-  "Look around (describe room)."
+  "Look around (describe room) and enumerate available movement directions."
   [game-state]
-  (say (rooms/describe (current-room game-state))))
+  (say (str (rooms/describe (current-room game-state))))
+  (say " ")
+  (reduce (fn [gs dirkw]
+            (let [dir-value (eval-direction game-state dirkw)
+                  dir-name (dirkw direction-names)]
+              (if dir-value
+                (alet [gs gs ; wait for the channel value before printing the next item name
+                       _ (say-inline (str dir-name ": "))
+                       ;; FIXME doesnt seem to be much win in reusing the verb, maybe better to just print a shorter version?
+                       gs (look-to game-state dir-name)]
+                      gs)
+                gs)))
+          game-state
+          directions))
+
 
 (defn inventory
   "Describe the inventory contents."

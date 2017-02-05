@@ -29,7 +29,7 @@
 
 
 (deftest process-input-test
-  (with-redefs [advenjure.ui.output/print-line say-mock]
+  (with-redefs [advenjure.ui.output/print-line say-mock print say-inline-mock]
 
     (testing "unknown command"
       (let [new-state (process-input game-state "dance around")]
@@ -41,7 +41,9 @@
         (is-output ["short description of bedroom"
                     "There was a bed there."
                     "There was a sock there."
-                    "There was a drawer there. The drawer contained a pencil"])
+                    "There was a drawer there. The drawer contained a pencil"
+                    ""
+                    "North: I didn't know what was in that direction."])
         (is (= new-state (update-in game-state [:moves] inc)))))
 
     (testing "invalid look with parameters"
