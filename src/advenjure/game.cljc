@@ -30,7 +30,6 @@
     :inventory inventory
     :events #{}
     :executed-dialogs #{}
-    :points 0
     :moves 0
     :configuration {:start-message ""
                     :end-message "\nThe End."

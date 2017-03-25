@@ -54,10 +54,10 @@
           (string? value) (say value)
           (false? value) (say (_ "I couldn't %s that." verb-name))
           (and kw-required (nil? value)) (say (_ "I couldn't %s that." verb-name))
-          :else (alet [before-state (execute game-state :before-item-handler verb-kw)
+          :else (alet [before-state (execute game-state :before-item-handler verb-kw item)
                        handler-state (handler before-state item)
                        post-state (eval-postcondition conditions before-state handler-state)]
-                  (execute post-state :after-item-handler verb-kw))))))))
+                  (execute post-state :after-item-handler verb-kw item))))))))
 
 
 (defn make-compound-item-handler
@@ -83,10 +83,10 @@
           (string? value) (say value)
           (false? value) (say (str "I couldn't " verb-name " that."))
           (and kw-required (nil? value)) (say (_ "I couldn't %s that." verb-name))
-          :else (alet [before-state (execute game-state :before-item-handler verb-kw)
+          :else (alet [before-state (execute game-state :before-item-handler verb-kw item1 item2)
                        handler-state (handler before-state item1 item2)
                        post-state (eval-postcondition conditions before-state handler-state)]
-                  (execute post-state :after-item-handler verb-kw))))))))
+                  (execute post-state :after-item-handler verb-kw item1 item2))))))))
 
 
 ;;; VERB HANDLER DEFINITIONS

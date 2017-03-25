@@ -106,7 +106,7 @@
 (deftest before-item-test
   (with-redefs [advenjure.ui.output/print-line say-mock]
     (testing "modify the game state before executing an item handler"
-      (let [hook (fn [gs kw]
+      (let [hook (fn [gs kw & items]
                    (-> gs (update-in [:counter] inc)
                           (assoc :received kw)))
             with-config (use-plugin base-state {:hooks {:before-item-handler hook}})
@@ -118,7 +118,7 @@
           (is (= :look-at (:received after-look2)))))
 
     (testing "dont call if precondition fails"
-      (let [hook (fn [gs kw]
+      (let [hook (fn [gs kw & items]
                    (-> gs (update-in [:counter] inc)
                           (assoc :received kw)))
             with-config (use-plugin base-state {:hooks {:before-item-handler hook}})
@@ -127,7 +127,7 @@
           (is (= nil (:received after-take)))))
 
     (testing "modify the game state before executing a compound item handler"
-      (let [hook (fn [gs kw]
+      (let [hook (fn [gs kw & items]
                    (-> gs (update-in [:counter] inc)
                           (assoc :received kw)))
             with-config (use-plugin base-state {:hooks {:before-item-handler hook}})
@@ -141,7 +141,7 @@
 (deftest after-item-test
   (with-redefs [advenjure.ui.output/print-line say-mock]
     (testing "modify the game state after executing an item handler"
-      (let [hook (fn [gs kw]
+      (let [hook (fn [gs kw & items]
                    (-> gs (update-in [:counter] inc)
                           (assoc :received kw)))
             with-config (use-plugin base-state {:hooks {:after-item-handler hook}})
@@ -153,7 +153,7 @@
           (is (= :look-at (:received after-look2)))))
 
     (testing "modify the game state after executing a compound item handler"
-      (let [hook (fn [gs kw]
+      (let [hook (fn [gs kw & items]
                    (-> gs (update-in [:counter] inc)
                           (assoc :received kw)))
             with-config (use-plugin base-state {:hooks {:after-item-handler hook}})

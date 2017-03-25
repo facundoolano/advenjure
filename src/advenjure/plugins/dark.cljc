@@ -1,14 +1,13 @@
 (ns advenjure.plugins.dark
+  "Plugin that allows marking a room as :dark, in which case a :lit source
+  is required to display it. If missing, a dark version of the room is presented
+  instead."
   (:require [advenjure.rooms :as rooms]
             [advenjure.items :as items]
             [advenjure.change-rooms :refer [change-rooms]]
             [advenjure.utils :refer [directions current-room]]
             [advenjure.verb-map :refer [add-verb]]
             [advenjure.gettext.core :refer [_]]))
-
-;;; Plugin that allows marking a room as :dark, in which case a :lit source
-;;; is required to display it. If missing, a dark version of the room is presented
-;;; instead
 
 (defn build-dark-room
   "Make a dark version of the current room, preserving only the connection to the
@@ -57,6 +56,3 @@
 ; Plugin definition
 (def dark-room {:hooks {:before-change-room hook
                         :after-handler hook}})
-
-
-

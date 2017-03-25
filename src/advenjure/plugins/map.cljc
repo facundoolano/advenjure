@@ -1,13 +1,12 @@
 (ns advenjure.plugins.map
+  "Plugin that adds a MAP verb to display an ASCII map of the room connections
+  and shows it upon room change."
   (:require [clojure.string :as string]
             [advenjure.verb-map :refer [add-verb]]
             [advenjure.gettext.core :refer [_]]
             [advenjure.utils :refer [current-room directions]]
             [advenjure.ui.output :refer [print-line clear]]
             [advenjure.hooks :refer [eval-precondition]]))
-
-;;; Plugin that adds a MAP verb to display an ASCII map of the room connections
-;;; and shows it upon room change
 
 (def full 60)
 (def half (/ full 2))
