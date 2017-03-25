@@ -21,7 +21,7 @@ For a fully fledged game see [House Taken Over](https://github.com/facundoolano/
 Add the following to your project map as a dependency:
 
 ```clojure
-[advenjure "0.8.0"]
+[advenjure "0.9.0"]
 ```
 
 ## Basic Usage
