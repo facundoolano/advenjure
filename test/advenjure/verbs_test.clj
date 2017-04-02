@@ -452,16 +452,16 @@
           new-bedroom (assoc bedroom :items #{new-drawer})
           new-state (assoc-in game-state [:room-map :bedroom] new-bedroom)
           newer-state (take_ new-state "drawer")]
-      (is (nil? newer-state))
-      (is-output "It's too heavy to take.")))
+      (is (= new-state (assoc newer-state :out [])))
+      (is-output newer-state "It's too heavy to take.")))
 
   (testing "Override look at description"
     (let [new-magazine (assoc magazine :look-at "I didn't want to look at it.")
           new-inventory (it/replace-from (:inventory game-state) magazine new-magazine)
           new-state (assoc game-state :inventory new-inventory)
           newer-state (look-at new-state "magazine")]
-      (is (nil? newer-state))
-      (is-output "I didn't want to look at it.")))
+      (is (= new-state (assoc newer-state :out [])))
+      (is-output newer-state "I didn't want to look at it.")))
 
   (testing "precondition returns false"
     (let [sock2 (it/make ["other sock"] "another sock"
@@ -469,8 +469,8 @@
           new-state (assoc-in game-state [:room-map :bedroom]
                               (room/add-item bedroom sock2))
           newer-state (take_ new-state "other sock")]
-      (is (nil? newer-state))
-      (is-output "I couldn't take that.")))
+      (is (= new-state (assoc newer-state :out [])))
+      (is-output newer-state "I couldn't take that.")))
 
   (testing "precondition returns error message"
     (let [sock2 (it/make ["other sock"] "another sock"
@@ -479,8 +479,8 @@
           new-state (assoc-in game-state [:room-map :bedroom]
                               (room/add-item bedroom sock2))
           newer-state (take_ new-state "other sock")]
-      (is (nil? newer-state))
-      (is-output "Not unless I have the other sock.")))
+      (is (= new-state (assoc newer-state :out [])))
+      (is-output newer-state "Not unless I have the other sock.")))
 
   (testing "precondition other syntax"
     (let [sock2 (it/make ["other sock"] "another sock"
@@ -489,18 +489,18 @@
           new-state (assoc-in game-state [:room-map :bedroom]
                               (room/add-item bedroom sock2))
           newer-state (take_ new-state "other sock")]
-      (is (nil? newer-state))
-      (is-output "Not unless I have the other sock.")))
+      (is (= new-state (assoc newer-state :out [])))
+      (is-output newer-state "Not unless I have the other sock.")))
 
   (testing "precondition returns true"
     (let [sock2 (it/make ["other sock"] "another sock"
                          :take `#(or (contains? (:inventory %) sock)
-                                     "Not unless I have the other sock."))
-          new-state (assoc-in game-state [:room-map :bedroom]
-                              (room/add-item bedroom sock2))
-          newer-state (assoc new-state :inventory (conj (:inventory new-state) sock))]
-      (take_ newer-state "other sock")
-      (is-output "Taken.")))
+                                     "Not unless I have the other sock."))]
+      (-> game-state
+          (assoc-in [:room-map :bedroom] (room/add-item bedroom sock2))
+          (update :inventory conj sock)
+          (take_ "other sock")
+          (is-output "Taken."))))
 
   (testing "precondition for compound verb"
     (let [beer (it/make ["beer"] "a beer")
@@ -508,20 +508,21 @@
                          :unlock `(fn [gs# the-key#]
                                     (or (contains? (:inventory gs#) ~beer)
                                         "Only if I have a beer.")))
-          ckey (it/make ["key"] "the chest key" :unlocks chest)
-          new-state (assoc game-state :inventory #{chest ckey})]
-      (unlock new-state "chest" "key")
-      (is-output "Only if I have a beer.")
-      (let [newer-state (assoc new-state :inventory #{chest ckey beer})]
-        (unlock newer-state "chest" "key")
-        (is-output "Unlocked."))))
+          ckey (it/make ["key"] "the chest key" :unlocks chest)]
+      (-> game-state
+          (assoc :inventory #{chest ckey})
+          (unlock "chest" "key")
+          (is-output "Only if I have a beer.")
+          (assoc :inventory #{chest ckey beer})
+          (unlock "chest" "key")
+          (is-output "Unlocked."))))
 
   (testing "override message for go"
     (let [new-bedroom (assoc bedroom :south "No way I was going south.")
           new-state (assoc-in game-state [:room-map :bedroom] new-bedroom)
           newer-state (go new-state "south")]
-      (is (nil? newer-state))
-      (is-output "No way I was going south.")))
+      (is (= new-state (assoc newer-state :out [])))
+      (is-output newer-state "No way I was going south.")))
 
   (testing "precondition for go"
     (let [wallet (it/make "wallet")
@@ -529,8 +530,7 @@
                                                 :living
                                                 "couldn't leave without my wallet."))
           new-state (assoc-in game-state [:room-map :bedroom] new-bedroom)]
-      (go new-state "north")
-      (is-output "couldn't leave without my wallet.")
+      (is-output (go new-state "north") "couldn't leave without my wallet.")
       (let [newer-state (assoc new-state :inventory #{wallet})
             last-state (go newer-state "north")]
         (is (= :living (:current-room last-state))))))
@@ -541,28 +541,30 @@
         (let [inventory (:inventory newgs)
               bottle (first (it/get-from inventory "bottle"))
               new-inv (it/replace-from inventory bottle broken-bottle)]
-          (say "I think I broke it.")
-          (assoc newgs :inventory new-inv)))
+          (-> newgs
+              (say "I think I broke it.")
+              (assoc :inventory new-inv))))
 
       (let [bottle (it/make ["bottle"] "a bottle"
                             :open {:post `break-bottle})
             new-state (assoc game-state :inventory #{bottle})
             newer-state (open new-state "bottle")]
-        (is-output "I think I broke it.")
+        (is-output newer-state "I think I broke it.")
         (is (contains? (:inventory newer-state) broken-bottle)))))
 
   (testing "postcondition for compound"
     (def beer (it/make ["beer"] "a beer"))
     (defn get-beer [oldgs newgs]
-      (say "There was a beer inside. Taking it.")
-      (assoc newgs :inventory (conj (:inventory newgs) beer)))
+      (-> newgs
+          (say "There was a beer inside. Taking it.")
+          (update :inventory conj beer)))
 
     (let [chest (it/make ["chest"] "a treasure chest" :closed true :locked true
                          :unlock {:post `get-beer})
           ckey (it/make ["key"] "the chest key" :unlocks chest)
           new-state (assoc game-state :inventory #{chest ckey})
           newer-state (unlock new-state "chest" "key")]
-      (is-output ["Unlocked." "There was a beer inside. Taking it."])
+      (is-output newer-state ["Unlocked." "There was a beer inside. Taking it."])
       (is (contains? (:inventory newer-state) beer))))
 
   (testing "postcondition for go"

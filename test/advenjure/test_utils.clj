@@ -15,4 +15,5 @@
 
         results (take-last amount output)]
     (is (= (map clean-str as-seq) ;just ignore case man
-           (map clean-str results)))))
+           (map clean-str results)))
+    gs))
