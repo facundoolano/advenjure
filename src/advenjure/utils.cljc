@@ -2,8 +2,6 @@
   (:require [clojure.string :as string]
             [advenjure.items :refer [get-from remove-from replace-from]]
             [advenjure.rooms :as rooms]
-            #?(:cljs [advenjure.ui.output :refer [print]])
-            [advenjure.ui.output :refer [print-line]]
             [advenjure.gettext.core :refer [_]]))
 
 (defn current-room
@@ -101,11 +99,26 @@
   [s]
   (str (string/capitalize (first s)) (subs s 1)))
 
-(defn say-inline
+(defn- prepare-new-output
+  "Prepares the game state to add new speech to the current unfinished
+  line or a new one if the last is finished."
   [gs speech]
-  (->> speech
-       (capfirst)
-       (string-wrap)
-       (update gs :out conj)))
+  (let [previous (or (last (:out gs)) "")
+        join? (not (clojure.string/ends-with? previous "\n"))
+        new-gs (if join? (update gs :out (comp vec butlast)) gs)]
+    [new-gs (str (when join? previous) speech)]))
 
-(defn say [gs speech] (say-inline gs (str speech "\n")))
+(defn say
+  "Add speech to the last unfinished line and finish it with \n."
+  [gs speech]
+  (let [[new-gs speech] (prepare-new-output gs speech)]
+    (->> (str speech "\n")
+         (capfirst)
+         (string-wrap)
+         (update new-gs :out conj))))
+
+(defn say-inline
+  "Add speech to the last unfinished line."
+  [gs speech]
+  (let [[new-gs speech] (prepare-new-output gs speech)]
+    (update new-gs :out conj speech)))

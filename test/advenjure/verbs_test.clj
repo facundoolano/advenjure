@@ -201,46 +201,44 @@
 
   (testing "Should say can't go back if previous room not currently accesible"))
 
-;;;;;;; TESTS passing up to here
-
 (deftest take-verb
   (testing "take an item from the room"
     (let [new-state (take_ game-state "sock")]
       (is (it/get-from (:inventory new-state) "sock"))
       (is (empty? (it/get-from (:items (current-room new-state)) "sock")))
-      (is-output "Taken.")))
+      (is-output new-state "Taken.")))
 
   (testing "take an item that's not takable"
     (let [new-state (take_ game-state "bed")]
-      (is (nil? new-state))
-      (is-output "I couldn't take that.")))
+      (is (= (:inventory game-state) (:inventory new-state)))
+      (is-output new-state "I couldn't take that.")))
 
   (testing "take an item from inventory"
     (let [new-state (take_ game-state "magazine")]
-      (is (nil? new-state))
-      (is-output "I already had that.")))
+      (is (= (:inventory game-state) (:inventory new-state)))
+      (is-output new-state "I already had that.")))
 
   (testing "take an invalid item"
     (let [new-state (take_ game-state "microwave")]
-      (is (nil? new-state))
-      (is-output "I didn't see that.")))
+      (is (= (:inventory game-state) (:inventory new-state)))
+      (is-output new-state "I didn't see that.")))
 
   (testing "take with no parameter"
     (let [new-state (take_ game-state)]
-      (is (nil? new-state))
-      (is-output "Take what?")))
+      (is (= (:inventory game-state) (:inventory new-state)))
+      (is-output new-state "Take what?")))
 
   (testing "take an item from other room"
     (let [new-state (assoc game-state :current-room :living)
           newer-state (take_ new-state "sock")]
-      (is (nil? newer-state))
-      (is-output "I didn't see that.")))
+      (is (= (:inventory new-state) (:inventory newer-state)))
+      (is-output newer-state "I didn't see that.")))
 
   (testing "take item in room container"
     (let [new-state (take_ game-state "pencil")]
       (is (it/get-from (:inventory new-state) "pencil"))
       (is (empty? (it/get-from (:items (current-room new-state)) "pencil")))
-      (is-output "Taken.")))
+      (is-output new-state "Taken.")))
 
   (testing "take item in inv container"
     (let [coin {:names ["coin"] :description "a nickle" :take true}
@@ -251,24 +249,24 @@
           new-sack (it/get-from inv "sack")]
       (is (contains? inv coin))
       (is (not (contains? (:items new-sack) coin)))
-      (is-output "Taken.")))
+      (is-output newer-state "Taken.")))
 
   (testing "take item in closed container"
     (let [coin {:names ["coin"] :description "a nickle" :take true}
           sack {:names ["sack"] :items #{coin} :closed true}
           new-state (assoc game-state :inventory #{sack})
           newer-state (take_ new-state "coin")]
-      (is (nil? newer-state))
-      (is-output "I didn't see that."))))
+      (is (= (:inventory new-state) (:inventory newer-state)))
+      (is-output newer-state "I didn't see that."))))
 
-(deftest take-verb
+(deftest take-all-verb
   (testing "take all items in the room with containers, ignore inventory"
     (let [new-state (take-all game-state)
           item-names (set (map #(first (:names %)) (:inventory new-state)))]
       (is (= item-names #{"magazine" "pencil" "sock"}))
       ;; lousy, assumes some order in items
-      (is-output ["Sock: Taken."
-                  "Pencil: Taken."])))
+      (is-output new-state ["Sock: Taken."
+                            "Pencil: Taken."])))
 
   (testing "attempt taking items that define :take property"
     (let [new-bedroom (-> bedroom
@@ -280,17 +278,16 @@
           item-names (set (map #(first (:names %)) (:inventory new-state)))]
       (is (= item-names #{"magazine" "pencil" "sock"}))
       ;; lousy, assumes some order in items
-      (is-output ["Sock: Taken."
-                  "Shoe: I didn't want that."
-                  "Fridge: I couldn't take that."
-                  "Pencil: Taken."])))
+      (is-output new-state ["Sock: Taken."
+                            "Shoe: I didn't want that."
+                            "Fridge: I couldn't take that."
+                            "Pencil: Taken."])))
 
   (testing "take all when no items left"
     (let [empty-state (assoc-in game-state [:room-map :bedroom :items] #{})
           new-state (take-all empty-state)]
-      (is-output "I saw nothing worth taking.")
-      (is (nil? new-state)))))
-
+      (is-output new-state "I saw nothing worth taking.")
+      (is (= (:inventory game-state) (:inventory new-state))))))
 
 (deftest open-verb
   (testing "open a closed item"
@@ -298,27 +295,27 @@
           new-state (assoc game-state :inventory #{sack})
           newer-state (open new-state "sack")
           new-sack (it/get-from (:inventory newer-state) "sack")]
-      (is-output "The sack was empty.")
+      (is-output newer-state "The sack was empty.")
       (is (not (:closed new-sack)))))
 
   (testing "open an already open item"
     (let [sack (it/make ["sack"] "a sack" :items #{} :closed false)
           new-state (assoc game-state :inventory #{sack})
           newer-state (open new-state "sack")]
-      (is-output "It was already open.")
-      (is (= new-state newer-state))))
+      (is-output newer-state "It was already open.")
+      (is (= new-state (assoc newer-state :out [])))))
 
   (testing "open a non openable item"
     (let [sack (it/make ["sack"] "a sack" :items #{})
           new-state (assoc game-state :inventory #{sack})
           newer-state (open new-state "sack")]
-      (is-output "I couldn't open that.")
-      (is (nil? newer-state))))
+      (is-output newer-state "I couldn't open that.")
+      (is (= new-state (assoc newer-state :out [])))))
 
   (testing "open a missing item"
     (let [new-state (open game-state "sack")]
-      (is-output "I didn't see that.")
-      (is (nil? new-state))))
+      (is-output new-state "I didn't see that.")
+      (is (= game-state (assoc new-state :out [])))))
 
   (testing "open a container inside a container"
     (let [bottle (it/make ["bottle"] "a bottle" :closed true
@@ -328,7 +325,7 @@
           newer-state (open new-state "bottle")
           new-sack (it/get-from (:inventory newer-state) "sack")
           new-bottle (it/get-from (:items new-sack) "bottle")]
-      (is-output ["The bottle contained an amount of water"])
+      (is-output newer-state "The bottle contained an amount of water")
       (is (not (:closed new-bottle))))))
 
 (deftest close-verb
@@ -337,27 +334,27 @@
           new-state (assoc game-state :inventory #{sack})
           newer-state (close new-state "sack")
           new-sack (first (it/get-from (:inventory newer-state) "sack"))]
-      (is-output "Closed.")
+      (is-output newer-state "Closed.")
       (is (:closed new-sack))))
 
   (testing "close an already closed item"
     (let [sack (it/make ["sack"] "a sack" :items #{} :closed true)
           new-state (assoc game-state :inventory #{sack})
           newer-state (close new-state "sack")]
-      (is-output "It was already closed.")
-      (is (= new-state newer-state))))
+      (is-output newer-state "It was already closed.")
+      (is (= new-state (assoc newer-state :out [])))))
 
   (testing "close a non openable item"
     (let [sack (it/make ["sack"] "a sack" :items #{})
           new-state (assoc game-state :inventory #{sack})
           newer-state (close new-state "sack")]
-      (is-output "I couldn't close that.")
-      (is (nil? newer-state))))
+      (is-output newer-state "I couldn't close that.")
+      (is (= new-state (assoc newer-state :out [])))))
 
   (testing "close a missing item"
     (let [new-state (close game-state "sack")]
-      (is-output "I didn't see that.")
-      (is (nil? new-state))))
+      (is-output new-state "I didn't see that.")
+      (is (= game-state (assoc new-state :out [])))))
 
   (testing "close a container inside a container"
     (let [bottle (it/make ["bottle"] "a bottle " :closed false
@@ -367,7 +364,7 @@
           newer-state (close new-state "bottle")
           new-sack (first (it/get-from (:inventory newer-state) "sack"))
           new-bottle (first (it/get-from (:items new-sack) "bottle"))]
-      (is-output "Closed.")
+      (is-output newer-state "Closed.")
       (is (:closed new-bottle)))))
 
 (deftest unlock-verb
@@ -379,79 +376,75 @@
 
     (testing "open a locked item"
       (let [newer-state (open new-state "chest")]
-        (is-output "It was locked.")
-        (is (= new-state newer-state))))
+        (is-output newer-state "It was locked.")
+        (is (= new-state (assoc newer-state :out [])))))
 
     (testing "unlock a locked item"
       (let [newer-state (unlock new-state "chest" "key")
             new-chest (it/get-from (:inventory newer-state) "chest")]
-        (is-output "Unlocked.")
+        (is-output newer-state "Unlocked.")
         (is (not (:locked new-chest)))
-        (open newer-state "chest")
-        (is-output "Opened.")))
+        (is-output (open newer-state "chest") "Opened.")))
 
     (testing "unlock an already unlocked item"
       (let [newer-state (unlock new-state "chest" "key")
             new-chest (it/get-from (:inventory newer-state) "chest")
             last-state (unlock newer-state "chest" "other key")]
-        (is-output "It wasn't locked.")
-        (is (= newer-state last-state))))
+        (is-output last-state "It wasn't locked.")
+        (is (= (assoc newer-state :out []) (assoc last-state :out [])))))
 
     (testing "unlock what?"
       (let [newer-state (unlock new-state)]
-        (is-output "Unlock what?")
-        (is (nil? newer-state))))
+        (is-output newer-state "Unlock what?")
+        (is (= new-state (assoc newer-state :out [])))))
 
     (testing "unlock with what?"
       (let [newer-state (unlock new-state "chest")]
-        (is-output "Unlock chest with what?")
-        (is (nil? newer-state))))
+        (is-output newer-state "Unlock chest with what?")
+        (is (= new-state (assoc newer-state :out [])))))
 
     (testing "unlock a non lockable item"
       (let [newer-state (unlock new-state "drawer" "key")]
-        (is-output "I couldn't unlock that.")
-        (is (nil? newer-state))))
+        (is-output newer-state "I couldn't unlock that.")
+        (is (= new-state (assoc newer-state :out [])))))
 
     (testing "unlock with item that didn't unlock"
       (let [newer-state (unlock new-state "chest" "sock")]
-        (is-output "That didn't work.")
-        (is (= new-state newer-state))))
+        (is-output newer-state "That didn't work.")
+        (is (= new-state (assoc newer-state :out [])))))
 
     (testing "unlock with item that unlocks another thing"
       (let [newer-state (unlock new-state "chest" "other key")]
-        (is-output "That didn't work.")
-        (is (= new-state newer-state))))))
+        (is-output newer-state "That didn't work.")
+        (is (= new-state (assoc newer-state :out [])))))))
 
 (deftest read-verb
   (testing "Read a readble item"
     (let [new-state (read_ game-state "magazine")]
-      (is-output "Tells the results of every major sports event till the end of the century.")
-      (is (nil? new-state))))
+      (is-output new-state
+                 "Tells the results of every major sports event till the end of the century.")
+      (is (= game-state (assoc new-state :out [])))))
 
   (testing "Read a non readble item"
     (let [new-state (read_ game-state "sock")]
-      (is-output "I couldn't read that.")
-      (is (nil? new-state)))))
+      (is-output new-state"I couldn't read that.")
+      (is (= game-state (assoc new-state :out []))))))
 
 (deftest inventory-verb
   (testing "list inventory contents"
-    (let [new-state (inventory game-state)]
-      (is-output ["I was carrying:" "A magazine"])
-      (is (nil? new-state))))
+    (is-output (inventory game-state) ["I was carrying:" "A magazine"]))
 
   (testing "empty inventory"
-    (let [new-state (assoc game-state :inventory #{})
-          newer-state (inventory new-state)]
-      (is-output "I wasn't carrying anything.")
-      (is (nil? newer-state))))
+    (let [new-state (assoc game-state :inventory #{})]
+      (is-output (inventory new-state) "I wasn't carrying anything.")))
 
   (testing "list inventory with container"
     (let [bottle {:names ["bottle"] :items #{{:names ["amount of water"]}}}
-          sack {:names ["sack"] :items #{bottle}}
-          new-state (assoc game-state :inventory #{sack})]
-      (inventory new-state)
-      (is-output ["I was carrying:"
-                  "A sack. The sack contained a bottle"]))))
+          sack {:names ["sack"] :items #{bottle}}]
+      (-> (assoc game-state :inventory #{sack})
+          (inventory)
+          (is-output ["I was carrying:"
+                      "A sack. The sack contained a bottle"])))))
 
 (deftest pre-post-conditions
   (testing "Override couldn't take message"

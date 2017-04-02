@@ -210,10 +210,10 @@
       Won't allow taking an object already in the inventory (i.e. not in a container)."
      (if (contains? (:inventory game-state) item)
        (say game-state (_ "I already had that."))
-       (let [new-state (remove-item game-state item)
-             new-inventory (conj (:inventory new-state) item)]
-         (say game-state (get-in item [:take :say] (_ "Taken.")))
-         (assoc new-state :inventory new-inventory))))))
+       (-> game-state
+           (say (get-in item [:take :say] (_ "Taken.")))
+           (remove-item item)
+           (update :inventory conj item))))))
 
 (defn take-all
   "Go through every item in the room that defines a value for :take, and attempt
@@ -240,12 +240,12 @@
        (not (:closed item)) (say game-state (p_ item "It was already open."))
        (:locked item) (say game-state (p_ item "It was locked."))
        :else (let [open-item (assoc item :closed false)
-                   custom-say (get-in item [:open :say])]
-               (cond
-                custom-say (say game-state custom-say)
-                (:items open-item) (say game-state (describe-container open-item))
-                :else (say game-state (_ "Opened.")))
-               (replace-item game-state item open-item))))))
+                   custom-say (get-in item [:open :say])
+                   new-state (cond
+                               custom-say (say game-state custom-say)
+                               (:items open-item) (say game-state (describe-container open-item))
+                               :else (say game-state (_ "Opened.")))]
+               (replace-item new-state item open-item))))))
 
 (def close
   (make-item-handler
@@ -254,8 +254,9 @@
      (if (:closed item)
        (say game-state (p_ item "It was already closed."))
        (let [closed-item (assoc item :closed true)]
-         (say game-state (get-in item [:close :say] (_ "Closed.")))
-         (replace-item game-state item closed-item))))))
+         (-> game-state
+             (say (get-in item [:close :say] (_ "Closed.")))
+             (replace-item item closed-item)))))))
 
 (def unlock
   (make-compound-item-handler
@@ -265,8 +266,9 @@
        (not (:locked locked)) (say game-state (p_ locked "It wasn't locked."))
        (not= locked (:unlocks key-item)) (say game-state (_ "That didn't work."))
        :else (let [unlocked (assoc locked :locked false)]
-               (say game-state (get-in locked [:unlock :say] (_ "Unlocked.")))
-               (replace-item game-state locked unlocked))))))
+               (-> game-state
+                   (say (get-in locked [:unlock :say] (_ "Unlocked.")))
+                   (replace-item locked unlocked)))))))
 
 (def open-with
   (make-compound-item-handler
@@ -275,10 +277,14 @@
      "An unlock + open of sorts."
      (cond
        (not (:closed closed)) (say game-state (p_ closed "It was already open."))
+
        (or (and (:locked closed) (= closed (:unlocks key-item)))
-           (= closed (:opens key-item))) (let [opened (merge closed {:locked false :closed false})]
-                                          (say game-state (get-in closed [:open-with :say] (_ "Opened.")))
-                                          (replace-item game-state closed opened))
+           (= closed (:opens key-item)))
+       (let [opened (merge closed {:locked false :closed false})]
+         (-> game-state
+             (say (get-in closed [:open-with :say] (_ "Opened.")))
+             (replace-item closed opened)))
+
        :else (say game-state (_ "That didn't work."))))
    :kw-required false))
 

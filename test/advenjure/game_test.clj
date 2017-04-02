@@ -27,7 +27,7 @@
 
 (def game-state (make {:bedroom bedroom, :living living} :bedroom #{magazine}))
 
-
+;; FIXME will have to make bring old mocks as print-line-mock and print-inline mock
 (deftest process-input-test
   (with-redefs [advenjure.ui.output/print-line say-mock print say-inline-mock]
 
