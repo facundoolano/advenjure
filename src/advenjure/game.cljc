@@ -1,7 +1,8 @@
 (ns advenjure.game
   #?(:cljs (:require-macros [cljs.core.async.macros :refer [go]]
                             [advenjure.async :refer [aloop alet let!?]]))
-  (:require [advenjure.rooms :as room]
+  (:require [clojure.string :as string]
+            [advenjure.rooms :as room]
             #?(:clj [advenjure.async :refer [let!? aloop alet]])
             [advenjure.change-rooms :refer [change-rooms]]
             [advenjure.utils :as utils]
@@ -55,18 +56,19 @@
   "Take an input comand, find the verb in it and execute its action handler."
   [game-state input]
   (let [verb-map (get-in game-state [:configuration :verb-map])
-        clean (clojure.string/trim (clojure.string/lower-case input))
+        clean (string/trim (string/lower-case input))
         [verb tokens] (find-verb verb-map clean)
         handler (get verb-map verb)]
     (if handler
       (alet [before-state (-> game-state
-                            (update-in [:moves] inc)
-                            (hooks/execute :before-handler))
+                              (update-in [:moves] inc)
+                              (hooks/execute :before-handler))
              handler-state (apply handler before-state tokens)
              after-state (hooks/execute (or handler-state before-state) :after-handler)]
-        after-state)
+            after-state)
 
-      (do (if-not (clojure.string/blank? clean) (print-line (_ "I didn't know how to do that.")))
+      (if-not (string/blank? clean)
+        (utils/say game-state (_ "I didn't know how to do that."))
         game-state))))
 
 (defn print-message
@@ -76,7 +78,7 @@
     (print-line (utils/capfirst value))))
 
 (defn flush-output [gs]
-  (doseq [output (clojure.string/split-lines (:out gs))]
+  (doseq [output (string/split-lines (:out gs))]
     (print-line output))
   (assoc gs :out ""))
 

@@ -1,7 +1,7 @@
 (ns advenjure.game-test
   (:require [clojure.test :refer :all]
             [advenjure.test-utils :refer :all]
-            [advenjure.utils :refer [say current-room]]
+            [advenjure.utils :refer [current-room]]
             [advenjure.game :refer :all]
             [advenjure.rooms :as room]
             [advenjure.items :as it]))
@@ -29,57 +29,57 @@
 
 ;; FIXME will have to make bring old mocks as print-line-mock and print-inline mock
 (deftest process-input-test
-  (with-redefs [advenjure.ui.output/print-line say-mock print say-inline-mock]
+  (testing "unknown command"
+    (let [new-state (process-input game-state "dance around")]
+      (is-output new-state "I didn't know how to do that.")
+      (is (= (assoc new-state :out "") game-state))))
 
-    (testing "unknown command"
-      (let [new-state (process-input game-state "dance around")]
-        (is-output "I didn't know how to do that.")
-        (is (= new-state game-state))))
+  (testing "look verb"
+    (let [new-state (process-input game-state "look ")]
+      (is-output new-state
+                 ["short description of bedroom"
+                  "There was a bed there."
+                  "There was a sock there."
+                  "There was a drawer there. The drawer contained a pencil"
+                  ""
+                  "North: ???"])
+      (is (= (assoc new-state :out "") (update-in game-state [:moves] inc)))))
 
-    (testing "look verb"
-      (let [new-state (process-input game-state "look ")]
-        (is-output ["short description of bedroom"
-                    "There was a bed there."
-                    "There was a sock there."
-                    "There was a drawer there. The drawer contained a pencil"
-                    ""
-                    "North: ???"])
-        (is (= new-state (update-in game-state [:moves] inc)))))
+  (testing "invalid look with parameters"
+    (let [new-state (process-input game-state "look something")]
+      (is-output new-state
+                 "I didn't know how to do that.")
+      (is (= (assoc new-state :out "") game-state))))
 
-    (testing "invalid look with parameters"
-      (let [new-state (process-input game-state "look something")]
-        (is-output "I didn't know how to do that.")
-        (is (= new-state game-state))))
+  (testing "look at item"
+    (let [new-state (process-input game-state "look at bed")]
+      (is-output new-state "just a bed")
+      (is (= (assoc new-state :out "") (update-in game-state [:moves] inc)))))
 
-    (testing "look at item"
-      (let [new-state (process-input game-state "look at bed")]
-        (is-output "just a bed")
-        (is (= new-state (update-in game-state [:moves] inc)))))
+  (testing "take item"
+    (let [new-state (process-input game-state "take sock")]
+      (is-output new-state "Taken.")
+      (is (contains? (:inventory new-state) sock))
+      (is (not (contains? (:items (current-room new-state)) sock)))))
 
-    (testing "take item"
-      (let [new-state (process-input game-state "take sock")]
-        (is-output "Taken.")
-        (is (contains? (:inventory new-state) sock))
-        (is (not (contains? (:items (current-room new-state)) sock)))))
+  (testing "go shortcuts"
+    (is-output (process-input game-state "north")
+               ["long description of living room"
+                "There was a sofa there."])
+    (is-output (process-input game-state "n")
+               ["long description of living room"
+                "There was a sofa there."]))
 
-    (testing "go shortcuts"
-      (process-input game-state "north")
-      (is-output ["long description of living room"
-                  "There was a sofa there."])
-      (process-input game-state "n")
-      (is-output ["long description of living room"
-                  "There was a sofa there."]))
+  (let [chest (it/make ["chest"] "a treasure chest" :closed true :locked true)
+        ckey (it/make ["key"] "the chest key" :unlocks chest)
+        inventory (conj #{} chest ckey)
+        new-state (assoc game-state :inventory inventory)]
+    (testing "unlock with item"
+      (is-output (process-input new-state "unlock chest with key")
+                 "Unlocked."))
 
-    (let [chest (it/make ["chest"] "a treasure chest" :closed true :locked true)
-          ckey (it/make ["key"] "the chest key" :unlocks chest)
-          inventory (conj #{} chest ckey)
-          new-state (assoc game-state :inventory inventory)]
-      (testing "unlock with item"
-        (process-input new-state "unlock chest with key")
-        (is-output "Unlocked."))
-
-      (testing "unlock with no item specified"
-        (process-input new-state "unlock")
-        (is-output "Unlock what?")
-        (process-input new-state "unlock chest")
-        (is-output "Unlock chest with what?")))))
+    (testing "unlock with no item specified"
+      (is-output (process-input new-state "unlock")
+                 "Unlock what?")
+      (is-output (process-input new-state "unlock chest")
+                 "Unlock chest with what?"))))
