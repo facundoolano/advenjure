@@ -40,7 +40,7 @@
   (let [current (:current-room game-state)
         rmap (:room-map game-state)
         name-mappings (rooms/visible-name-mappings rmap current)
-        room-name (if room-name (clojure.string/lower-case room-name))]
+        room-name (if room-name (string/lower-case room-name))]
     (get name-mappings room-name)))
 
 (defn room-as-item
@@ -80,45 +80,19 @@
         (assoc-in [:room-map room-kw :items]
                   (replace-from (:items room) old-item new-item)))))
 
-(defn string-wrap
-  ([text] (string-wrap text 80))
-  ([text max-size]
-   (loop [[word & others] (string/split text #" ")
-           current ""
-           lines []]
-     (if word
-       (let [new-current (str current " " word)
-             line-size (count (last (string/split new-current #"\n")))]
-         (if (> max-size line-size)
-           (recur others new-current lines)
-           (recur others word (conj lines current))))
-       (string/triml (string/join "\n" (conj lines current)))))))
-
+;; This should be done only when printing
 (defn capfirst
   "Converts first character to upper-case, leaves the rest untouched."
   [s]
   (str (string/capitalize (first s)) (subs s 1)))
 
-(defn- prepare-new-output
-  "Prepares the game state to add new speech to the current unfinished
-  line or a new one if the last is finished."
-  [gs speech]
-  (let [previous (or (last (:out gs)) "")
-        join? (not (clojure.string/ends-with? previous "\n"))
-        new-gs (if join? (update gs :out (comp vec butlast)) gs)]
-    [new-gs (str (when join? previous) speech)]))
-
+;; TODO trim, if last not whitespace and not punctuation, add a dot
 (defn say
   "Add speech to the last unfinished line and finish it with \n."
   [gs speech]
-  (let [[new-gs speech] (prepare-new-output gs speech)]
-    (->> (str speech "\n")
-         (capfirst)
-         (string-wrap)
-         (update new-gs :out conj))))
+  (update gs :out str speech "\n"))
 
 (defn say-inline
   "Add speech to the last unfinished line."
   [gs speech]
-  (let [[new-gs speech] (prepare-new-output gs speech)]
-    (update new-gs :out conj speech)))
+  (update gs :out str speech))

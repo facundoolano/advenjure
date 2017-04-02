@@ -10,9 +10,7 @@
                  (list expected)
                  (seq expected))
         amount (count as-seq)
-        output (clojure.string/split-lines
-                (clojure.string/join (:out gs)))
-
+        output (clojure.string/split-lines (:out gs))
         results (take-last amount output)]
     (is (= (map clean-str as-seq) ;just ignore case man
            (map clean-str results)))

@@ -27,7 +27,7 @@
                        :south :bedroom))
 
 (def game-state {:current-room :bedroom
-                 :out []
+                 :out ""
                  :room-map (-> {:bedroom bedroom, :living living}
                                (room/connect :bedroom :north :living))
                  :inventory #{magazine}})
@@ -303,19 +303,19 @@
           new-state (assoc game-state :inventory #{sack})
           newer-state (open new-state "sack")]
       (is-output newer-state "It was already open.")
-      (is (= new-state (assoc newer-state :out [])))))
+      (is (= new-state (assoc newer-state :out "")))))
 
   (testing "open a non openable item"
     (let [sack (it/make ["sack"] "a sack" :items #{})
           new-state (assoc game-state :inventory #{sack})
           newer-state (open new-state "sack")]
       (is-output newer-state "I couldn't open that.")
-      (is (= new-state (assoc newer-state :out [])))))
+      (is (= new-state (assoc newer-state :out "")))))
 
   (testing "open a missing item"
     (let [new-state (open game-state "sack")]
       (is-output new-state "I didn't see that.")
-      (is (= game-state (assoc new-state :out [])))))
+      (is (= game-state (assoc new-state :out "")))))
 
   (testing "open a container inside a container"
     (let [bottle (it/make ["bottle"] "a bottle" :closed true
@@ -342,19 +342,19 @@
           new-state (assoc game-state :inventory #{sack})
           newer-state (close new-state "sack")]
       (is-output newer-state "It was already closed.")
-      (is (= new-state (assoc newer-state :out [])))))
+      (is (= new-state (assoc newer-state :out "")))))
 
   (testing "close a non openable item"
     (let [sack (it/make ["sack"] "a sack" :items #{})
           new-state (assoc game-state :inventory #{sack})
           newer-state (close new-state "sack")]
       (is-output newer-state "I couldn't close that.")
-      (is (= new-state (assoc newer-state :out [])))))
+      (is (= new-state (assoc newer-state :out "")))))
 
   (testing "close a missing item"
     (let [new-state (close game-state "sack")]
       (is-output new-state "I didn't see that.")
-      (is (= game-state (assoc new-state :out [])))))
+      (is (= game-state (assoc new-state :out "")))))
 
   (testing "close a container inside a container"
     (let [bottle (it/make ["bottle"] "a bottle " :closed false
@@ -377,7 +377,7 @@
     (testing "open a locked item"
       (let [newer-state (open new-state "chest")]
         (is-output newer-state "It was locked.")
-        (is (= new-state (assoc newer-state :out [])))))
+        (is (= new-state (assoc newer-state :out "")))))
 
     (testing "unlock a locked item"
       (let [newer-state (unlock new-state "chest" "key")
@@ -391,44 +391,44 @@
             new-chest (it/get-from (:inventory newer-state) "chest")
             last-state (unlock newer-state "chest" "other key")]
         (is-output last-state "It wasn't locked.")
-        (is (= (assoc newer-state :out []) (assoc last-state :out [])))))
+        (is (= (assoc newer-state :out "") (assoc last-state :out "")))))
 
     (testing "unlock what?"
       (let [newer-state (unlock new-state)]
         (is-output newer-state "Unlock what?")
-        (is (= new-state (assoc newer-state :out [])))))
+        (is (= new-state (assoc newer-state :out "")))))
 
     (testing "unlock with what?"
       (let [newer-state (unlock new-state "chest")]
         (is-output newer-state "Unlock chest with what?")
-        (is (= new-state (assoc newer-state :out [])))))
+        (is (= new-state (assoc newer-state :out "")))))
 
     (testing "unlock a non lockable item"
       (let [newer-state (unlock new-state "drawer" "key")]
         (is-output newer-state "I couldn't unlock that.")
-        (is (= new-state (assoc newer-state :out [])))))
+        (is (= new-state (assoc newer-state :out "")))))
 
     (testing "unlock with item that didn't unlock"
       (let [newer-state (unlock new-state "chest" "sock")]
         (is-output newer-state "That didn't work.")
-        (is (= new-state (assoc newer-state :out [])))))
+        (is (= new-state (assoc newer-state :out "")))))
 
     (testing "unlock with item that unlocks another thing"
       (let [newer-state (unlock new-state "chest" "other key")]
         (is-output newer-state "That didn't work.")
-        (is (= new-state (assoc newer-state :out [])))))))
+        (is (= new-state (assoc newer-state :out "")))))))
 
 (deftest read-verb
   (testing "Read a readble item"
     (let [new-state (read_ game-state "magazine")]
       (is-output new-state
                  "Tells the results of every major sports event till the end of the century.")
-      (is (= game-state (assoc new-state :out [])))))
+      (is (= game-state (assoc new-state :out "")))))
 
   (testing "Read a non readble item"
     (let [new-state (read_ game-state "sock")]
       (is-output new-state"I couldn't read that.")
-      (is (= game-state (assoc new-state :out []))))))
+      (is (= game-state (assoc new-state :out ""))))))
 
 (deftest inventory-verb
   (testing "list inventory contents"
@@ -452,7 +452,7 @@
           new-bedroom (assoc bedroom :items #{new-drawer})
           new-state (assoc-in game-state [:room-map :bedroom] new-bedroom)
           newer-state (take_ new-state "drawer")]
-      (is (= new-state (assoc newer-state :out [])))
+      (is (= new-state (assoc newer-state :out "")))
       (is-output newer-state "It's too heavy to take.")))
 
   (testing "Override look at description"
@@ -460,7 +460,7 @@
           new-inventory (it/replace-from (:inventory game-state) magazine new-magazine)
           new-state (assoc game-state :inventory new-inventory)
           newer-state (look-at new-state "magazine")]
-      (is (= new-state (assoc newer-state :out [])))
+      (is (= new-state (assoc newer-state :out "")))
       (is-output newer-state "I didn't want to look at it.")))
 
   (testing "precondition returns false"
@@ -469,7 +469,7 @@
           new-state (assoc-in game-state [:room-map :bedroom]
                               (room/add-item bedroom sock2))
           newer-state (take_ new-state "other sock")]
-      (is (= new-state (assoc newer-state :out [])))
+      (is (= new-state (assoc newer-state :out "")))
       (is-output newer-state "I couldn't take that.")))
 
   (testing "precondition returns error message"
@@ -479,7 +479,7 @@
           new-state (assoc-in game-state [:room-map :bedroom]
                               (room/add-item bedroom sock2))
           newer-state (take_ new-state "other sock")]
-      (is (= new-state (assoc newer-state :out [])))
+      (is (= new-state (assoc newer-state :out "")))
       (is-output newer-state "Not unless I have the other sock.")))
 
   (testing "precondition other syntax"
@@ -489,7 +489,7 @@
           new-state (assoc-in game-state [:room-map :bedroom]
                               (room/add-item bedroom sock2))
           newer-state (take_ new-state "other sock")]
-      (is (= new-state (assoc newer-state :out [])))
+      (is (= new-state (assoc newer-state :out "")))
       (is-output newer-state "Not unless I have the other sock.")))
 
   (testing "precondition returns true"
@@ -521,7 +521,7 @@
     (let [new-bedroom (assoc bedroom :south "No way I was going south.")
           new-state (assoc-in game-state [:room-map :bedroom] new-bedroom)
           newer-state (go new-state "south")]
-      (is (= new-state (assoc newer-state :out [])))
+      (is (= new-state (assoc newer-state :out "")))
       (is-output newer-state "No way I was going south.")))
 
   (testing "precondition for go"
