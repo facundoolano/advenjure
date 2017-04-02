@@ -7,10 +7,14 @@
    (loop [[word & others] (string/split text #" ")
           current ""
           lines []]
-         (if word
-             (let [new-current (str current " " word)
-                               line-size (count (last (string/split new-current #"\n")))]
-               (if (> max-size line-size)
-                   (recur others new-current lines)
-                 (recur others word (conj lines current))))
-           (string/triml (string/join "\n" (conj lines current)))))))
+     (if word
+       (let [new-current (cond
+                           ;; don't ask, got to this after two hours of blind trial and error
+                           (and (= "" current) (string/blank? word)) (str current word " ")
+                           (= "" current) (str current "" word)
+                           :else (str current " " word))
+             line-size (count (last (string/split new-current #"\n")))]
+         (if (> max-size line-size)
+           (recur others new-current lines)
+           (recur others word (conj lines current))))
+       (string/join "\n" (conj lines current))))))

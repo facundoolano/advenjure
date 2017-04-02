@@ -9,6 +9,6 @@
   (.clearScreen (ConsoleReader.)))
 
 (defn print-line [& strs]
-  (println (map string-wrap strs)))
+  (apply println (map string-wrap strs)))
 
 (def write-file spit)

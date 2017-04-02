@@ -84,7 +84,9 @@
 (defn capfirst
   "Converts first character to upper-case, leaves the rest untouched."
   [s]
-  (str (string/capitalize (first s)) (subs s 1)))
+  (if (string/blank? s)
+    s
+    (str (string/capitalize (first s)) (subs s 1))))
 
 ;; TODO trim, if last not whitespace and not punctuation, add a dot
 (defn say

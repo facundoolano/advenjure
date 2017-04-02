@@ -75,27 +75,30 @@
   [gs kw]
   (let [config (get-in gs [:configuration kw])
         value (if (fn? config) (config gs) config)]
-    (print-line (utils/capfirst value))))
+    (when-not (string/blank? value)
+      (print-line (utils/capfirst value))
+      (read-key))))
 
 (defn flush-output [gs]
   (doseq [output (string/split-lines (:out gs))]
     (print-line output))
   (assoc gs :out ""))
 
+;; FIXME the async macros in this function got really weird
 (defn run
   "Run the game loop. Requires a finished? function to decide when to terminate
   the loop. The rest of the parameters are configuration key/values."
   [game-state finished? & {:as extras}]
   (let [game-state (use-plugin game-state (merge extras {:finished finished?}))]
     (init)
-    (print-message game-state :start-message)
-    (alet [k (read-key)]
-      (aloop [state (change-rooms game-state (:current-room game-state))]
-        (let!? [input (get-input state)
-                new-state (process-input state input)
-                new-state (flush-output new-state)]
-          (if-not ((get-in new-state [:configuration :finished]) new-state)
-            (recur new-state)
-            (do
-             (print-message game-state :end-message)
-             (exit))))))))
+    (alet [_ (print-message game-state :start-message)
+           intial-state (change-rooms game-state (:current-room game-state))]
+          (aloop [state (flush-output intial-state)]
+                 (let!? [input (get-input state)
+                         new-state (process-input state input)
+                         new-state (flush-output new-state)]
+                   (if-not ((get-in new-state [:configuration :finished]) new-state)
+                     (recur new-state)
+                     (do
+                       (print-message game-state :end-message)
+                       (exit))))))))

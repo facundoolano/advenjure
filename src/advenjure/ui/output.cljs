@@ -21,7 +21,7 @@
 (defn print-line
   [& strs]
   (let [joined (apply str (or strs [" "]))
-        nonblank (if (string/blank? joined) " " joined)]
+        nonblank (if (string/blank? joined) " \n" joined)]
     (echo (string-wrap nonblank))
     nil)) ; need to return nil, echo doesnt
 

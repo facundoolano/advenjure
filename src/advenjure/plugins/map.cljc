@@ -4,8 +4,7 @@
   (:require [clojure.string :as string]
             [advenjure.verb-map :refer [add-verb]]
             [advenjure.gettext.core :refer [_]]
-            [advenjure.utils :refer [current-room directions]]
-            [advenjure.ui.output :refer [print-line clear]]
+            [advenjure.utils :refer [current-room directions say]]
             [advenjure.hooks :refer [eval-precondition]]))
 
 (def full 60)
@@ -54,22 +53,21 @@
   "Print a map of the current room, with the connections in every direction."
   [game-state]
   (let [rooms (room-names game-state)]
-    (print-line)
-    (print-line (pad full (and (:up rooms) (uarr (:up rooms)))))
-    (print-line)
-    (print-line (pad full (:north rooms)))
-    (print-line (str (pad half (:northwest rooms)) (pad half (:northeast rooms))))
-    (print-line (pad full "+--- N ---+"))
-    (print-line (pad full "|         |"))
-    (print-line (str (pad side (:west rooms))  "W         E" (pad side (:east rooms))))
-    (print-line (pad full "|         |"))
-    (print-line (pad full "+--- S ---+"))
-    (print-line (str (pad half (:southwest rooms)) (pad half (:southeast rooms))))
-    (print-line (pad full (:south rooms)))
-    (print-line)
-    (print-line (pad full (and (:down rooms) (darr (:down rooms)))))))
-
-
+    (-> game-state
+        (say "")
+        (say (pad full (and (:up rooms) (uarr (:up rooms)))))
+        (say "")
+        (say (pad full (:north rooms)))
+        (say (str (pad half (:northwest rooms)) (pad half (:northeast rooms))))
+        (say (pad full "+--- N ---+"))
+        (say (pad full "|         |"))
+        (say (str (pad side (:west rooms))  "W         E" (pad side (:east rooms))))
+        (say (pad full "|         |"))
+        (say (pad full "+--- S ---+"))
+        (say (str (pad half (:southwest rooms)) (pad half (:southeast rooms))))
+        (say (pad full (:south rooms)))
+        (say "")
+        (say (pad full (and (:down rooms) (darr (:down rooms))))))))
 
 ;; PLUGIN DEFINITIONS
 (def verb-map (add-verb {} [(_ "^map$") (_ "^m$")] print-map_))
@@ -77,15 +75,16 @@
 (def map-on-unvisited
   {:verb-map verb-map
    :hooks {:before-change-room (fn [gs]
-                                  (let [visited? (:visited (current-room gs))]
-                                    (if-not visited? (clear))
-                                    (assoc gs :__show-map (not visited?))))
+                                 (let [visited? (:visited (current-room gs))]
+                                   ;;(if-not visited? (clear)) FIXME this wont work with new output style
+                                   (assoc gs :__show-map (not visited?))))
 
            :after-change-room (fn [gs]
-                                (if (:__show-map gs) (print-map_ gs))
-                                (dissoc gs :__show-map))}})
+                                (if (:__show-map gs)
+                                  (dissoc (print-map_ gs) :__show-map)
+                                  gs))}})
 
 (def map-on-every-room
   {:verb-map verb-map
-   :hooks {:before-change-room (fn [gs] (clear) gs)
+   :hooks {;;:before-change-room (fn [gs] (clear) gs) FIXME this wont work with new output style
            :after-change-room (fn [gs] (print-map_ gs))}})
