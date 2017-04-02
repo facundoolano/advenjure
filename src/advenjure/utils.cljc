@@ -101,10 +101,11 @@
   [s]
   (str (string/capitalize (first s)) (subs s 1)))
 
-(defn say
-  [speech]
-  (print-line (string-wrap (capfirst speech))))
-
 (defn say-inline
-  [speech]
-  (print (str (capfirst speech))))
+  [gs speech]
+  (->> speech
+       (capfirst)
+       (string-wrap)
+       (update gs :out conj)))
+
+(defn say [gs speech] (say-inline gs (str speech "\n")))

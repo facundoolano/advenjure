@@ -28,6 +28,7 @@
    {:room-map room-map
     :current-room start-room
     :inventory inventory
+    :out []
     :events #{}
     :executed-dialogs #{}
     :moves 0
@@ -85,8 +86,9 @@
       (aloop [state (change-rooms game-state (:current-room game-state))]
         (let!? [input (get-input state)
                 new-state (process-input state input)]
+          (doseq [output (:out new-state)] (print output))
           (if-not ((get-in new-state [:configuration :finished]) new-state)
-            (recur new-state)
+            (recur (assoc new-state :out []))
             (do
              (say-message game-state :end-message)
              (exit))))))))
