@@ -4,7 +4,7 @@
   (:require [clojure.string :as string]
             [advenjure.verb-map :refer [add-verb]]
             [advenjure.gettext.core :refer [_]]
-            [advenjure.utils :refer [current-room directions say]]
+            [advenjure.utils :refer [current-room directions say clear-screen]]
             [advenjure.hooks :refer [eval-precondition]]))
 
 (def full 60)
@@ -74,17 +74,19 @@
 
 (def map-on-unvisited
   {:verb-map verb-map
-   :hooks {:before-change-room (fn [gs]
-                                 (let [visited? (:visited (current-room gs))]
-                                   ;;(if-not visited? (clear)) FIXME this wont work with new output style
-                                   (assoc gs :__show-map (not visited?))))
+   :hooks    {:before-change-room
+              (fn [gs]
+                (let [visited? (:visited (current-room gs))
+                      gs       (if-not visited? (clear-screen gs) gs)]
+                  (assoc gs :__show-map (not visited?))))
 
-           :after-change-room (fn [gs]
-                                (if (:__show-map gs)
-                                  (dissoc (print-map_ gs) :__show-map)
-                                  gs))}})
+              :after-change-room
+              (fn [gs]
+                (if (:__show-map gs)
+                  (dissoc (print-map_ gs) :__show-map)
+                  gs))}})
 
 (def map-on-every-room
   {:verb-map verb-map
-   :hooks {;;:before-change-room (fn [gs] (clear) gs) FIXME this wont work with new output style
-           :after-change-room (fn [gs] (print-map_ gs))}})
+   :hooks    {:before-change-room (fn [gs] (clear-screen gs))
+              :after-change-room  (fn [gs] (print-map_ gs))}})

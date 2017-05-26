@@ -9,7 +9,7 @@
             [advenjure.hooks :as hooks]
             [advenjure.verb-map :refer [find-verb default-map]]
             [advenjure.ui.input :refer [get-input exit read-key]]
-            [advenjure.ui.output :refer [print-line init]]
+            [advenjure.ui.output :refer [print-line init clear]]
             [advenjure.gettext.core :refer [_]]))
 
 (defn default-prompt
@@ -81,7 +81,9 @@
 
 (defn flush-output [gs]
   (doseq [output (string/split-lines (:out gs))]
-    (print-line output))
+    (if (utils/clear? output)
+      (clear)
+      (print-line output)))
   (assoc gs :out ""))
 
 ;; FIXME the async macros in this function got really weird

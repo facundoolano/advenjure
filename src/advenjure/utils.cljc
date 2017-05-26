@@ -88,6 +88,11 @@
     s
     (str (string/capitalize (first s)) (subs s 1))))
 
+(defn clear-screen [gs]
+  (update gs :out str "\n__CLEAR__\n"))
+
+(defn clear? [s] (= s "__CLEAR__"))
+
 ;; TODO trim, if last not whitespace and not punctuation, add a dot
 (defn say
   "Add speech to the last unfinished line and finish it with \n."

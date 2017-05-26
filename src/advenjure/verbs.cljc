@@ -175,8 +175,7 @@
   [game-state]
   (try
     (let [loaded-state (assoc (read-file "saved.game") :configuration (:configuration game-state))]
-      (say game-state (rooms/describe (current-room loaded-state)))
-      loaded-state)
+      (say loaded-state (rooms/describe (current-room loaded-state))))
     (catch #?(:clj java.io.FileNotFoundException :cljs js/Object) e (say game-state (_ "No saved game found.")))))
 
 (defn exit
