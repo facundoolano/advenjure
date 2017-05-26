@@ -83,7 +83,7 @@
   (doseq [output (string/split-lines (:out gs))]
     (if (utils/clear? output)
       (clear)
-      (print-line output)))
+      (print-line (utils/capfirst output))))
   (assoc gs :out ""))
 
 ;; FIXME the async macros in this function got really weird
