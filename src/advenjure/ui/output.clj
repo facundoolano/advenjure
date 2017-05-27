@@ -1,4 +1,5 @@
 (ns advenjure.ui.output
+  (:require [advenjure.ui.string-wrap :refer [string-wrap]])
   (:import [jline.console ConsoleReader]))
 
 (defn init []
@@ -7,6 +8,7 @@
 (defn clear []
   (.clearScreen (ConsoleReader.)))
 
-(def print-line println)
+(defn print-line [& strs]
+  (apply println (map string-wrap strs)))
 
 (def write-file spit)

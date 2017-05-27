@@ -19,8 +19,7 @@
         finished? (get-in new-state [:configuration :finished])]
 
     (if-not (and finished? (finished? new-state))
-      (do
+      (-> new-state
         (say (rooms/describe room-spec))
-        (hooks/execute new-state :after-change-room))
+        (hooks/execute :after-change-room))
       new-state)))
-

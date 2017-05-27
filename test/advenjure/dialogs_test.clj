@@ -45,16 +45,22 @@
                 ("YOU" "Hill Valley."))
         :go-back)))
 
+;; keep the output in an atom like a map as expected by is-output
+(def output (atom {:out ""}))
+
+(defn print-mock
+  "Save the speech lines to output, separated by '\n'"
+  ([& speech] (swap! output update :out str (apply str speech) "\n") nil))
 
 (deftest basic-dialogs
-  (with-redefs [print-line say-mock
+  (with-redefs [print-line print-mock
                 read-key (fn [] nil)]
     (testing "linear dialog"
       (let [character (it/make ["character"] "" :dialog `simple)
             new-state (assoc-in game-state
                                 [:room-map :bedroom :items] #{character})]
         (talk new-state "character")
-        (is-output ["ME —Hi!" "YOU —Hey there!"])))
+        (is-output @output ["ME —Hi!" "YOU —Hey there!"])))
 
 
     (testing "compound literal dialog"
@@ -62,7 +68,7 @@
             new-state (assoc-in game-state
                                 [:room-map :bedroom :items] #{character})]
         (talk new-state "character")
-        (is-output ["ME —Hi!" "YOU —Hey there!" "ME —Bye then"])))
+        (is-output @output ["ME —Hi!" "YOU —Hey there!" "ME —Bye then"])))
 
 
     (testing "compound referenced dialog"
@@ -70,35 +76,34 @@
             new-state (assoc-in game-state
                                 [:room-map :bedroom :items] #{character})]
         (talk new-state "character")
-        (is-output ["ME —Hi!" "YOU —Hey there!" "ME —Bye then"])))
+        (is-output @output ["ME —Hi!" "YOU —Hey there!" "ME —Bye then"])))
 
     (testing "conditional event"
       (let [character (it/make ["character"] "" :dialog `cond-event)
             new-state (assoc-in game-state
                                 [:room-map :bedroom :items] #{character})]
         (talk new-state "character")
-        (is-output "ME —I'm full.")))
+        (is-output @output "ME —I'm full.")))
 
     (testing "conditional item"
       (let [character (it/make ["character"] "" :dialog `cond-item)
             new-state (assoc-in game-state
                                 [:room-map :bedroom :items] #{character})]
         (talk new-state "character")
-        (is-output "ME —I have a shiny sword.")))))
-
+        (is-output @output "ME —I have a shiny sword.")))))
 
 (deftest optional-dialogs
-  (with-redefs [print-line say-mock
+  (with-redefs [print-line print-mock
                 read-key (fn [] "1")]
     (testing "simple choice and go back"
       (let [character (it/make ["character"] "" :dialog `choice)
             new-state (assoc-in game-state
                                 [:room-map :bedroom :items] #{character})]
         (talk new-state "character")
-        (is-output ["1. What's your name?"
-                    "2. Where are you from?"
-                    ""
-                    "ME —What's your name?"
-                    "YOU —Emmett Brown."
-                    "ME —Where are you from?" ; only one option, autoselects
-                    "YOU —Hill Valley."])))))
+        (is-output @output ["1. What's your name?"
+                            "2. Where are you from?"
+                            ""
+                            "ME —What's your name?"
+                            "YOU —Emmett Brown."
+                            "ME —Where are you from?" ; only one option, autoselects
+                            "YOU —Hill Valley."])))))

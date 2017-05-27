@@ -2,8 +2,6 @@
   (:require [clojure.string :as string]
             [advenjure.items :refer [get-from remove-from replace-from]]
             [advenjure.rooms :as rooms]
-            #?(:cljs [advenjure.ui.output :refer [print]])
-            [advenjure.ui.output :refer [print-line]]
             [advenjure.gettext.core :refer [_]]))
 
 (defn current-room
@@ -42,7 +40,7 @@
   (let [current (:current-room game-state)
         rmap (:room-map game-state)
         name-mappings (rooms/visible-name-mappings rmap current)
-        room-name (if room-name (clojure.string/lower-case room-name))]
+        room-name (if room-name (string/lower-case room-name))]
     (get name-mappings room-name)))
 
 (defn room-as-item
@@ -82,29 +80,26 @@
         (assoc-in [:room-map room-kw :items]
                   (replace-from (:items room) old-item new-item)))))
 
-(defn string-wrap
-  ([text] (string-wrap text 80))
-  ([text max-size]
-   (loop [[word & others] (string/split text #" ")
-           current ""
-           lines []]
-     (if word
-       (let [new-current (str current " " word)
-             line-size (count (last (string/split new-current #"\n")))]
-         (if (> max-size line-size)
-           (recur others new-current lines)
-           (recur others word (conj lines current))))
-       (string/triml (string/join "\n" (conj lines current)))))))
-
+;; This should be done only when printing
 (defn capfirst
   "Converts first character to upper-case, leaves the rest untouched."
   [s]
-  (str (string/capitalize (first s)) (subs s 1)))
+  (if (string/blank? s)
+    s
+    (str (string/capitalize (first s)) (subs s 1))))
 
+(defn clear-screen [gs]
+  (update gs :out str "\n__CLEAR__\n"))
+
+(defn clear? [s] (= s "__CLEAR__"))
+
+;; TODO trim, if last not whitespace and not punctuation, add a dot
 (defn say
-  [speech]
-  (print-line (string-wrap (capfirst speech))))
+  "Add speech to the last unfinished line and finish it with \n."
+  [gs speech]
+  (update gs :out str speech "\n"))
 
 (defn say-inline
-  [speech]
-  (print (str (capfirst speech))))
+  "Add speech to the last unfinished line."
+  [gs speech]
+  (update gs :out str speech))

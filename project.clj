@@ -1,4 +1,4 @@
-(defproject advenjure "0.9.0"
+(defproject advenjure "1.0.0-SNAPSHOT"
   :description "A text adveture engine"
   :url "https://github.com/facundoolano/advenjure"
   :license {:name "Eclipse Public License"
@@ -10,6 +10,8 @@
                  [jline/jline "2.8"]
                  [cljs-ajax "0.5.8"]
                  [org.clojure/data.json "0.2.6"]]
+  :test-selectors {:default (complement :skip)
+                   :focus :focus}
   :plugins [[lein-cljsbuild "1.1.4"]]
   :cljsbuild
     {:builds
