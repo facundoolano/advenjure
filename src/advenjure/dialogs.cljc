@@ -6,6 +6,9 @@
             #?(:clj [advenjure.async :refer [let!? <!? aloop]])
             #?(:cljs [advenjure.eval :refer [eval]])))
 
+;; FIXME major rewrite of this ns is pending, to stop using advenjure.async
+;; and also have a data over macros approach
+
 (defn print-dialog
   [game-state character speech]
   (print-line (str character #?(:clj " —" :cljs " &mdash;") speech))

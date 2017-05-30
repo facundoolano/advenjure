@@ -18,8 +18,8 @@
 
 ;;;; FUNCTIONS TO BUILD VERB HANDLERS
 
-; the noop handler does nothing except optionally saying something, the item specific
-; behavior is defined in the item spec
+;; the noop handler does nothing except optionally saying something, the item specific
+;; behavior is defined in the item spec
 (defn noop [kw]
   (fn [gs item & etc]
     (if-let [speech (get-in item [kw :say])]
@@ -38,7 +38,7 @@
   "Takes the verb name, the kw to look up at the item at the handler function,
   wraps the function with the common logic such as trying to find the item,
   executing pre/post conditions, etc."
-                                        ; this one uses a noop handler, solely based on post/preconditions (i.e. read)
+  ;; this one uses a noop handler, solely based on post/preconditions (i.e. read)
   ([verb-name verb-kw] (make-item-handler verb-name verb-kw (noop verb-kw)))
   ([verb-name verb-kw handler &
     {:keys [kw-required] :or {kw-required true}}]
@@ -56,13 +56,13 @@
           (string? value)                (say game-state value)
           (false? value)                 (say game-state (_ "I couldn't %s that." verb-name))
           (and kw-required (nil? value)) (say game-state (_ "I couldn't %s that." verb-name))
-          :else (let [before-state  (execute game-state :before-item-handler verb-kw item)
-                      handler-state (handler before-state item)
-                      post-state    (eval-postcondition conditions before-state handler-state)]
-                  (execute post-state :after-item-handler verb-kw item))))))))
+          :else                          (let [before-state  (execute game-state :before-item-handler verb-kw item)
+                                               handler-state (handler before-state item)
+                                               post-state    (eval-postcondition conditions before-state handler-state)]
+                                           (execute post-state :after-item-handler verb-kw item))))))))
 
+;; some copy pasta, but doesn't seem worth to refactor
 (defn make-compound-item-handler
-                                        ; some copy pasta, but doesn't seem worth to refactor
   "The same as above but adapted to compund verbs."
   ([verb-name verb-kw] (make-compound-item-handler verb-name verb-kw (noop verb-kw)))
   ([verb-name verb-kw handler &
@@ -89,7 +89,6 @@
                                                      handler-state (handler before-state item1 item2)
                                                      post-state    (eval-postcondition conditions before-state handler-state)]
                                                  (execute post-state :after-item-handler verb-kw item1 item2))))))))
-
 
 ;;; VERB HANDLER DEFINITIONS
 (defn go_
