@@ -1,5 +1,8 @@
 (ns advenjure.verbs
+  #?(:cljs (:require-macros [cljs.core.async.macros :refer [go]]))
   (:require [clojure.set]
+            #?(:clj [clojure.core.async :refer [<! go]]
+               :cljs [cljs.core.async :refer [<!]])
             [advenjure.utils :refer [say say-inline find-item direction-mappings
                                      current-room remove-item replace-item capfirst
                                      directions direction-names get-visible-room]]
@@ -89,7 +92,7 @@
 
 
 ;;; VERB HANDLER DEFINITIONS
-(defn go
+(defn go_
   "Change the location if direction is valid."
   ([game-state] (say game-state (_ "Go where?")))
   ([game-state direction]
@@ -169,14 +172,15 @@
   (write-file "saved.game" (dissoc game-state :configuration))
   (say game-state (_ "Done.")))
 
-;; FIXME this should use async?
 (defn restore
   "Restore a previous game state from file."
   [game-state]
-  (try
-    (let [loaded-state (assoc (read-file "saved.game") :configuration (:configuration game-state))]
-      (say loaded-state (rooms/describe (current-room loaded-state))))
-    (catch #?(:clj java.io.FileNotFoundException :cljs js/Object) e (say game-state (_ "No saved game found.")))))
+  (go
+    (try
+      (let [loaded-state (<! (read-file "saved.game"))
+            saved-state  (assoc loaded-state :configuration (:configuration game-state))]
+        (say saved-state (rooms/describe (current-room saved-state))))
+      (catch #?(:clj java.io.FileNotFoundException :cljs js/Object) e (say game-state (_ "No saved game found."))))))
 
 (defn exit
   "Close the game."
