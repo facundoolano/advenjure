@@ -1,7 +1,7 @@
 (ns advenjure.game
   #?(:cljs (:require-macros [cljs.core.async.macros :refer [go]]))
   (:require [clojure.string :as string]
-            #?(:clj [clojure.core.async :refer [go <!]]
+            #?(:clj [clojure.core.async :refer [go <! <!!]]
                :cljs [cljs.core.async :refer [<!]])
             #?(:clj [clojure.core.async.impl.protocols :refer [ReadPort]]
                :cljs [cljs.core.async.impl.protocols :refer [ReadPort]])
@@ -92,7 +92,7 @@
       (print-line (utils/capfirst output))))
   (assoc gs :out ""))
 
-(defn run
+(defn- do-run
   "Run the game loop. Requires a finished? function to decide when to terminate
   the loop. The rest of the parameters are configuration key/values."
   [game-state finished? & {:as extras}]
@@ -110,3 +110,7 @@
               (do
                 (print-message game-state :end-message)
                 (exit)))))))))
+
+(defn run [& args]
+  #?(:clj (<!! (apply do-run args))
+     :cljs (apply do-run args)))
