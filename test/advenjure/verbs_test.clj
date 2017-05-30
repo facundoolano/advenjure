@@ -108,7 +108,7 @@
                "I couldn't look inside a bed.")))
 
 (deftest go-verb
-  (let [new-state (go game-state "north")]
+  (let [new-state (go_ game-state "north")]
     (testing "go to an unvisited room"
       (is-output new-state ["long description of living room"
                             "There was a sofa there."])
@@ -116,7 +116,7 @@
       (is (get-in new-state [:room-map :living :visited])))
 
     (testing "go to an already visited room"
-      (let [newer-state (go new-state "south")]
+      (let [newer-state (go_ new-state "south")]
         (is-output newer-state
                    ["short description of bedroom"
                     "There was a bed there."
@@ -126,7 +126,7 @@
         (is (get-in newer-state [:room-map :bedroom :visited]))))
 
     (testing "go to a visited room name"
-      (let [newer-state (go new-state "bedroom")]
+      (let [newer-state (go_ new-state "bedroom")]
         (is-output newer-state
                    ["short description of bedroom"
                     "There was a bed there."
@@ -136,11 +136,11 @@
         (is (get-in newer-state [:room-map :bedroom :visited])))))
 
   (testing "go to a blocked direction"
-    (is-output (go game-state "west") "couldn't go in that direction."))
+    (is-output (go_ game-state "west") "couldn't go in that direction."))
 
   (testing "go to an invalid direction"
-    (is-output (go game-state nil) "Go where?")
-    (is-output (go game-state "crazy") "Go where?")))
+    (is-output (go_ game-state nil) "Go where?")
+    (is-output (go_ game-state "crazy") "Go where?")))
 
 (deftest look-to-verb
   (testing "Look to a known direction"
@@ -185,7 +185,7 @@
 (deftest go-back-verb
   (testing "Should remember previous room and go back"
     (let [new-state (-> game-state
-                        (go "north")
+                        (go_ "north")
                         (go-back))]
       (is (:current-room new-state) :bedroom)
       (is (:previous-room new-state) :living)
@@ -448,46 +448,46 @@
 
 (deftest pre-post-conditions
   (testing "Override couldn't take message"
-    (let [new-drawer (assoc drawer :take "It's too heavy to take.")
+    (let [new-drawer  (assoc drawer :take "It's too heavy to take.")
           new-bedroom (assoc bedroom :items #{new-drawer})
-          new-state (assoc-in game-state [:room-map :bedroom] new-bedroom)
+          new-state   (assoc-in game-state [:room-map :bedroom] new-bedroom)
           newer-state (take_ new-state "drawer")]
       (is (= new-state (assoc newer-state :out "")))
       (is-output newer-state "It's too heavy to take.")))
 
   (testing "Override look at description"
-    (let [new-magazine (assoc magazine :look-at "I didn't want to look at it.")
+    (let [new-magazine  (assoc magazine :look-at "I didn't want to look at it.")
           new-inventory (it/replace-from (:inventory game-state) magazine new-magazine)
-          new-state (assoc game-state :inventory new-inventory)
-          newer-state (look-at new-state "magazine")]
+          new-state     (assoc game-state :inventory new-inventory)
+          newer-state   (look-at new-state "magazine")]
       (is (= new-state (assoc newer-state :out "")))
       (is-output newer-state "I didn't want to look at it.")))
 
   (testing "precondition returns false"
-    (let [sock2 (it/make ["other sock"] "another sock"
-                         :take `#(contains? (:inventory %) sock))
-          new-state (assoc-in game-state [:room-map :bedroom]
-                              (room/add-item bedroom sock2))
+    (let [sock2       (it/make ["other sock"] "another sock"
+                               :take `#(contains? (:inventory %) sock))
+          new-state   (assoc-in game-state [:room-map :bedroom]
+                                (room/add-item bedroom sock2))
           newer-state (take_ new-state "other sock")]
       (is (= new-state (assoc newer-state :out "")))
       (is-output newer-state "I couldn't take that.")))
 
   (testing "precondition returns error message"
-    (let [sock2 (it/make ["other sock"] "another sock"
-                         :take `#(or (contains? (:inventory %) sock)
-                                     "Not unless I have the other sock."))
-          new-state (assoc-in game-state [:room-map :bedroom]
-                              (room/add-item bedroom sock2))
+    (let [sock2       (it/make ["other sock"] "another sock"
+                               :take `#(or (contains? (:inventory %) sock)
+                                           "Not unless I have the other sock."))
+          new-state   (assoc-in game-state [:room-map :bedroom]
+                                (room/add-item bedroom sock2))
           newer-state (take_ new-state "other sock")]
       (is (= new-state (assoc newer-state :out "")))
       (is-output newer-state "Not unless I have the other sock.")))
 
   (testing "precondition other syntax"
-    (let [sock2 (it/make ["other sock"] "another sock"
-                         :take {:pre `#(or (contains? (:inventory %) sock)
-                                           "Not unless I have the other sock.")})
-          new-state (assoc-in game-state [:room-map :bedroom]
-                              (room/add-item bedroom sock2))
+    (let [sock2       (it/make ["other sock"] "another sock"
+                               :take {:pre `#(or (contains? (:inventory %) sock)
+                                                 "Not unless I have the other sock.")})
+          new-state   (assoc-in game-state [:room-map :bedroom]
+                                (room/add-item bedroom sock2))
           newer-state (take_ new-state "other sock")]
       (is (= new-state (assoc newer-state :out "")))
       (is-output newer-state "Not unless I have the other sock.")))
@@ -503,12 +503,12 @@
           (is-output "Taken."))))
 
   (testing "precondition for compound verb"
-    (let [beer (it/make ["beer"] "a beer")
+    (let [beer  (it/make ["beer"] "a beer")
           chest (it/make ["chest"] "a treasure chest" :closed true :locked true
                          :unlock `(fn [gs# the-key#]
                                     (or (contains? (:inventory gs#) ~beer)
                                         "Only if I have a beer.")))
-          ckey (it/make ["key"] "the chest key" :unlocks chest)]
+          ckey  (it/make ["key"] "the chest key" :unlocks chest)]
       (-> game-state
           (assoc :inventory #{chest ckey})
           (unlock "chest" "key")
@@ -519,35 +519,35 @@
 
   (testing "override message for go"
     (let [new-bedroom (assoc bedroom :south "No way I was going south.")
-          new-state (assoc-in game-state [:room-map :bedroom] new-bedroom)
-          newer-state (go new-state "south")]
+          new-state   (assoc-in game-state [:room-map :bedroom] new-bedroom)
+          newer-state (go_ new-state "south")]
       (is (= new-state (assoc newer-state :out "")))
       (is-output newer-state "No way I was going south.")))
 
   (testing "precondition for go"
-    (let [wallet (it/make "wallet")
+    (let [wallet      (it/make "wallet")
           new-bedroom (assoc bedroom :north `#(if (contains? (:inventory %) ~wallet)
                                                 :living
                                                 "couldn't leave without my wallet."))
-          new-state (assoc-in game-state [:room-map :bedroom] new-bedroom)]
-      (is-output (go new-state "north") "couldn't leave without my wallet.")
+          new-state   (assoc-in game-state [:room-map :bedroom] new-bedroom)]
+      (is-output (go_ new-state "north") "couldn't leave without my wallet.")
       (let [newer-state (assoc new-state :inventory #{wallet})
-            last-state (go newer-state "north")]
+            last-state  (go_ newer-state "north")]
         (is (= :living (:current-room last-state))))))
 
   (testing "postcondition replace object"
     (let [broken-bottle (it/make "broken bottle")]
       (defn break-bottle [oldgs newgs]
         (let [inventory (:inventory newgs)
-              bottle (first (it/get-from inventory "bottle"))
-              new-inv (it/replace-from inventory bottle broken-bottle)]
+              bottle    (first (it/get-from inventory "bottle"))
+              new-inv   (it/replace-from inventory bottle broken-bottle)]
           (-> newgs
               (say "I think I broke it.")
               (assoc :inventory new-inv))))
 
-      (let [bottle (it/make ["bottle"] "a bottle"
-                            :open {:post `break-bottle})
-            new-state (assoc game-state :inventory #{bottle})
+      (let [bottle      (it/make ["bottle"] "a bottle"
+                                 :open {:post `break-bottle})
+            new-state   (assoc game-state :inventory #{bottle})
             newer-state (open new-state "bottle")]
         (is-output newer-state "I think I broke it.")
         (is (contains? (:inventory newer-state) broken-bottle)))))
@@ -559,18 +559,18 @@
           (say "There was a beer inside. Taking it.")
           (update :inventory conj beer)))
 
-    (let [chest (it/make ["chest"] "a treasure chest" :closed true :locked true
-                         :unlock {:post `get-beer})
-          ckey (it/make ["key"] "the chest key" :unlocks chest)
-          new-state (assoc game-state :inventory #{chest ckey})
+    (let [chest       (it/make ["chest"] "a treasure chest" :closed true :locked true
+                               :unlock {:post `get-beer})
+          ckey        (it/make ["key"] "the chest key" :unlocks chest)
+          new-state   (assoc game-state :inventory #{chest ckey})
           newer-state (unlock new-state "chest" "key")]
       (is-output newer-state ["Unlocked." "There was a beer inside. Taking it."])
       (is (contains? (:inventory newer-state) beer))))
 
   (testing "postcondition for go"
-    (let [new-bedroom (assoc bedroom :north {:pre :living
+    (let [new-bedroom (assoc bedroom :north {:pre  :living
                                              :post `(fn [oldgs# newgs#] ;empties inv
                                                       (assoc newgs# :inventory #{}))})
-          new-state (assoc-in game-state [:room-map :bedroom] new-bedroom)
-          newer-state (go new-state "north")]
+          new-state   (assoc-in game-state [:room-map :bedroom] new-bedroom)
+          newer-state (go_ new-state "north")]
       (is (empty? (:inventory newer-state))))))
