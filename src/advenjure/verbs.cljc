@@ -45,11 +45,9 @@
    (fn
      ([game-state] (say game-state (_ "%s what?" verb-name)))
      ([game-state item-name]
-      ;; FIXME destructuring
-      (let [items      (find-item game-state item-name)
-            item       (first items)
-            conditions (verb-kw item)
-            value      (eval-precondition conditions game-state)]
+      (let [[item :as items] (find-item game-state item-name)
+            conditions       (verb-kw item)
+            value            (eval-precondition conditions game-state)]
         (cond
           (empty? items)                 (say game-state (_ "I didn't see that."))
           (> (count items) 1)            (say game-state (ask-ambiguous item-name items))
@@ -71,13 +69,10 @@
      ([game-state] (say game-state (_ "%s what?" verb-name)))
      ([game-state item1] (say game-state (_ "%s %s with what?" verb-name item1)))
      ([game-state item1-name item2-name]
-      ;; FIXME destructuring
-      (let [items1     (find-item game-state item1-name)
-            item1      (first items1)
-            items2     (find-item game-state item2-name)
-            item2      (first items2)
-            conditions (verb-kw item1)
-            value      (eval-precondition conditions game-state item2)]
+      (let [[item1 :as items1] (find-item game-state item1-name)
+            [item2 :as items2] (find-item game-state item2-name)
+            conditions         (verb-kw item1)
+            value              (eval-precondition conditions game-state item2)]
         (cond
           (or (empty? items1) (empty? items2)) (say game-state (_ "I didn't see that."))
           (> (count items1) 1)                 (say game-state (ask-ambiguous item1-name items1))
