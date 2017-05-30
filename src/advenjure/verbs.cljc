@@ -1,5 +1,4 @@
 (ns advenjure.verbs
-  #?(:cljs (:require-macros [advenjure.async :refer [alet]]))
   (:require [clojure.set]
             [advenjure.utils :refer [say say-inline find-item direction-mappings
                                      current-room remove-item replace-item capfirst
@@ -12,7 +11,6 @@
             [advenjure.gettext.core :refer [_ p_]]
             [advenjure.ui.input :as input :refer [read-file]]
             [advenjure.ui.output :refer [write-file]]
-            #?(:clj [advenjure.async :refer [alet]])
             #?(:cljs [advenjure.eval :refer [eval]])))
 
 ;;;; FUNCTIONS TO BUILD VERB HANDLERS
@@ -37,30 +35,31 @@
   "Takes the verb name, the kw to look up at the item at the handler function,
   wraps the function with the common logic such as trying to find the item,
   executing pre/post conditions, etc."
-  ; this one uses a noop handler, solely based on post/preconditions (i.e. read)
+                                        ; this one uses a noop handler, solely based on post/preconditions (i.e. read)
   ([verb-name verb-kw] (make-item-handler verb-name verb-kw (noop verb-kw)))
   ([verb-name verb-kw handler &
     {:keys [kw-required] :or {kw-required true}}]
    (fn
      ([game-state] (say game-state (_ "%s what?" verb-name)))
      ([game-state item-name]
-      (alet [items (find-item game-state item-name)
-             item (first items)
-             conditions (verb-kw item)
-             value (eval-precondition conditions game-state)]
+      ;; FIXME destructuring
+      (let [items      (find-item game-state item-name)
+            item       (first items)
+            conditions (verb-kw item)
+            value      (eval-precondition conditions game-state)]
         (cond
-          (empty? items) (say game-state (_ "I didn't see that."))
-          (> (count items) 1) (say game-state (ask-ambiguous item-name items))
-          (string? value) (say game-state value)
-          (false? value) (say game-state (_ "I couldn't %s that." verb-name))
+          (empty? items)                 (say game-state (_ "I didn't see that."))
+          (> (count items) 1)            (say game-state (ask-ambiguous item-name items))
+          (string? value)                (say game-state value)
+          (false? value)                 (say game-state (_ "I couldn't %s that." verb-name))
           (and kw-required (nil? value)) (say game-state (_ "I couldn't %s that." verb-name))
-          :else (alet [before-state (execute game-state :before-item-handler verb-kw item)
-                       handler-state (handler before-state item)
-                       post-state (eval-postcondition conditions before-state handler-state)]
+          :else (let [before-state  (execute game-state :before-item-handler verb-kw item)
+                      handler-state (handler before-state item)
+                      post-state    (eval-postcondition conditions before-state handler-state)]
                   (execute post-state :after-item-handler verb-kw item))))))))
 
 (defn make-compound-item-handler
-  ; some copy pasta, but doesn't seem worth to refactor
+                                        ; some copy pasta, but doesn't seem worth to refactor
   "The same as above but adapted to compund verbs."
   ([verb-name verb-kw] (make-compound-item-handler verb-name verb-kw (noop verb-kw)))
   ([verb-name verb-kw handler &
@@ -69,23 +68,24 @@
      ([game-state] (say game-state (_ "%s what?" verb-name)))
      ([game-state item1] (say game-state (_ "%s %s with what?" verb-name item1)))
      ([game-state item1-name item2-name]
-      (alet [items1 (find-item game-state item1-name)
-             item1 (first items1)
-             items2 (find-item game-state item2-name)
-             item2 (first items2)
-             conditions (verb-kw item1)
-             value (eval-precondition conditions game-state item2)]
+      ;; FIXME destructuring
+      (let [items1     (find-item game-state item1-name)
+            item1      (first items1)
+            items2     (find-item game-state item2-name)
+            item2      (first items2)
+            conditions (verb-kw item1)
+            value      (eval-precondition conditions game-state item2)]
         (cond
           (or (empty? items1) (empty? items2)) (say game-state (_ "I didn't see that."))
-          (> (count items1) 1) (say game-state (ask-ambiguous item1-name items1))
-          (> (count items2) 1) (say game-state (ask-ambiguous item2-name items2))
-          (string? value) (say game-state value)
-          (false? value) (say game-state (str "I couldn't " verb-name " that."))
-          (and kw-required (nil? value)) (say game-state (_ "I couldn't %s that." verb-name))
-          :else (alet [before-state (execute game-state :before-item-handler verb-kw item1 item2)
-                       handler-state (handler before-state item1 item2)
-                       post-state (eval-postcondition conditions before-state handler-state)]
-                  (execute post-state :after-item-handler verb-kw item1 item2))))))))
+          (> (count items1) 1)                 (say game-state (ask-ambiguous item1-name items1))
+          (> (count items2) 1)                 (say game-state (ask-ambiguous item2-name items2))
+          (string? value)                      (say game-state value)
+          (false? value)                       (say game-state (str "I couldn't " verb-name " that."))
+          (and kw-required (nil? value))       (say game-state (_ "I couldn't %s that." verb-name))
+          :else                                (let [before-state  (execute game-state :before-item-handler verb-kw item1 item2)
+                                                     handler-state (handler before-state item1 item2)
+                                                     post-state    (eval-postcondition conditions before-state handler-state)]
+                                                 (execute post-state :after-item-handler verb-kw item1 item2))))))))
 
 
 ;;; VERB HANDLER DEFINITIONS
@@ -95,12 +95,12 @@
   ([game-state direction]
    (let [current (current-room game-state)]
      (if-let [dir (get direction-mappings direction)]
-       (alet [dir-value (eval-direction game-state dir)]
-             (cond
-               (string? dir-value) (say game-state dir-value)
-               (not dir-value) (say game-state (or (:default-go current) (_ "Couldn't go in that direction.")))
-               :else (alet [new-state (change-rooms game-state dir-value)]
-                           (eval-postcondition (dir current) game-state new-state))))
+       (let [dir-value (eval-direction game-state dir)]
+         (cond
+           (string? dir-value) (say game-state dir-value)
+           (not dir-value)     (say game-state (or (:default-go current) (_ "Couldn't go in that direction.")))
+           :else               (let [new-state (change-rooms game-state dir-value)]
+                                 (eval-postcondition (dir current) game-state new-state))))
        ;; it's not a direction name, maybe it's a room name
        (if-let [roomkw (get-visible-room game-state direction)]
          (change-rooms game-state roomkw)
@@ -111,20 +111,20 @@
   ([game-state] (say game-state (_ "Look to where?")))
   ([game-state direction]
    (if-let [dir (get direction-mappings direction)]
-     (alet [dir-value (eval-direction game-state dir)
-            dir-room (get-in game-state [:room-map dir-value])]
-           (cond
-             (string? dir-value) (say game-state (_ "That direction was blocked."))
-             (not dir-value) (say game-state (_ "There was nothing in that direction."))
-             (or (:known dir-room) (:visited dir-room)) (say game-state (_ "The %s was in that direction." (:name dir-room)))
-             :else (say game-state (_ "I didn't know what was in that direction."))))
+     (let [dir-value (eval-direction game-state dir)
+           dir-room  (get-in game-state [:room-map dir-value])]
+       (cond
+         (string? dir-value)                        (say game-state (_ "That direction was blocked."))
+         (not dir-value)                            (say game-state (_ "There was nothing in that direction."))
+         (or (:known dir-room) (:visited dir-room)) (say game-state (_ "The %s was in that direction." (:name dir-room)))
+         :else                                      (say game-state (_ "I didn't know what was in that direction."))))
      ;; it's not a direction name, maybe it's a room name
      (if-let [roomkw (get-visible-room game-state direction)]
        (let [room-name (get-in game-state [:room-map roomkw :name])
              ;; this feels kinda ugly:
-             dir-kw (roomkw (clojure.set/map-invert (current-room game-state)))
-             dir-name (dir-kw direction-names)]
-        (say game-state (_ "The %s was toward %s." room-name dir-name)))
+             dir-kw    (roomkw (clojure.set/map-invert (current-room game-state)))
+             dir-name  (dir-kw direction-names)]
+         (say game-state (_ "The %s was toward %s." room-name dir-name)))
        (say game-state (_ "Look to where?"))))))
 
 (defn go-back
@@ -144,15 +144,14 @@
     (say game-state " ")
     (reduce (fn [gs dirkw]
               (let [dir-value (eval-direction game-state dirkw)
-                    dir-name (dirkw direction-names)
-                    dir-room (get-in game-state [:room-map dir-value])]
+                    dir-name  (dirkw direction-names)
+                    dir-room  (get-in game-state [:room-map dir-value])]
                 (if dir-value
-                  (alet [gs gs ; wait for the channel value before printing the next item name
-                         prefix (str dir-name ": ")]
-                        (cond
-                          (string? dir-value) (say gs (str prefix (_ "blocked.")))
-                          (or (:visited dir-room) (:known dir-room)) (say gs (str prefix (:name dir-room) "."))
-                          :else (say gs (str prefix  "???"))))
+                  (let [prefix (str dir-name ": ")]
+                    (cond
+                      (string? dir-value)                        (say gs (str prefix (_ "blocked.")))
+                      (or (:visited dir-room) (:known dir-room)) (say gs (str prefix (:name dir-room) "."))
+                      :else                                      (say gs (str prefix  "???"))))
                   gs)))
             game-state
             directions)))
@@ -170,6 +169,7 @@
   (write-file "saved.game" (dissoc game-state :configuration))
   (say game-state (_ "Done.")))
 
+;; FIXME this should use async?
 (defn restore
   "Restore a previous game state from file."
   [game-state]
@@ -218,18 +218,17 @@
   "Go through every item in the room that defines a value for :take, and attempt
   to take it."
   [game-state]
-  (let [items (all-items (:items (current-room game-state)))
-        takeable (remove (comp nil? :take) items)
+  (let [items      (all-items (:items (current-room game-state)))
+        takeable   (remove (comp nil? :take) items)
         item-names (map #(first (:names %)) takeable)]
     (if (empty? item-names)
       (say game-state (_ "I saw nothing worth taking."))
       (reduce (fn [gs iname]
-                (alet [gs gs ; wait for the channel value before printing the next item name
-                       gs (say-inline gs (str iname ": "))
-                       new-state (take_ gs iname)
-                       result (or new-state gs)]
+                (let [gs        (say-inline gs (str iname ": "))
+                      new-state (take_ gs iname)
+                      result    (or new-state gs)]
                   result))
-         game-state item-names))))
+              game-state item-names))))
 
 (def open
   (make-item-handler
