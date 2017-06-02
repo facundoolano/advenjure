@@ -1,7 +1,9 @@
-(ns advenjure.async
+(ns ^:deprecated advenjure.async
   #?(:cljs (:require-macros [cljs.core.async.macros]))
   #?(:cljs (:require [cljs.core.async]
                      [cljs.core.async.impl.protocols])))
+
+;; FIXME this ns is deprecated, keeping it around because dialogs still use it
 
 (defn cljs-env?
   "Take the &env from a macro, and tell whether we are expanding into cljs."
@@ -54,4 +56,3 @@
   `(if-cljs
     (cljs.core.async.macros/go (let!? ~bindings ~@exprs))
     (let ~bindings ~@exprs)))
-

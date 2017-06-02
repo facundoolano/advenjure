@@ -1,21 +1,32 @@
 (ns advenjure.hooks
-  #?(:cljs (:require [advenjure.eval :refer [eval]])))
+  #?(:cljs (:require-macros [cljs.core.async.macros :refer [go]]))
+  (:require
+   [advenjure.ui.input :as input]
+   #?(:clj [clojure.core.async :refer [<! go]]
+      :cljs [cljs.core.async :refer [<!]])
+   #?(:cljs [advenjure.eval :refer [eval]])))
 
 (defn execute
   "Pipe the game state through the hooks loaded for the given event kw,
   passing the extra parameters in each step."
   [game-state hook-kw & extra]
-  (let [hooks (get-in game-state [:configuration :hooks hook-kw])
+  (let [hooks      (get-in game-state [:configuration :hooks hook-kw])
         apply-hook (fn [gs hook] (or (apply hook (cons gs extra)) gs))]
     (reduce apply-hook game-state hooks)))
 
+;; FIXME have a way to do this without prompt ?
 (defn eval-precondition
   "If the condition is a function return it's value, otherwise return unchanged."
   [condition & args]
-  (let [condition (eval (or (:pre condition) condition))]
-    (if (fn? condition)
-      (apply condition args)
-      condition)))
+  (go
+    (let [prompt    (:prompt condition)
+          condition (eval (or (:pre condition) condition))
+          args      (if prompt
+                      (conj (vec args) (<! (input/prompt-value prompt)))
+                      args)]
+      (if (fn? condition)
+        (apply condition args)
+        condition))))
 
 (defn eval-postcondition
   "If there's a postcondition defined, evaluate it and return new game-state.
@@ -34,3 +45,17 @@
         room          (get-in game-state [:room-map roomkw])
         dir-condition (direction room)]
     (eval-precondition dir-condition game-state)))
+
+(defn eval-direction-sync
+  "The same as eval direction but skips the prompt possibility to avoid it being
+  async. Useful for helper verbs that check directions."
+  [game-state direction]
+  (let [roomkw        (:current-room game-state)
+        room          (get-in game-state [:room-map roomkw])
+        dir-condition (direction room)
+        prompt        (:prompt dir-condition)
+        dir-condition (eval (or (:pre dir-condition) dir-condition))]
+    (when-not prompt
+      (if (fn? dir-condition)
+        (apply dir-condition game-state)
+        dir-condition))))

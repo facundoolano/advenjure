@@ -2,8 +2,8 @@
   "Plugin that adds a MAP verb to display an ASCII map of the room connections
   and shows it upon room change."
   (:require [clojure.string :as string]
-            [advenjure.verb-map :refer [add-verb]]
             [advenjure.gettext.core :refer [_]]
+            [advenjure.verb-map :refer [expand-verb]]
             [advenjure.utils :refer [current-room directions say clear-screen]]
             [advenjure.hooks :refer [eval-precondition]]))
 
@@ -70,7 +70,7 @@
         (say (pad full (and (:down rooms) (darr (:down rooms))))))))
 
 ;; PLUGIN DEFINITIONS
-(def verb-map (add-verb {} [(_ "^map$") (_ "^m$")] print-map_))
+(def verb-map (expand-verb {:commands [(_ "map") (_ "m")] :handler print-map_}))
 
 (def map-on-unvisited
   {:verb-map verb-map
