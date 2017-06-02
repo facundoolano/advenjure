@@ -304,16 +304,18 @@
   [game-state]
   (let [items      (all-items (:items (current-room game-state)))
         takeable   (remove (comp nil? :take) items)
-        item-names (map #(first (:commands %)) takeable)
+        item-names (map #(first (:names %)) takeable)
         do-take    (:handler take_)]
     (if (empty? item-names)
       (say game-state (_ "I saw nothing worth taking."))
-      (reduce (fn [gs iname]
-                (let [gs        (say-inline gs (str iname ": "))
-                      new-state (do-take gs iname)
-                      result    (or new-state gs)]
-                  result))
-              game-state item-names))))
+      (reduce (fn [gs-chan iname]
+                (go
+                  (let [gs        (<! gs-chan)
+                        gs        (say-inline gs (str iname ": "))
+                        new-state (<! (do-take gs iname))]
+                    (or new-state gs))))
+              (go game-state)
+              item-names))))
 
 (defn- open-handler
   [game-state item]
