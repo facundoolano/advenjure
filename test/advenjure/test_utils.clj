@@ -6,12 +6,16 @@
 (defn is-output
   "Compare the last n output lines with the given."
   [gs expected]
-  (let [as-seq (if (string? expected)
-                 (list expected)
-                 (seq expected))
-        amount (count as-seq)
-        output (clojure.string/split-lines (:out gs))
+  (let [as-seq  (if (string? expected)
+                  (list expected)
+                  (seq expected))
+        amount  (count as-seq)
+        output  (clojure.string/split-lines (:out gs))
         results (take-last amount output)]
     (is (= (map clean-str as-seq) ;just ignore case man
            (map clean-str results)))
     gs))
+
+(defn is-same [s1 s2]
+  (is (= (dissoc s1 :out :__prevalue)
+         (dissoc s2 :out :__prevalue))))

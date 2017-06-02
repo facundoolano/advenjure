@@ -32,7 +32,7 @@
   (testing "unknown command"
     (let [new-state (<!! (process-input game-state "dance around"))]
       (is-output new-state "I didn't know how to do that.")
-      (is (= (assoc new-state :out "") game-state))))
+      (is-same new-state game-state)))
 
   (testing "look verb"
     (let [new-state (<!! (process-input game-state "look "))]
@@ -43,18 +43,18 @@
                   "There was a drawer there. The drawer contained a pencil"
                   ""
                   "North: ???"])
-      (is (= (assoc new-state :out "") (update-in game-state [:moves] inc)))))
+      (is-same new-state (update-in game-state [:moves] inc))))
 
   (testing "invalid look with parameters"
     (let [new-state (<!! (process-input game-state "look something"))]
       (is-output new-state
                  "I didn't know how to do that.")
-      (is (= (assoc new-state :out "") game-state))))
+      (is-same new-state game-state)))
 
   (testing "look at item"
     (let [new-state (<!! (process-input game-state "look at bed"))]
       (is-output new-state "just a bed")
-      (is (= (assoc new-state :out "") (update-in game-state [:moves] inc)))))
+      (is-same new-state (update-in game-state [:moves] inc))))
 
   (testing "take item"
     (let [new-state (<!! (process-input game-state "take sock"))]

@@ -34,10 +34,6 @@
                                    (room/connect :bedroom :north :living))
                  :inventory    #{magazine}})
 
-(defn is-same [s1 s2]
-  (is (= (dissoc s1 :out :__prevalue)
-         (dissoc s2 :out :__prevalue))))
-
 (defn get-verb
   [verb-name]
   (let [handler (->> verbs/verbs

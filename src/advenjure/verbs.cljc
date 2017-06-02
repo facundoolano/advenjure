@@ -349,7 +349,7 @@
                                             (say (get-in locked [:unlock :say] (_ "Unlocked.")))
                                             (replace-item locked unlocked)))))
 
-(defn- open-with
+(defn- open-with-handler
   [game-state closed key-item]
   (cond
     (not (:closed closed)) (say game-state (p_ closed "It was already open."))
@@ -456,7 +456,7 @@
                                      :kw       :close
                                      :handler  close-handler})
 
-                    (make-compound-item-verb {:commands [(_ "unlock $1 with $2")]
+                    (make-compound-item-verb {:commands [(_ "unlock") (_ "unlock $1 with $2")]
                                               :display  (_ "unlock")
                                               :help     (_ "Try to unlock an item.")
                                               :kw       :unlock
@@ -467,7 +467,7 @@
                                               :help        (_ "Try to unlock and open a locked item.")
                                               :kw          :open-with
                                               :kw-required false
-                                              :handler     open-handler})
+                                              :handler     open-with-handler})
 
                     (make-item-verb {:commands [(_ "talk to") (_ "talk with") (_ "talk")]
                                      :help     (_ "Talk to a given character or item.")
