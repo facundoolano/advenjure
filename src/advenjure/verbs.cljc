@@ -1,6 +1,7 @@
 (ns advenjure.verbs
   #?(:cljs (:require-macros [cljs.core.async.macros :refer [go]]))
   (:require [clojure.set]
+            [clojure.string :as str]
             #?(:clj [clojure.core.async :refer [<! go]]
                :cljs [cljs.core.async :refer [<!]])
             [advenjure.utils :refer [say say-inline find-item direction-mappings
@@ -18,86 +19,133 @@
 
 ;;;; FUNCTIONS TO BUILD VERBS
 
-;; the noop handler does nothing except optionally saying something, the item specific
-;; behavior is defined in the item spec
-(defn- noop [kw]
+(defn- noop
+  "Does nothing except optionally saying something, the item specific behavior
+  is defined in the item spec."
+  [kw]
   (fn [gs item & etc]
     (if-let [speech (get-in item [kw :say])]
       (say gs speech))))
 
 (defn- ask-ambiguous
   [item-name items]
-  (let [first-different (fn [spec] (first (filter #(not= % item-name) (:verbs spec))))
+  (let [first-different (fn [spec] (first (filter #(not= % item-name) (:names spec))))
         names           (map first-different items)
         names           (map #(str "the " %) names)
         first-names     (clojure.string/join ", " (butlast names))]
     (str "Which " item-name "? "
          (capfirst first-names) " or " (last names) "?")))
 
+(defn- exclude-string
+  [exclude]
+  (str/re-quote-replacement
+   (if (not-empty exclude)
+     (format "(?!%s$)" (str/join "|" exclude))
+     "")))
+
+(defn- fill-implicit-item
+  "convert `talk to` to `talk to $`"
+  [command]
+  (cond
+    (not (str/includes? command "$"))        (str command " $")
+    (and (str/includes? command "$1")
+         (not (str/includes? command "$2"))) (str command " $2")
+    (and (str/includes? command "$2")
+         (not (str/includes? command "$1"))) (str command " $1")
+    :else                                    command))
+
+(defn- expand-missing-item
+  "convert `talk to $` to [`talk to` `talk to $`]"
+  [command]
+  (cond
+    (str/ends-with? command "$")  [command (str/replace command #" \$$" "")]
+    (str/ends-with? command "$1") [command (str/replace command #" \$1$" "")]
+    (str/ends-with? command "$2") [command (str/replace command #" \$2$" "")]
+    :else                         [command]))
+
+(defn- expand-item-placeholders
+  [command exclude]
+  (let [exclude (exclude-string exclude)]
+    (-> command
+        (str/replace #"\$1" (str exclude "(?<item1>.*)"))
+        (str/replace #"\$2" (str exclude "(?<item2>.*)"))
+        (str/replace #"\$" (str exclude "(?<item>.*)")))))
+
+(defn- expand-item-commands
+  "applies all the above to the command array"
+  [commands exclude]
+  (->> commands
+       (map str/trim)
+       (map fill-implicit-item)
+       (mapcat expand-missing-item)
+       (map #(expand-item-placeholders % exclude))))
+
 (defn make-item-verb
   "Takes the verb name, the kw to look up at the item at the handler function,
   wraps the function with the common logic such as trying to find the item,
   executing pre/post conditions, etc."
-  [{:keys [verbs kw display kw-required handler]
+  [{:keys [commands kw display kw-required handler ignore-item]
     :or   {kw-required true
-           display     (first verbs)
+           display     (first commands)
            handler     noop}
     :as   spec}]
   (assoc
-   spec :handler
-   (fn
-     ([game-state] (say game-state (_ "%s what?" display)))
-     ([game-state item-name]
-      (let [[item :as items] (find-item game-state item-name)
-            conditions       (kw item)
-            value            (eval-precondition conditions game-state)]
-        (cond
-          (empty? items)                 (say game-state (_ "I didn't see that."))
-          (> (count items) 1)            (say game-state (ask-ambiguous item-name items))
-          (string? value)                (say game-state value)
-          (false? value)                 (say game-state (_ "I couldn't %s that." display))
-          (and kw-required (nil? value)) (say game-state (_ "I couldn't %s that." display))
-          :else                          (let [before-state  (execute game-state :before-item-handler kw item)
-                                               handler-state (handler before-state item)
-                                               post-state    (eval-postcondition conditions before-state handler-state)]
-                                           (execute post-state :after-item-handler kw item))))))))
+   spec
+   :commands (expand-item-commands commands ignore-item)
+   :handler (fn
+              ([game-state] (say game-state (_ "%s what?" display)))
+              ([game-state item-name]
+               (let [[item :as items] (find-item game-state item-name)
+                     conditions       (kw item)
+                     value            (eval-precondition conditions game-state)]
+                 (cond
+                   (empty? items)                 (say game-state (_ "I didn't see that."))
+                   (> (count items) 1)            (say game-state (ask-ambiguous item-name items))
+                   (string? value)                (say game-state value)
+                   (false? value)                 (say game-state (_ "I couldn't %s that." display))
+                   (and kw-required (nil? value)) (say game-state (_ "I couldn't %s that." display))
+                   :else                          (let [before-state  (execute game-state :before-item-handler kw item)
+                                                        handler-state (handler before-state item)
+                                                        post-state    (eval-postcondition conditions before-state handler-state)]
+                                                    (execute post-state :after-item-handler kw item))))))))
 
 (defn make-compound-item-verb
   "The same as above but adapted to compund verbs."
-  [{:keys [verbs kw display kw-required handler]
+  [{:keys [commands kw display kw-required handler ignore-item]
     :or   {kw-required true
-           display     (first verbs)
+           display     (first commands)
            handler     noop}
     :as   spec}]
   (assoc
-   spec :handler
-   (fn
-     ([game-state] (say game-state (_ "%s what?" display)))
-     ([game-state item1] (say game-state (_ "%s %s with what?" display item1)))
-     ([game-state item1-name item2-name]
-      (let [[item1 :as items1] (find-item game-state item1-name)
-            [item2 :as items2] (find-item game-state item2-name)
-            conditions         (kw item1)
-            value              (eval-precondition conditions game-state item2)]
-        (cond
-          (or (empty? items1) (empty? items2)) (say game-state (_ "I didn't see that."))
-          (> (count items1) 1)                 (say game-state (ask-ambiguous item1-name items1))
-          (> (count items2) 1)                 (say game-state (ask-ambiguous item2-name items2))
-          (string? value)                      (say game-state value)
-          (false? value)                       (say game-state (_ "I couldn't %s that." display))
-          (and kw-required (nil? value))       (say game-state (_ "I couldn't %s that." display))
-          :else                                (let [before-state  (execute game-state :before-item-handler kw item1 item2)
-                                                     handler-state (handler before-state item1 item2)
-                                                     post-state    (eval-postcondition conditions before-state handler-state)]
-                                                 (execute post-state :after-item-handler kw item1 item2))))))))
+   spec
+   :commands (expand-item-commands commands ignore-item)
+   :handler (fn
+              ([game-state] (say game-state (_ "%s what?" display)))
+              ([game-state item1] (say game-state (_ "%s %s with what?" display item1)))
+              ([game-state item1-name item2-name]
+               (let [[item1 :as items1] (find-item game-state item1-name)
+                     [item2 :as items2] (find-item game-state item2-name)
+                     conditions         (kw item1)
+                     value              (eval-precondition conditions game-state item2)]
+                 (cond
+                   (or (empty? items1) (empty? items2)) (say game-state (_ "I didn't see that."))
+                   (> (count items1) 1)                 (say game-state (ask-ambiguous item1-name items1))
+                   (> (count items2) 1)                 (say game-state (ask-ambiguous item2-name items2))
+                   (string? value)                      (say game-state value)
+                   (false? value)                       (say game-state (_ "I couldn't %s that." display))
+                   (and kw-required (nil? value))       (say game-state (_ "I couldn't %s that." display))
+                   :else                                (let [before-state  (execute game-state :before-item-handler kw item1 item2)
+                                                              handler-state (handler before-state item1 item2)
+                                                              post-state    (eval-postcondition conditions before-state handler-state)]
+                                                          (execute post-state :after-item-handler kw item1 item2))))))))
 
-;; TODO implement and use in go and look-to
+;; FIXME implement and use in go and look-to
 (defn make-movement-verb [])
 
 (defn make-movement-item-verb
   "Constructs verbs that use items to change rooms."
   [{:keys [kw] :as spec}]
-  (make-item-handler
+  (make-item-verb
    (assoc
     spec :handler
     (fn [game-state item]
@@ -218,13 +266,20 @@
         (remove-item item)
         (update :inventory conj item))))
 
+;; need to declare it first because take-all calls it
+(def take_ (make-item-verb {:commands    [(_ "take") (_ "get") (_ "pick up") (_ "pick $ up")]
+                            :ignore-item [(_ "all") (_ "everything")]
+                            :help        (_ "Attempt to take the given item.")
+                            :kw          :take
+                            :handler     take-handler}))
+
 (defn- take-all-handler
   "Go through every item in the room that defines a value for :take, and attempt
   to take it."
   [game-state]
   (let [items      (all-items (:items (current-room game-state)))
         takeable   (remove (comp nil? :take) items)
-        item-names (map #(first (:verbs %)) takeable)]
+        item-names (map #(first (:commands %)) takeable)]
     (if (empty? item-names)
       (say game-state (_ "I saw nothing worth taking."))
       (reduce (fn [gs iname]
@@ -285,123 +340,120 @@
   (let [dialog (eval (:dialog item))]
     (dialog game-state)))
 
-;; FIXME rewrite to autogenerate from verb map help
 (declare verbs)
-(def help (make-say-verb (clojure.string/join "\n    " [(_ "You're playing a text adventure game. You control the character by entering commands. Some available commands are:")
-                                                        (_ "GO <direction>: move in the given compass direction. For example: \"GO NORTH\". \"NORTH\" and \"N\" will work too.")
-                                                        (_ "TAKE <item>: add an item to your inventory.")
-                                                        (_ "INVENTORY: list your inventory contents. \"I\" will work too.")
-                                                        (_ "LOOK: look around.")
-                                                        (_ "LOOK AT <item>: look at some specific item.")
-                                                        (_ "LOOK IN <item>: look inside some container item.")
-                                                        (_ "TALK TO <character>: start a conversation with another character.")
-                                                        (_ "UNLOCK <item> WITH <item>: unlock some item using another one. For example: UNLOCK door WITH key.")
-                                                        (_ "OPEN, CLOSE, READ, TURN ON, PUT IN, EAT, DRINK, KILL, etc. may work on some objects, just try.")
-                                                        (_ "SAVE: save your current progress.")
-                                                        (_ "RESTORE: restore a previously saved game.")
-                                                        (_ "EXIT: close the game.")
-                                                        (_ "You can use the TAB key to get completion suggestions for a command and the UP/DOWN arrows to search the command history.")])))
+;; FIXME rewrite to autogenerate from verb map help
+;; (def help (make-say-verb (clojure.string/join "\n    " [(_ "You're playing a text adventure game. You control the character by entering commands. Some available commands are:")
+;;                                                         (_ "GO <direction>: move in the given compass direction. For example: \"GO NORTH\". \"NORTH\" and \"N\" will work too.")
+;;                                                         (_ "TAKE <item>: add an item to your inventory.")
+;;                                                         (_ "INVENTORY: list your inventory contents. \"I\" will work too.")
+;;                                                         (_ "LOOK: look around.")
+;;                                                         (_ "LOOK AT <item>: look at some specific item.")
+;;                                                         (_ "LOOK IN <item>: look inside some container item.")
+;;                                                         (_ "TALK TO <character>: start a conversation with another character.")
+;;                                                         (_ "UNLOCK <item> WITH <item>: unlock some item using another one. For example: UNLOCK door WITH key.")
+;;                                                         (_ "OPEN, CLOSE, READ, TURN ON, PUT IN, EAT, DRINK, KILL, etc. may work on some objects, just try.")
+;;                                                         (_ "SAVE: save your current progress.")
+;;                                                         (_ "RESTORE: restore a previously saved game.")
+;;                                                         (_ "EXIT: close the game.")
+;;                                                         (_ "You can use the TAB key to get completion suggestions for a command and the UP/DOWN arrows to search the command history.")])))
 
 ;;;; VERB DEFINITIONS
-(def verbs [{:verbs   [(_ "go") (_ "go to")]
-             :help    (_ "Change the location according to the given direction.")
-             :handler go-handler}
+(def verbs [{:commands   [(_ "go") (_ "go to")]
+             :help       (_ "Change the location according to the given direction.")
+             :ignore-dir ["back"]
+             :handler    go-handler}
 
-            {:verbs   [(_ "look to") (_ "look toward")]
-             :help    (_ "Describe what's in the given direction.")
-             :handler look-to-handler}
+            {:commands [(_ "look to") (_ "look toward")]
+             :help     (_ "Describe what's in the given direction.")
+             :handler  look-to-handler}
 
-            {:verbs   [(_ "go back") (_ "back") (_ "b")]
-             :help    (_ "Go to the previous room, if possible.")
-             :handler go-back-handler}
+            {:commands [(_ "go back") (_ "back") (_ "b")]
+             :help     (_ "Go to the previous room, if possible.")
+             :handler  go-back-handler}
 
-            {:verbs   [(_ "look") (_ "look around") (_ "l")]
-             :help    (_ "Look around and enumerate available movement directions.")
-             :handler look-handler}
+            {:commands [(_ "look") (_ "look around") (_ "l")]
+             :help     (_ "Look around and enumerate available movement directions.")
+             :handler  look-handler}
 
-            {:verbs   [(_ "inventory") (_ "i")]
-             :help    (_ "Describe the inventory contents.")
-             :handler inventory-handler}
+            {:commands [(_ "inventory") (_ "i")]
+             :help     (_ "Describe the inventory contents.")
+             :handler  inventory-handler}
 
-            {:verbs   [(_ "save")]
-             :help    (_ "Save the current game to a file.")
-             :handler save-handler}
+            {:commands [(_ "save")]
+             :help     (_ "Save the current game to a file.")
+             :handler  save-handler}
 
-            {:verbs   [(_ "restore") (_ "load")]
-             :help    (_ "Restore a previous game from file.")
-             :handler restore-handler}
+            {:commands [(_ "restore") (_ "load")]
+             :help     (_ "Restore a previous game from file.")
+             :handler  restore-handler}
 
-            {:verbs   [(_ "exit")]
-             :help    (_ "Close the game.")
-             :handler exit-handler}
+            {:commands [(_ "exit")]
+             :help     (_ "Close the game.")
+             :handler  exit-handler}
 
-            (make-item-verb {:verbs       [(_ "look at") (_ "describe")]
+            (make-item-verb {:commands    [(_ "look at") (_ "describe")]
                              :help        (_ "Look at a given item.")
                              :kw          :look-at
                              :kw-required false
                              :handler     look-at-handler})
 
-            (make-item-verb {:verbs       [(_ "look inside") (_ "look in")]
+            (make-item-verb {:commands    [(_ "look inside") (_ "look in")]
                              :help        (_ "Look inside a given item.")
                              :kw          :look-in
                              :kw-required false
                              :handler     look-inside-handler})
 
-            (make-item-verb {:verbs       [(_ "take") (_ "get") (_ "pick up") (_ "pick % up")]
-                             :ignore-item [(_ "all") (_ "everything")]
-                             :help        (_ "Attempt to take the given item.")
-                             :kw          :take
-                             :handler     take-handler})
+            take_
 
-            {:verbs   [(_ "take all") (_ "take everything")
-                       (_ "get all") (_ "get everything")]
-             :help    (_ "Attempt to take every visible object.")
-             :handler take-all-handler}
+            {:commands [(_ "take all") (_ "take everything")
+                        (_ "get all") (_ "get everything")]
+             :help     (_ "Attempt to take every visible object.")
+             :handler  take-all-handler}
 
-            (make-item-verb {:verbs   [(_ "open")]
-                             :help    (_ "Try to open a closed item.")
-                             :kw      :open
-                             :handler open-handler})
+            (make-item-verb {:commands [(_ "open")]
+                             :help     (_ "Try to open a closed item.")
+                             :kw       :open
+                             :handler  open-handler})
 
-            (make-item-verb {:verbs   [(_ "close")]
-                             :help    (_ "Try to close an open item.")
-                             :kw      :close
-                             :handler close-handler})
+            (make-item-verb {:commands [(_ "close")]
+                             :help     (_ "Try to close an open item.")
+                             :kw       :close
+                             :handler  close-handler})
 
-            (make-compound-item-verb {:verbs   [(_ "unlock %1 with %2")]
-                                      :display (_ "unlock")
-                                      :help    (_ "Try to unlock an item.")
-                                      :kw      :unlock
-                                      :handler unlock-handler})
+            (make-compound-item-verb {:commands [(_ "unlock $1 with $2")]
+                                      :display  (_ "unlock")
+                                      :help     (_ "Try to unlock an item.")
+                                      :kw       :unlock
+                                      :handler  unlock-handler})
 
-            (make-compound-item-verb {:verbs       [(_ "open %1 with %2")]
+            (make-compound-item-verb {:commands    [(_ "open $1 with $2")]
                                       :display     (_ "open")
                                       :help        (_ "Try to unlock and open a locked item.")
                                       :kw          :open-with
                                       :kw-required false
                                       :handler     open-handler})
 
-            (make-item-verb {:verbs   [(_ "talk to") (_ "talk with") (_ "talk")]
-                             :help    (_ "Talk to a given character or item.")
-                             :kw      :talk
-                             :handler talk-handler})
+            (make-item-verb {:commands [(_ "talk to") (_ "talk with") (_ "talk")]
+                             :help     (_ "Talk to a given character or item.")
+                             :kw       :talk
+                             :handler  talk-handler})
 
             ;; noop verbs
-            (make-item-verb {:verbs [(_ "read")] :kw :read})
-            (make-item-verb {:verbs [(_ "use")] :kw :use})
-            (make-compound-item-verb {:verbs [(_ "use %1 with %2")]
-                                      :kw    :use-with})
-            (make-item-verb {:verbs [(_ "move")] :kw :move})
-            (make-item-verb {:verbs [(_ "push")] :kw :push})
-            (make-item-verb {:verbs [(_ "pull")] :kw :pull})
+            (make-item-verb {:commands [(_ "read")] :kw :read})
+            (make-item-verb {:commands [(_ "use")] :kw :use})
+            (make-compound-item-verb {:commands [(_ "use $1 with $2")]
+                                      :kw       :use-with})
+            (make-item-verb {:commands [(_ "move")] :kw :move})
+            (make-item-verb {:commands [(_ "push")] :kw :push})
+            (make-item-verb {:commands [(_ "pull")] :kw :pull})
 
-            (make-say-verb {:verbs [(_ "stand") (_ "stand up") (_ "get up")]
-                            :say   (_ "I was standing up already")})
+            (make-say-verb {:commands [(_ "stand") (_ "stand up") (_ "get up")]
+                            :say      (_ "I was standing up already")})
 
-            (make-movement-item-verb {:verbs [(_ "climb")] :kw :climb})
-            (make-movement-item-verb {:verbs [(_ "climb down") (_ "climb % down")]
-                                      :kw    :climb-down})
-            (make-movement-item-verb {:verbs [(_ "climb up") (_ "climb % up")]
-                                      :kw    :climb-up})
-            (make-movement-item-verb {:verbs [(_ "enter")] :kw :climb-up})
+            (make-movement-item-verb {:commands [(_ "climb")] :kw :climb})
+            (make-movement-item-verb {:commands [(_ "climb down") (_ "climb $ down")]
+                                      :kw       :climb-down})
+            (make-movement-item-verb {:commands [(_ "climb up") (_ "climb $ up")]
+                                      :kw       :climb-up})
+            (make-movement-item-verb {:commands [(_ "enter")] :kw :climb-up})
             ])
