@@ -36,6 +36,7 @@
     (str "Which " item-name "? "
          (capfirst first-names) " or " (last names) "?")))
 
+;; TODO move to a separate ns
 (defn- exclude-string
   [exclude]
   (str/re-quote-replacement
@@ -97,18 +98,23 @@
               ([game-state] (say game-state (_ "%s what?" display)))
               ([game-state item-name]
                (let [[item :as items] (find-item game-state item-name)
-                     conditions       (kw item)
-                     value            (eval-precondition conditions game-state)]
+                     conditions       (kw item)]
                  (cond
-                   (empty? items)                 (say game-state (_ "I didn't see that."))
-                   (> (count items) 1)            (say game-state (ask-ambiguous item-name items))
-                   (string? value)                (say game-state value)
-                   (false? value)                 (say game-state (_ "I couldn't %s that." display))
-                   (and kw-required (nil? value)) (say game-state (_ "I couldn't %s that." display))
-                   :else                          (let [before-state  (execute game-state :before-item-handler kw item)
-                                                        handler-state (handler before-state item)
-                                                        post-state    (eval-postcondition conditions before-state handler-state)]
-                                                    (execute post-state :after-item-handler kw item))))))))
+                   (empty? items)      (say game-state (_ "I didn't see that."))
+                   (> (count items) 1) (say game-state (ask-ambiguous item-name items))
+                   :else
+                   ;; TODO factor out the following?
+                   (go (let [value (<! (eval-precondition conditions game-state))]
+                         (cond
+                           (string? value)                (say game-state value)
+                           (false? value)                 (say game-state (_ "I couldn't %s that." display))
+                           (and kw-required (nil? value)) (say game-state (_ "I couldn't %s that." display))
+                           :else                          (let [before-state  (-> (assoc game-state :__prevalue value)
+                                                                                  (execute :before-item-handler kw item))
+                                                                handler-state (handler before-state item)
+                                                                ;; TODO refactor this once before state is dropped
+                                                                post-state    (eval-postcondition conditions before-state handler-state)]
+                                                            (execute post-state :after-item-handler kw item)))))))))))
 
 (defn make-compound-item-verb
   "The same as above but adapted to compund verbs."
@@ -126,19 +132,23 @@
               ([game-state item1-name item2-name]
                (let [[item1 :as items1] (find-item game-state item1-name)
                      [item2 :as items2] (find-item game-state item2-name)
-                     conditions         (kw item1)
-                     value              (eval-precondition conditions game-state item2)]
+                     conditions         (kw item1)]
                  (cond
                    (or (empty? items1) (empty? items2)) (say game-state (_ "I didn't see that."))
                    (> (count items1) 1)                 (say game-state (ask-ambiguous item1-name items1))
                    (> (count items2) 1)                 (say game-state (ask-ambiguous item2-name items2))
-                   (string? value)                      (say game-state value)
-                   (false? value)                       (say game-state (_ "I couldn't %s that." display))
-                   (and kw-required (nil? value))       (say game-state (_ "I couldn't %s that." display))
-                   :else                                (let [before-state  (execute game-state :before-item-handler kw item1 item2)
-                                                              handler-state (handler before-state item1 item2)
-                                                              post-state    (eval-postcondition conditions before-state handler-state)]
-                                                          (execute post-state :after-item-handler kw item1 item2))))))))
+                   :else
+                   (go (let [value (<! (eval-precondition conditions game-state item2))]
+                         (cond
+                           (string? value)                (say game-state value)
+                           (false? value)                 (say game-state (_ "I couldn't %s that." display))
+                           (and kw-required (nil? value)) (say game-state (_ "I couldn't %s that." display))
+                           :else                          (let [before-state  (-> (assoc game-state :__prevalue value)
+                                                                                  (execute :before-item-handler kw item1 item2))
+                                                                handler-state (handler before-state item1 item2)
+                                                                ;; TODO refactor this once old state is dropped
+                                                                post-state (eval-postcondition conditions before-state handler-state)]
+                                                            (execute post-state :after-item-handler kw item1 item2)))))))))))
 
 (defn expand-direction-commands
   [commands exclude]
@@ -163,7 +173,9 @@
    (assoc
     spec :handler
     (fn [game-state item]
-      (change-rooms game-state (eval-precondition (kw item)))))))
+      ;; hackishly getting __prevalue so we can get the room kw from the precondition
+      (println "GOING TO " (:__prevalue game-state))
+      (change-rooms game-state (:__prevalue game-state))))))
 
 (defn make-say-verb
   [spec]
@@ -174,12 +186,13 @@
   [game-state direction]
   (let [current (current-room game-state)]
     (if-let [dir (get direction-mappings direction)]
-      (let [dir-value (eval-direction game-state dir)]
-        (cond
-          (string? dir-value) (say game-state dir-value)
-          (not dir-value)     (say game-state (or (:default-go current) (_ "Couldn't go in that direction.")))
-          :else               (let [new-state (change-rooms game-state dir-value)]
-                                (eval-postcondition (dir current) game-state new-state))))
+      (go
+        (let [dir-value (<! (eval-direction game-state dir))]
+          (cond
+            (string? dir-value) (say game-state dir-value)
+            (not dir-value)     (say game-state (or (:default-go current) (_ "Couldn't go in that direction.")))
+            :else               (let [new-state (change-rooms game-state dir-value)]
+                                  (eval-postcondition (dir current) game-state new-state)))))
       ;; it's not a direction name, maybe it's a room name
       (if-let [roomkw (get-visible-room game-state direction)]
         (change-rooms game-state roomkw)
@@ -188,13 +201,15 @@
 (defn- look-to-handler
   [game-state direction]
   (if-let [dir (get direction-mappings direction)]
-    (let [dir-value (eval-direction game-state dir)
-          dir-room  (get-in game-state [:room-map dir-value])]
-      (cond
-        (string? dir-value)                        (say game-state (_ "That direction was blocked."))
-        (not dir-value)                            (say game-state (_ "There was nothing in that direction."))
-        (or (:known dir-room) (:visited dir-room)) (say game-state (_ "The %s was in that direction." (:name dir-room)))
-        :else                                      (say game-state (_ "I didn't know what was in that direction."))))
+    (go
+      ;; FIXME here would need to just ignore if async
+      (let [dir-value (<! (eval-direction game-state dir))
+            dir-room  (get-in game-state [:room-map dir-value])]
+        (cond
+          (string? dir-value)                        (say game-state (_ "That direction was blocked."))
+          (not dir-value)                            (say game-state (_ "There was nothing in that direction."))
+          (or (:known dir-room) (:visited dir-room)) (say game-state (_ "The %s was in that direction." (:name dir-room)))
+          :else                                      (say game-state (_ "I didn't know what was in that direction.")))))
     ;; it's not a direction name, maybe it's a room name
     (if-let [roomkw (get-visible-room game-state direction)]
       (let [room-name (get-in game-state [:room-map roomkw :name])
@@ -218,6 +233,7 @@
     (say game-state (str (rooms/describe (current-room game-state))))
     (say game-state " ")
     (reduce (fn [gs dirkw]
+              ;; FIXME eval direction is async -> use sync version, consider blocked if async
               (let [dir-value (eval-direction game-state dirkw)
                     dir-name  (dirkw direction-names)
                     dir-room  (get-in game-state [:room-map dir-value])]
@@ -476,5 +492,5 @@
                                               :kw       :climb-down})
                     (make-movement-item-verb {:commands [(_ "climb up") (_ "climb $ up")]
                                               :kw       :climb-up})
-                    (make-movement-item-verb {:commands [(_ "enter")] :kw :climb-up})
+                    (make-movement-item-verb {:commands [(_ "enter")] :kw :enter})
                     ]))

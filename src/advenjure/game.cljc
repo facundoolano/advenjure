@@ -57,7 +57,6 @@
   (go
     (if (satisfies? ReadPort value) (<! value) value)))
 
-;; FIXME coerce handler to channel
 (defn process-input
   "Take an input comand, find the verb in it and execute its action handler."
   [game-state input]
