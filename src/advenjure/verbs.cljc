@@ -87,7 +87,7 @@
   [{:keys [commands kw display kw-required handler ignore-item]
     :or   {kw-required true
            display     (first commands)
-           handler     noop}
+           handler     (noop kw)}
     :as   spec}]
   (assoc
    spec
@@ -114,7 +114,7 @@
   [{:keys [commands kw display kw-required handler ignore-item]
     :or   {kw-required true
            display     (first commands)
-           handler     noop}
+           handler     (noop kw)}
     :as   spec}]
   (assoc
    spec
@@ -279,12 +279,13 @@
   [game-state]
   (let [items      (all-items (:items (current-room game-state)))
         takeable   (remove (comp nil? :take) items)
-        item-names (map #(first (:commands %)) takeable)]
+        item-names (map #(first (:commands %)) takeable)
+        do-take    (:handler take_)]
     (if (empty? item-names)
       (say game-state (_ "I saw nothing worth taking."))
       (reduce (fn [gs iname]
                 (let [gs        (say-inline gs (str iname ": "))
-                      new-state (take_ gs iname)
+                      new-state (do-take gs iname)
                       result    (or new-state gs)]
                   result))
               game-state item-names))))
