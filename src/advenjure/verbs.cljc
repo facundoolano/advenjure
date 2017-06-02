@@ -9,7 +9,7 @@
                                      directions direction-names get-visible-room]]
             [advenjure.change-rooms :refer [change-rooms]]
             [advenjure.hooks :refer [execute eval-precondition eval-postcondition
-                                     eval-direction]]
+                                     eval-direction eval-direction-sync]]
             [advenjure.items :refer [print-list describe-container iname all-items]]
             [advenjure.rooms :as rooms]
             [advenjure.gettext.core :refer [_ p_]]
@@ -201,15 +201,13 @@
 (defn- look-to-handler
   [game-state direction]
   (if-let [dir (get direction-mappings direction)]
-    (go
-      ;; FIXME here would need to just ignore if async
-      (let [dir-value (<! (eval-direction game-state dir))
-            dir-room  (get-in game-state [:room-map dir-value])]
-        (cond
-          (string? dir-value)                        (say game-state (_ "That direction was blocked."))
-          (not dir-value)                            (say game-state (_ "There was nothing in that direction."))
-          (or (:known dir-room) (:visited dir-room)) (say game-state (_ "The %s was in that direction." (:name dir-room)))
-          :else                                      (say game-state (_ "I didn't know what was in that direction.")))))
+    (let [dir-value (eval-direction-sync game-state dir)
+          dir-room  (get-in game-state [:room-map dir-value])]
+      (cond
+        (string? dir-value)                        (say game-state (_ "That direction was blocked."))
+        (not dir-value)                            (say game-state (_ "There was nothing in that direction."))
+        (or (:known dir-room) (:visited dir-room)) (say game-state (_ "The %s was in that direction." (:name dir-room)))
+        :else                                      (say game-state (_ "I didn't know what was in that direction."))))
     ;; it's not a direction name, maybe it's a room name
     (if-let [roomkw (get-visible-room game-state direction)]
       (let [room-name (get-in game-state [:room-map roomkw :name])
@@ -233,8 +231,7 @@
     (say game-state (str (rooms/describe (current-room game-state))))
     (say game-state " ")
     (reduce (fn [gs dirkw]
-              ;; FIXME eval direction is async -> use sync version, consider blocked if async
-              (let [dir-value (eval-direction game-state dirkw)
+              (let [dir-value (eval-direction-sync game-state dirkw)
                     dir-name  (dirkw direction-names)
                     dir-room  (get-in game-state [:room-map dir-value])]
                 (if dir-value

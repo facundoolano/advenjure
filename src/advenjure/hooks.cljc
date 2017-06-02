@@ -45,3 +45,17 @@
         room          (get-in game-state [:room-map roomkw])
         dir-condition (direction room)]
     (eval-precondition dir-condition game-state)))
+
+(defn eval-direction-sync
+  "The same as eval direction but skips the prompt possibility to avoid it being
+  async. Useful for helper verbs that check directions."
+  [game-state direction]
+  (let [roomkw        (:current-room game-state)
+        room          (get-in game-state [:room-map roomkw])
+        dir-condition (direction room)
+        prompt        (:prompt dir-condition)
+        dir-condition (eval (or (:pre dir-condition) dir-condition))]
+    (when-not prompt
+      (if (fn? dir-condition)
+        (apply dir-condition game-state)
+        dir-condition))))
