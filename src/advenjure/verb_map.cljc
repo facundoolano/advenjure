@@ -8,17 +8,6 @@
   (let [patterns (map #(str "^" % "$") commands)]
     (zipmap patterns (repeat handler))))
 
-;; FIXME this should be moved to the other file
-;; (defn add-go-shortcuts
-;;   "Allow commands like 'north' and 'n' instead of 'go north'"
-;;   [vmap]
-;;   (loop [new-map        vmap
-;;          [dir & remain] (keys direction-mappings)]
-;;     (if (nil? dir)
-;;       new-map
-;;       (let [regexp (str "^" dir "$")]
-;;         (recur (add-verb new-map [regexp] #(go_ % dir)) remain)))))
-
 (def default-map (apply merge (map expand-verb verbs/verbs)))
 
 ;use a sorted version to extract the longest possible form first

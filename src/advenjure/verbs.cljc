@@ -371,102 +371,110 @@
 ;;                                                         (_ "You can use the TAB key to get completion suggestions for a command and the UP/DOWN arrows to search the command history.")])))
 
 ;;;; VERB DEFINITIONS
-(def verbs [(make-direction-verb {:commands   [(_ "go") (_ "go to")]
-                                  :help       (_ "Change the location according to the given direction.")
-                                  :ignore-dir ["back"]
-                                  :handler    go-handler})
+(defn- make-go-shortcuts
+  "Allow commands like 'north' and 'n' instead of 'go north'"
+  []
+  (map (fn [dir] {:commands [dir]
+                  :handler  #(go-handler % dir)})
+       (keys direction-mappings)))
 
-            (make-direction-verb {:commands [(_ "look to") (_ "look toward")]
-                                  :help     (_ "Describe what's in the given direction.")
-                                  :handler  look-to-handler})
+(def verbs (concat (make-go-shortcuts)
+                   [(make-direction-verb {:commands   [(_ "go") (_ "go to")]
+                                          :help       (_ "Change the location according to the given direction.")
+                                          :ignore-dir ["back"]
+                                          :handler    go-handler})
 
-            {:commands [(_ "go back") (_ "back") (_ "b")]
-             :help     (_ "Go to the previous room, if possible.")
-             :handler  go-back-handler}
+                    (make-direction-verb {:commands [(_ "look to") (_ "look toward")]
+                                          :help     (_ "Describe what's in the given direction.")
+                                          :handler  look-to-handler})
 
-            {:commands [(_ "look") (_ "look around") (_ "l")]
-             :help     (_ "Look around and enumerate available movement directions.")
-             :handler  look-handler}
+                    {:commands [(_ "go back") (_ "back") (_ "b")]
+                     :help     (_ "Go to the previous room, if possible.")
+                     :handler  go-back-handler}
 
-            {:commands [(_ "inventory") (_ "i")]
-             :help     (_ "Describe the inventory contents.")
-             :handler  inventory-handler}
+                    {:commands [(_ "look") (_ "look around") (_ "l")]
+                     :help     (_ "Look around and enumerate available movement directions.")
+                     :handler  look-handler}
 
-            {:commands [(_ "save")]
-             :help     (_ "Save the current game to a file.")
-             :handler  save-handler}
+                    {:commands [(_ "inventory") (_ "i")]
+                     :help     (_ "Describe the inventory contents.")
+                     :handler  inventory-handler}
 
-            {:commands [(_ "restore") (_ "load")]
-             :help     (_ "Restore a previous game from file.")
-             :handler  restore-handler}
+                    {:commands [(_ "save")]
+                     :help     (_ "Save the current game to a file.")
+                     :handler  save-handler}
 
-            {:commands [(_ "exit")]
-             :help     (_ "Close the game.")
-             :handler  exit-handler}
+                    {:commands [(_ "restore") (_ "load")]
+                     :help     (_ "Restore a previous game from file.")
+                     :handler  restore-handler}
 
-            (make-item-verb {:commands    [(_ "look at") (_ "describe")]
-                             :help        (_ "Look at a given item.")
-                             :kw          :look-at
-                             :kw-required false
-                             :handler     look-at-handler})
+                    {:commands [(_ "exit")]
+                     :help     (_ "Close the game.")
+                     :handler  exit-handler}
 
-            (make-item-verb {:commands    [(_ "look inside") (_ "look in")]
-                             :help        (_ "Look inside a given item.")
-                             :kw          :look-in
-                             :kw-required false
-                             :handler     look-inside-handler})
+                    (make-item-verb {:commands    [(_ "look at") (_ "describe")]
+                                     :help        (_ "Look at a given item.")
+                                     :kw          :look-at
+                                     :kw-required false
+                                     :handler     look-at-handler})
 
-            take_
+                    (make-item-verb {:commands    [(_ "look inside") (_ "look in")]
+                                     :help        (_ "Look inside a given item.")
+                                     :kw          :look-in
+                                     :kw-required false
+                                     :handler     look-inside-handler})
 
-            {:commands [(_ "take all") (_ "take everything")
-                        (_ "get all") (_ "get everything")]
-             :help     (_ "Attempt to take every visible object.")
-             :handler  take-all-handler}
+                    take_
 
-            (make-item-verb {:commands [(_ "open")]
-                             :help     (_ "Try to open a closed item.")
-                             :kw       :open
-                             :handler  open-handler})
+                    {:commands [(_ "take all") (_ "take everything")
+                                (_ "get all") (_ "get everything")]
+                     :help     (_ "Attempt to take every visible object.")
+                     :handler  take-all-handler}
 
-            (make-item-verb {:commands [(_ "close")]
-                             :help     (_ "Try to close an open item.")
-                             :kw       :close
-                             :handler  close-handler})
+                    (make-item-verb {:commands [(_ "open")]
+                                     :help     (_ "Try to open a closed item.")
+                                     :kw       :open
+                                     :handler  open-handler})
 
-            (make-compound-item-verb {:commands [(_ "unlock $1 with $2")]
-                                      :display  (_ "unlock")
-                                      :help     (_ "Try to unlock an item.")
-                                      :kw       :unlock
-                                      :handler  unlock-handler})
+                    (make-item-verb {:commands [(_ "close")]
+                                     :help     (_ "Try to close an open item.")
+                                     :kw       :close
+                                     :handler  close-handler})
 
-            (make-compound-item-verb {:commands    [(_ "open $1 with $2")]
-                                      :display     (_ "open")
-                                      :help        (_ "Try to unlock and open a locked item.")
-                                      :kw          :open-with
-                                      :kw-required false
-                                      :handler     open-handler})
+                    (make-compound-item-verb {:commands [(_ "unlock $1 with $2")]
+                                              :display  (_ "unlock")
+                                              :help     (_ "Try to unlock an item.")
+                                              :kw       :unlock
+                                              :handler  unlock-handler})
 
-            (make-item-verb {:commands [(_ "talk to") (_ "talk with") (_ "talk")]
-                             :help     (_ "Talk to a given character or item.")
-                             :kw       :talk
-                             :handler  talk-handler})
+                    (make-compound-item-verb {:commands    [(_ "open $1 with $2")]
+                                              :display     (_ "open")
+                                              :help        (_ "Try to unlock and open a locked item.")
+                                              :kw          :open-with
+                                              :kw-required false
+                                              :handler     open-handler})
 
-            ;; noop verbs
-            (make-item-verb {:commands [(_ "read")] :kw :read})
-            (make-item-verb {:commands [(_ "use")] :kw :use})
-            (make-compound-item-verb {:commands [(_ "use $1 with $2")]
-                                      :kw       :use-with})
-            (make-item-verb {:commands [(_ "move")] :kw :move})
-            (make-item-verb {:commands [(_ "push")] :kw :push})
-            (make-item-verb {:commands [(_ "pull")] :kw :pull})
+                    (make-item-verb {:commands [(_ "talk to") (_ "talk with") (_ "talk")]
+                                     :help     (_ "Talk to a given character or item.")
+                                     :kw       :talk
+                                     :handler  talk-handler})
 
-            (make-say-verb {:commands [(_ "stand") (_ "stand up") (_ "get up")]
-                            :say      (_ "I was standing up already")})
+                    ;; noop verbs
+                    (make-item-verb {:commands [(_ "read")] :kw :read})
+                    (make-item-verb {:commands [(_ "use")] :kw :use})
+                    (make-compound-item-verb {:commands [(_ "use $1 with $2")]
+                                              :kw       :use-with})
+                    (make-item-verb {:commands [(_ "move")] :kw :move})
+                    (make-item-verb {:commands [(_ "push")] :kw :push})
+                    (make-item-verb {:commands [(_ "pull")] :kw :pull})
 
-            (make-movement-item-verb {:commands [(_ "climb")] :kw :climb})
-            (make-movement-item-verb {:commands [(_ "climb down") (_ "climb $ down")]
-                                      :kw       :climb-down})
-            (make-movement-item-verb {:commands [(_ "climb up") (_ "climb $ up")]
-                                      :kw       :climb-up})
-            (make-movement-item-verb {:commands [(_ "enter")] :kw :climb-up})
-            ])
+                    (make-say-verb {:commands [(_ "stand") (_ "stand up") (_ "get up")]
+                                    :say      (_ "I was standing up already")})
+
+                    (make-movement-item-verb {:commands [(_ "climb")] :kw :climb})
+                    (make-movement-item-verb {:commands [(_ "climb down") (_ "climb $ down")]
+                                              :kw       :climb-down})
+                    (make-movement-item-verb {:commands [(_ "climb up") (_ "climb $ up")]
+                                              :kw       :climb-up})
+                    (make-movement-item-verb {:commands [(_ "enter")] :kw :climb-up})
+                    ]))
