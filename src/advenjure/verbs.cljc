@@ -64,6 +64,7 @@
     :else                         [command]))
 
 (defn- expand-item-placeholders
+  "Translate user friendly placeholders to proper regex groups."
   [command exclude]
   (let [exclude (exclude-string exclude)]
     (-> command
@@ -139,8 +140,21 @@
                                                               post-state    (eval-postcondition conditions before-state handler-state)]
                                                           (execute post-state :after-item-handler kw item1 item2))))))))
 
-;; FIXME implement and use in go and look-to
-(defn make-movement-verb [])
+(defn expand-direction-commands
+  [commands exclude]
+  (->> (expand-item-commands commands exclude)
+       (map #(str/replace % #"<item" "<dir"))))
+
+(defn make-direction-verb
+  [{:keys [commands ignore-dir handler display]
+    :or   {display (first commands)}
+    :as   spec}]
+  (assoc
+   spec
+   :commands (expand-direction-commands commands ignore-dir)
+   :handler (fn
+              ([game-state] (say game-state (_ "% where?" display)))
+              ([game-state direction] (handler game-state direction)))))
 
 (defn make-movement-item-verb
   "Constructs verbs that use items to change rooms."
@@ -157,40 +171,38 @@
 
 ;;; VERB HANDLER DEFINITIONS
 (defn- go-handler
-  ([game-state] (say game-state (_ "Go where?")))
-  ([game-state direction]
-   (let [current (current-room game-state)]
-     (if-let [dir (get direction-mappings direction)]
-       (let [dir-value (eval-direction game-state dir)]
-         (cond
-           (string? dir-value) (say game-state dir-value)
-           (not dir-value)     (say game-state (or (:default-go current) (_ "Couldn't go in that direction.")))
-           :else               (let [new-state (change-rooms game-state dir-value)]
-                                 (eval-postcondition (dir current) game-state new-state))))
-       ;; it's not a direction name, maybe it's a room name
-       (if-let [roomkw (get-visible-room game-state direction)]
-         (change-rooms game-state roomkw)
-         (say game-state "Go where?"))))))
+  [game-state direction]
+  (let [current (current-room game-state)]
+    (if-let [dir (get direction-mappings direction)]
+      (let [dir-value (eval-direction game-state dir)]
+        (cond
+          (string? dir-value) (say game-state dir-value)
+          (not dir-value)     (say game-state (or (:default-go current) (_ "Couldn't go in that direction.")))
+          :else               (let [new-state (change-rooms game-state dir-value)]
+                                (eval-postcondition (dir current) game-state new-state))))
+      ;; it's not a direction name, maybe it's a room name
+      (if-let [roomkw (get-visible-room game-state direction)]
+        (change-rooms game-state roomkw)
+        (say game-state "Go where?")))))
 
 (defn- look-to-handler
-  ([game-state] (say game-state (_ "Look to where?")))
-  ([game-state direction]
-   (if-let [dir (get direction-mappings direction)]
-     (let [dir-value (eval-direction game-state dir)
-           dir-room  (get-in game-state [:room-map dir-value])]
-       (cond
-         (string? dir-value)                        (say game-state (_ "That direction was blocked."))
-         (not dir-value)                            (say game-state (_ "There was nothing in that direction."))
-         (or (:known dir-room) (:visited dir-room)) (say game-state (_ "The %s was in that direction." (:name dir-room)))
-         :else                                      (say game-state (_ "I didn't know what was in that direction."))))
-     ;; it's not a direction name, maybe it's a room name
-     (if-let [roomkw (get-visible-room game-state direction)]
-       (let [room-name (get-in game-state [:room-map roomkw :name])
-             ;; this feels kinda ugly:
-             dir-kw    (roomkw (clojure.set/map-invert (current-room game-state)))
-             dir-name  (dir-kw direction-names)]
-         (say game-state (_ "The %s was toward %s." room-name dir-name)))
-       (say game-state (_ "Look to where?"))))))
+  [game-state direction]
+  (if-let [dir (get direction-mappings direction)]
+    (let [dir-value (eval-direction game-state dir)
+          dir-room  (get-in game-state [:room-map dir-value])]
+      (cond
+        (string? dir-value)                        (say game-state (_ "That direction was blocked."))
+        (not dir-value)                            (say game-state (_ "There was nothing in that direction."))
+        (or (:known dir-room) (:visited dir-room)) (say game-state (_ "The %s was in that direction." (:name dir-room)))
+        :else                                      (say game-state (_ "I didn't know what was in that direction."))))
+    ;; it's not a direction name, maybe it's a room name
+    (if-let [roomkw (get-visible-room game-state direction)]
+      (let [room-name (get-in game-state [:room-map roomkw :name])
+            ;; this feels kinda ugly:
+            dir-kw    (roomkw (clojure.set/map-invert (current-room game-state)))
+            dir-name  (dir-kw direction-names)]
+        (say game-state (_ "The %s was toward %s." room-name dir-name)))
+      (say game-state (_ "Look to where?")))))
 
 (defn- go-back-handler
   [game-state]
@@ -359,14 +371,14 @@
 ;;                                                         (_ "You can use the TAB key to get completion suggestions for a command and the UP/DOWN arrows to search the command history.")])))
 
 ;;;; VERB DEFINITIONS
-(def verbs [{:commands   [(_ "go") (_ "go to")]
-             :help       (_ "Change the location according to the given direction.")
-             :ignore-dir ["back"]
-             :handler    go-handler}
+(def verbs [(make-direction-verb {:commands   [(_ "go") (_ "go to")]
+                                  :help       (_ "Change the location according to the given direction.")
+                                  :ignore-dir ["back"]
+                                  :handler    go-handler})
 
-            {:commands [(_ "look to") (_ "look toward")]
-             :help     (_ "Describe what's in the given direction.")
-             :handler  look-to-handler}
+            (make-direction-verb {:commands [(_ "look to") (_ "look toward")]
+                                  :help     (_ "Describe what's in the given direction.")
+                                  :handler  look-to-handler})
 
             {:commands [(_ "go back") (_ "back") (_ "b")]
              :help     (_ "Go to the previous room, if possible.")
