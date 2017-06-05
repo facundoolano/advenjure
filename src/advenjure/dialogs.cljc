@@ -1,5 +1,9 @@
 (ns advenjure.dialogs
-  (:require [advenjure.ui.input :as in]
+  #?(:cljs (:require-macros [cljs.core.async :refer [go go-loop]]))
+  (:require #?(:clj [clojure.core.async :refer [go go-loop <!]]
+               :cljs [cljs.core.async :refer [<!]])
+            [advenjure.async :as async]
+            [advenjure.ui.input :as in]
             [advenjure.ui.output :as out]
             [advenjure.items :as items]))
 
@@ -53,7 +57,7 @@
 
   clojure.lang.Fn
   (run [dialog game-state]
-    (dialog game-state)))
+    (go (-> game-state async/force-chan <! dialog))))
 
 (defn random
   [& lines]
@@ -64,14 +68,68 @@
   ([condition true-d] (conditional true-d []))
   ([condition true-d false-d]
    (fn [game-state]
-     (if (condition game-state)
-       (run true-d game-state)
-       (run false-d game-state)))))
+     (go
+       (if (condition (<! (async/force-chan game-state)))
+         (run true-d game-state)
+         (run false-d game-state))))))
 
-;; TODO
+;;; OPTIONAL DIALOGS
+
+(defn- is-available
+  [{executed :executed-dialogs :as game-state} {:keys [id sticky show-if]}]
+  (and
+   (or sticky (not (contains? executed id)))
+   (or (not show-if) (show-if game-state))))
+
+(defn- filter-available
+  [game-state options]
+  (vec (filter (partial is-available game-state) options)))
+
+(defn- option-text
+  [{:keys [dialog text]}]
+  (or text (second dialog)))
+
+(defn- print-options
+  [options]
+  (out/print-line)
+  (doseq [[i opt] (map-indexed vector options)]
+    (out/print-line (format "%d. %s" (inc i) (option-text opt))))
+  (out/print-line))
+
+(defn- select-option
+  "Present the player with a list of options, read input and return the
+  selected one. If only one option is available return that right away."
+  [options]
+  (let [amount  (count options)
+        choices (set (range 1 (inc amount)))]
+    (if (= amount 1)
+      (go (first options))
+      (do
+        (print-options options)
+        (go-loop [i (<! (in/read-value))]
+          (if-not (contains? choices i)
+            (recur (<! (in/read-value)))
+            (get options (dec i))))))))
+
+(defn- execute-optional
+  [game-state options]
+  (go-loop [available  (filter-available game-state options)
+            game-state game-state]
+    (let [{:keys [id dialog go-back]} (<! (select-option available))
+          new-state (-> (run dialog game-state)
+                        <!
+                        (update :executed-dialogs conj id))
+          remaining    (filter-available new-state options)]
+      (if (or go-back (empty? remaining))
+        new-state
+        (recur remaining new-state)))))
+
+;; TODO allow to specify non map dialog when defaults
 (defn optional
-  [& options])
-
+  [& options]
+  (let [options (map #(assoc % :id (gensym "opt")) options)]
+    (fn [game-state]
+      (execute-optional game-state options))))
 
 ;;; INLINE HELPERS
 (defn event?
@@ -85,7 +143,7 @@
 (defn set-event
   [event-kw]
   (fn [game-state]
-    (update-in game-state [:events] conj event-kw)))
+    (update game-state :events conj event-kw)))
 
 (defn item?
   [item-name]

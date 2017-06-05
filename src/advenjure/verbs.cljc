@@ -13,8 +13,9 @@
             [advenjure.items :refer [print-list describe-container iname all-items]]
             [advenjure.rooms :as rooms]
             [advenjure.gettext.core :refer [_ p_]]
-            [advenjure.ui.input :as input :refer [read-file]]
-            [advenjure.ui.output :refer [write-file]]
+            [advenjure.ui.input :as in]
+            [advenjure.ui.output :as out]
+            [advenjure.dialogs :as dialogs]
             #?(:cljs [advenjure.eval :refer [eval]])))
 
 ;;;; FUNCTIONS TO BUILD VERBS
@@ -252,14 +253,14 @@
 
 (defn- save-handler
   [game-state]
-  (write-file "saved.game" (dissoc game-state :configuration))
+  (out/write-file "saved.game" (dissoc game-state :configuration))
   (say game-state (_ "Done.")))
 
 (defn- restore-handler
   [game-state]
   (go
     (try
-      (let [loaded-state (<! (read-file "saved.game"))
+      (let [loaded-state (<! (in/read-file "saved.game"))
             saved-state  (assoc loaded-state :configuration (:configuration game-state))]
         (say saved-state (rooms/describe (current-room saved-state))))
       (catch #?(:clj java.io.FileNotFoundException :cljs js/Object) e (say game-state (_ "No saved game found."))))))
@@ -267,7 +268,7 @@
 (defn- exit-handler
   [game-state]
   (say game-state (_ "Bye!"))
-  (input/exit))
+  (in/exit))
 
 (defn- look-at-handler
   [game-state item]
@@ -365,8 +366,7 @@
 
 (defn- talk-handler
   [game-state item]
-  (let [dialog (eval (:dialog item))]
-    (dialog game-state)))
+  (dialogs/run (:dialog item) game-state))
 
 (declare verbs)
 ;; FIXME rewrite to autogenerate from verb map help
