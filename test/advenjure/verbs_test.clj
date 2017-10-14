@@ -1,7 +1,5 @@
 (ns advenjure.verbs-test
   (:require [clojure.test :refer :all]
-            [clojure.core.async :refer [<!!]]
-            [clojure.core.async.impl.protocols :refer [ReadPort]]
             [advenjure.test-utils :refer :all]
             [advenjure.verbs :as verbs]
             [advenjure.utils :refer :all]
@@ -33,19 +31,6 @@
                  :room-map     (-> {:bedroom bedroom, :living living}
                                    (room/connect :bedroom :north :living))
                  :inventory    #{magazine}})
-
-(defn get-verb
-  [verb-name]
-  (let [handler (->> verbs/verbs
-                     (filter #(contains? (set (:commands %)) verb-name))
-                     first
-                     :handler)]
-    (if (nil? handler) (println "AAAAAAAAA" verb-name)
-        (fn [& args]
-          (let [result (apply handler args)]
-            (if (satisfies? ReadPort result)
-              (<!! result)
-              result))))))
 
 (deftest look-verb
   (let [look (get-verb "look")]

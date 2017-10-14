@@ -9,11 +9,9 @@
             [advenjure.ui.output :as out]
             [advenjure.items :as items]))
 
-(def pad-fmt (str "%-" (count "LONGESTNAME") "s"))
-
 (defn- format-line
   [character speech]
-  (str (format pad-fmt character)
+  (str character
        #?(:clj " —" :cljs " &mdash;")
        speech))
 
