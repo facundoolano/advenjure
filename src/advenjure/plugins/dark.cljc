@@ -6,7 +6,6 @@
             [advenjure.items :as items]
             [advenjure.change-rooms :refer [change-rooms]]
             [advenjure.utils :refer [directions current-room]]
-            [advenjure.verb-map :refer [add-verb]]
             [advenjure.gettext.core :refer [_]]))
 
 (defn build-dark-room

@@ -2,6 +2,7 @@
   #?(:cljs (:require-macros [cljs.core.async.macros :refer [go]]))
   (:require [clojure.set]
             [clojure.string :as str]
+            #?(:cljs [goog.string :as gstring])
             #?(:clj [clojure.core.async :refer [<! go]]
                :cljs [cljs.core.async :refer [<!]])
             [advenjure.utils :refer [say say-inline find-item direction-mappings
@@ -16,6 +17,7 @@
             [advenjure.ui.input :as in]
             [advenjure.ui.output :as out]
             [advenjure.dialogs :as dialogs]
+            #?(:cljs [goog.string :refer [format]])
             #?(:cljs [advenjure.eval :refer [eval]])))
 
 ;;;; FUNCTIONS TO BUILD VERBS
@@ -37,10 +39,14 @@
     (str "Which " item-name "? "
          (capfirst first-names) " or " (last names) "?")))
 
+
 ;; TODO move to a separate ns
+(def re-escape #?(:clj str/re-quote-replacement
+                  :cljs gstring/regExpEscape))
+
 (defn- exclude-string
   [exclude]
-  (str/re-quote-replacement
+  (re-escape
    (if (not-empty exclude)
      (format "(?!%s$)" (str/join "|" exclude))
      "")))

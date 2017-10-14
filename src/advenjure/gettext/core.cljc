@@ -4,6 +4,7 @@
    #?(:cljs [goog.string :as gstring])
    #?(:cljs [goog.string.format])))
 
+;; FIXME why is this necessary and can't jist refer in the require
 #?(:cljs (def format gstring/format))
 
 (def ^:dynamic *text-source* advenjure.text.en-past/dictionary)

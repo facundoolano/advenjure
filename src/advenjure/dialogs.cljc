@@ -1,7 +1,9 @@
 (ns advenjure.dialogs
-  #?(:cljs (:require-macros [cljs.core.async :refer [go go-loop]]))
+  #?(:cljs (:require-macros [cljs.core.async.macros :refer [go go-loop]]))
   (:require #?(:clj [clojure.core.async :refer [go go-loop <!]]
                :cljs [cljs.core.async :refer [<!]])
+            #?(:cljs [goog.string :refer [format]])
+            #?(:cljs [advenjure.eval :refer [eval]])
             [advenjure.async :as async]
             [advenjure.ui.input :as in]
             [advenjure.ui.output :as out]
@@ -40,24 +42,28 @@
 
 (extend-protocol Dialog
 
-  java.lang.String
+  #?(:clj java.lang.String
+     :cljs string)
   (run [dialog game-state]
     (out/print-line dialog)
-    game-state)
+    (async/force-chan game-state))
 
-  clojure.lang.IPersistentCollection
+  #?(:clj clojure.lang.IPersistentCollection
+     :cljs cljs.core.PersistentVector)
   (run [dialog game-state]
     (reduce (fn [gs element] (run element gs))
             game-state
             (pack-strings dialog)))
 
-  clojure.lang.Keyword
+  #?(:clj clojure.lang.Symbol
+     :cljs cljs.core.Symbol)
   (run [dialog game-state]
-    (run (resolve dialog) game-state))
+    (run (eval dialog) game-state))
 
-  clojure.lang.Fn
+  #?(:clj clojure.lang.Fn
+     :cljs function)
   (run [dialog game-state]
-    (go (-> game-state async/force-chan <! dialog))))
+    (go (-> game-state async/force-chan <! dialog async/force-chan <!))))
 
 (defn random
   [& lines]
