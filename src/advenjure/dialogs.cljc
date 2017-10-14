@@ -46,7 +46,7 @@
      :cljs string)
   (run [dialog game-state]
     (out/print-line dialog)
-    (async/force-chan game-state))
+    game-state)
 
   #?(:clj clojure.lang.IPersistentCollection
      :cljs cljs.core.PersistentVector)
@@ -63,7 +63,7 @@
   #?(:clj clojure.lang.Fn
      :cljs function)
   (run [dialog game-state]
-    (go (-> game-state async/force-chan <! dialog async/force-chan <!))))
+    (go (-> game-state async/force-chan <! dialog))))
 
 (defn random
   [& lines]
@@ -74,10 +74,9 @@
   ([condition true-d] (conditional true-d []))
   ([condition true-d false-d]
    (fn [game-state]
-     (go
-       (if (condition (<! (async/force-chan game-state)))
-         (run true-d game-state)
-         (run false-d game-state))))))
+     (if (condition game-state)
+       (run true-d game-state)
+       (run false-d game-state)))))
 
 ;;; OPTIONAL DIALOGS
 
@@ -122,10 +121,11 @@
   (go-loop [available  (filter-available game-state options)
             game-state game-state]
     (let [{:keys [id dialog go-back]} (<! (select-option available))
-          new-state (-> (run dialog game-state)
-                        <!
-                        (update :executed-dialogs conj id))
-          remaining    (filter-available new-state options)]
+          new-state                   (-> (run dialog game-state)
+                                          async/force-chan
+                                          <!
+                                          (update :executed-dialogs conj id))
+          remaining                   (filter-available new-state options)]
       (if (or go-back (empty? remaining))
         new-state
         (recur remaining new-state)))))
