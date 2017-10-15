@@ -1,58 +1,18 @@
-(ns ^:deprecated advenjure.async
-  #?(:cljs (:require-macros [cljs.core.async.macros]))
-  #?(:cljs (:require [cljs.core.async]
-                     [cljs.core.async.impl.protocols])))
-
-;; FIXME this ns is deprecated, keeping it around because dialogs still use it
-
-(defn cljs-env?
-  "Take the &env from a macro, and tell whether we are expanding into cljs."
-  [env]
-  (boolean (:ns env)))
-
-(defmacro if-cljs
-  "Return then if we are generating cljs code and else for Clojure code.
-  https://groups.google.com/d/msg/clojurescript/iBY5HaQda4A/w1lAQi9_AwsJ"
-  [then else]
-  (if (cljs-env? &env) then else))
+(ns advenjure.async
+  #?(:cljs (:require-macros [cljs.core.async.macros :refer [go]]))
+  (:require #?(:clj [clojure.core.async :refer [go <!]]
+               :cljs [cljs.core.async :refer [<!]])
+            #?(:clj [clojure.core.async.impl.protocols :refer [ReadPort]]
+               :cljs [cljs.core.async.impl.protocols :refer [ReadPort]])))
 
 
-(defmacro <!?
-  "If value is a channel (implements ReadPort protocol), take the value from it
-  (<!), otherwise return as is. Works with nested channels, I wish there wasn't any.
-  "
-  [value]
-  `(if-cljs
-    (loop [result# ~value]
-      (if (satisfies? cljs.core.async.impl.protocols/ReadPort result#)
-        (recur (cljs.core.async/<! result#))
-        result#))
-    ~value))
+;; sadly it's too difficult to make sure we don't nest a channel in a channel
+;; this will force the value to be exactly a valua inside one chan
+(defn force-chan [value]
+  (go
+    (if (satisfies? ReadPort value)
+      (-> value <! force-chan <!)
+      value)))
 
-
-(defmacro aloop
-  "replace with go-loop in cljs and with loop in clj."
-  [& expr]
-  `(if-cljs (cljs.core.async.macros/go-loop ~@expr)
-            (loop ~@expr)))
-
-(defn async-bindings
-  [bindings]
-  (->> bindings
-    (partition 2)
-    (mapcat (fn [[bind expr]] [bind `(<!? ~expr)]))
-    (vec)))
-
-(defmacro let!?
-  "In cljs, enclose every binded value in a (<!?) expression."
-  [bindings & exprs]
-  `(if-cljs
-    (let ~(async-bindings bindings) ~@exprs)
-    (let ~bindings ~@exprs)))
-
-(defmacro alet
-  "Repace with (go (let!? ...)) in cljs and with let in clj."
-  [bindings & exprs]
-  `(if-cljs
-    (cljs.core.async.macros/go (let!? ~bindings ~@exprs))
-    (let ~bindings ~@exprs)))
+(defn debug [value]
+  (if (satisfies? ReadPort value) "PORT!" "value"))

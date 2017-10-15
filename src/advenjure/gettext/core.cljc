@@ -1,10 +1,8 @@
 (ns advenjure.gettext.core
   (:require
    [advenjure.text.en-past]
-   #?(:cljs [goog.string :as gstring])
+   #?(:cljs [goog.string :refer [format]])
    #?(:cljs [goog.string.format])))
-
-#?(:cljs (def format gstring/format))
 
 (def ^:dynamic *text-source* advenjure.text.en-past/dictionary)
 

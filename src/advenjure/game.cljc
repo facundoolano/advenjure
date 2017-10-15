@@ -3,8 +3,7 @@
   (:require [clojure.string :as string]
             #?(:clj [clojure.core.async :refer [go <! <!!]]
                :cljs [cljs.core.async :refer [<!]])
-            #?(:clj [clojure.core.async.impl.protocols :refer [ReadPort]]
-               :cljs [cljs.core.async.impl.protocols :refer [ReadPort]])
+            [advenjure.async :as async]
             [advenjure.change-rooms :refer [change-rooms]]
             [advenjure.utils :as utils]
             [advenjure.hooks :as hooks]
@@ -53,10 +52,6 @@
                             {:verb-map merged-verbs})]
     (assoc gs :configuration new-config)))
 
-(defn force-channel [value]
-  (go
-    (if (satisfies? ReadPort value) (<! value) value)))
-
 (defn process-input
   "Take an input comand, find the verb in it and execute its action handler."
   [game-state input]
@@ -69,7 +64,8 @@
         (let [before-state  (-> game-state
                                 (update-in [:moves] inc)
                                 (hooks/execute :before-handler))
-              handler-state (-> (apply handler before-state tokens) force-channel <!)
+              handler-state (-> (apply handler before-state tokens)
+                                async/force-chan <!)
               after-state   (hooks/execute (or handler-state before-state) :after-handler)]
           after-state)
         (if-not (string/blank? clean)

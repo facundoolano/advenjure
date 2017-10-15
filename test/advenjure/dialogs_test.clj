@@ -1,25 +1,25 @@
-(ns ^:skip advenjure.dialogs-test
+(ns advenjure.dialogs-test
   (:require [clojure.test :refer :all]
             [clojure.core.async :refer [go <!!]]
             [advenjure.test-utils :refer :all]
             [advenjure.ui.output :refer :all]
             [advenjure.ui.input :refer :all]
-            [advenjure.dialogs :refer :all]
+            [advenjure.dialogs :as dialogs]
             [advenjure.rooms :as room]
             [advenjure.items :as it]))
 
-;; FIXME owe you this one
-(def talk nil)
 
-(def simple (dialog ("ME" "Hi!")
-                    ("YOU" "Hey there!")))
+(def talk (get-verb "talk"))
 
-(def compound (dialog ("ME" "Hi!")
-                      ("YOU" "Hey there!")
-                      (dialog ("ME" "Bye then"))))
+(def simple ["ME" "Hi!"
+             "YOU" "Hey there!"])
 
-(def referenced (dialog simple
-                        ("ME" "Bye then")))
+(def compound ["ME" "Hi!"
+               "YOU" "Hey there!"
+               ["ME" "Bye then"]])
+
+(def referenced [simple
+                 "ME" "Bye then"])
 
 (def bedroom (room/make "Bedroom" "short description of bedroom"))
 
@@ -29,31 +29,30 @@
                  :current-room :bedroom
                  :room-map {:bedroom bedroom}})
 
-(def cond-event (conditional (not-event? :had-breakfast)
-                             ("ME" "I'm hungry.")
-                             ("ME" "I'm full.")))
+(def cond-event (dialogs/conditional (dialogs/not-event? :had-breakfast)
+                                     ["ME" "I'm hungry."]
+                                     ["ME" "I'm full."]))
 
-(def cond-item (conditional (item? "sword")
-                            ("ME" "I have a shiny sword.")
-                            ("ME" "I have nothin'")))
+(def cond-item (dialogs/conditional (dialogs/item? "sword")
+                                    ["ME" "I have a shiny sword."]
+                                    ["ME" "I have nothin'"]))
 
 (def choice
-  (optional
-    ("What's your name?"
-        (dialog ("ME" "What's your name?")
-                ("YOU" "Emmett Brown.")))
-
-    ("Where are you from?"
-        (dialog ("ME" "Where are you from?")
-                ("YOU" "Hill Valley."))
-        :go-back)))
+  (dialogs/optional
+   ;; allow both single dialog or map
+   ["ME" "What's your name?"
+    "YOU" "Emmett Brown."]
+   {:dialog  ["ME" "Where are you from?"
+              "YOU" "Hill Valley."]
+    :go-back true}))
 
 ;; keep the output in an atom like a map as expected by is-output
 (def output (atom {:out ""}))
 
 (defn print-mock
   "Save the speech lines to output, separated by '\n'"
-  ([& speech] (swap! output update :out str (apply str speech) "\n") nil))
+  ([& speech]
+   (swap! output update :out str (apply str speech) "\n") nil))
 
 (deftest basic-dialogs
   (with-redefs [print-line print-mock
@@ -64,7 +63,6 @@
                                 [:room-map :bedroom :items] #{character})]
         (talk new-state "character")
         (is-output @output ["ME —Hi!" "YOU —Hey there!"])))
-
 
     (testing "compound literal dialog"
       (let [character (it/make ["character"] "" :dialog `compound)
@@ -95,9 +93,7 @@
         (talk new-state "character")
         (is-output @output "ME —I have a shiny sword.")))))
 
-;; FIXME some async weirdness here
-;; skipping for now, unskip when dialogs are rewritten
-(deftest ^:skip optional-dialogs
+(deftest optional-dialogs
   (with-redefs [print-line print-mock
                 read-key   (fn [] (go "1"))]
     (testing "simple choice and go back"
