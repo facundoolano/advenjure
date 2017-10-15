@@ -39,8 +39,9 @@
 
 (def choice
   (dialogs/optional
-   {:dialog ["ME" "What's your name?"
-             "YOU" "Emmett Brown."]}
+   ;; allow both single dialog or map
+   ["ME" "What's your name?"
+    "YOU" "Emmett Brown."]
    {:dialog  ["ME" "Where are you from?"
               "YOU" "Hill Valley."]
     :go-back true}))

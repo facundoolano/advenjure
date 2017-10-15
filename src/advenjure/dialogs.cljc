@@ -15,12 +15,6 @@
        #?(:clj " —" :cljs " &mdash;")
        speech))
 
-;; TODO make async and wait for read key
-;; (defn- print-dialog
-;;   [character speech]
-;;   (out/print-line (format-line character speech))
-;;   (in/read-key))
-
 (defn- pack-strings
   "Loops through the sequence of lines, assuming that two sequential strings
   stand for character name and speech, and formats them accordingly."
@@ -128,10 +122,15 @@
         new-state
         (recur remaining new-state)))))
 
-;; TODO allow to specify non map dialog when defaults
+(defn- prepare-option
+  "Coerce to map and add option id."
+  [opt]
+  (let [opt (if (map? opt) opt {:dialog opt})]
+    (assoc opt :id (gensym "opt"))))
+
 (defn optional
   [& options]
-  (let [options (map #(assoc % :id (gensym "opt")) options)]
+  (let [options (map prepare-option options)]
     (fn [game-state]
       (execute-optional game-state options))))
 
