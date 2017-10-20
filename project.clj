@@ -7,6 +7,7 @@
                  [org.clojure/clojurescript "1.9.229"]
                  [org.clojure/core.async "0.2.391"]
                  [gettext "0.1.1"]
+                 [sonian/carica "1.2.2"]
                  [jline/jline "2.8"]
                  [cljs-ajax "0.5.8"]
                  [org.clojure/data.json "0.2.6"]
