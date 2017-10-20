@@ -7,7 +7,7 @@
             [advenjure.change-rooms :refer [change-rooms]]
             [advenjure.utils :as utils]
             [advenjure.hooks :as hooks]
-            [advenjure.verb-map :refer [find-verb default-map]]
+            [advenjure.verb-map :refer [find-verb make-default-map]]
             [advenjure.ui.input :refer [get-input exit read-key]]
             [advenjure.ui.output :refer [print-line init clear]]
             [advenjure.gettext.core :refer [_]]))
@@ -36,7 +36,7 @@
     :moves 0
     :configuration {:start-message ""
                     :end-message "\nThe End."
-                    :verb-map default-map
+                    :verb-map (make-default-map)
                     :prompt default-prompt
                     :hooks (zipmap hooks (repeat []))}}))
 

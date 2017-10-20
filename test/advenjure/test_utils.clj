@@ -30,9 +30,11 @@
     (take-from-port (<!! value))
     value))
 
+(def verbs (verbs/make-default-verbs))
+
 (defn get-verb
   [verb-name]
-  (let [handler (->> verbs/verbs
+  (let [handler (->> verbs
                      (filter #(contains? (set (:commands %)) verb-name))
                      first
                      :handler)]
