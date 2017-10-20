@@ -8,7 +8,9 @@
   (let [patterns (map #(str "^" % "$") commands)]
     (zipmap patterns (repeat handler))))
 
-(def default-map (apply merge (map expand-verb verbs/verbs)))
+(defn make-default-map
+  []
+  (apply merge (map expand-verb (verbs/make-default-verbs))))
 
 ;use a sorted version to extract the longest possible form first
 (defn sort-verbs [verb-map] (reverse (sort-by count (keys verb-map))))
