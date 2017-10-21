@@ -1,29 +1,32 @@
 (ns advenjure.gettext.core
-  #?(:cljs (:require-macros [advenjure.gettext.macro :refer [config]]))
   (:require
-   [advenjure.text.en-past]
-   #?(:clj [advenjure.gettext.macro :refer [config]])
+   #?(:clj  [carica.core :as carica])
    #?(:cljs [goog.string :refer [format]])
    #?(:cljs [goog.string.format])))
 
-(if (config :gettext-source)
-  (require [(symbol (namespace (symbol (config :gettext-source))))]))
-(def ^:dynamic *text-source* (eval (symbol (config :gettext-source))))
+(defmacro resolve-source
+  "In order to make a config symbol available both in clj and cljs, wrap its
+   evaluation in a macro, so it's done at compile time by clojure, when the
+  config is available."
+  []
+  (let [sym    (carica/config :gettext-source)
+        nspace (symbol (namespace sym))]
+    (require nspace)
+    sym))
 
-;; copypasted from clojure-gettext for now, until I figure out how
-;; to properly make it work for both clj and cljs
+(def text-source (resolve-source))
 
 (defn gettext
   "Look up the given key in the current text source dictionary.
   If not found return the key itself."
   [text-key & replacements]
-  (let [text-value (get *text-source* text-key text-key)
+  (let [text-value (get text-source text-key text-key)
         text-value (if (fn? text-value) (text-value nil) text-value)]
     (apply format text-value replacements)))
 
 (defn pgettext
   [ctx text-key & replacements]
-  (let [text-value (get *text-source* text-key text-key)
+  (let [text-value (get text-source text-key text-key)
         text-value (if (fn? text-value) (text-value ctx) text-value)]
     (apply format text-value replacements)))
 

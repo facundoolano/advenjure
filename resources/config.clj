@@ -1,1 +1,1 @@
-{:gettext-source 'advenjure.text.en-present/dictionary}
+{:gettext-source 'advenjure.text.en-past/dictionary}
