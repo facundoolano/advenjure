@@ -194,3 +194,7 @@ The current limitations of the ClojureScript version of the library are:
 * Can use up to `:simple` optimizations (not `:advanced`), since [ClojureScript self-hosting](https://github.com/clojure/clojurescript/wiki/Optional-Self-hosting) is required for some of the advanced features.
 
 See the [advenjure-example](https://github.com/facundoolano/advenjure-example) for a game that targets both the terminal and the browser.
+
+## Roadmap
+
+[Check the milestones](https://github.com/facundoolano/advenjure/milestones).
