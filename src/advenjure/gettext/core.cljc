@@ -1,10 +1,14 @@
 (ns advenjure.gettext.core
+  #?(:cljs (:require-macros [advenjure.gettext.macro :refer [config]]))
   (:require
    [advenjure.text.en-past]
+   #?(:clj [advenjure.gettext.macro :refer [config]])
    #?(:cljs [goog.string :refer [format]])
    #?(:cljs [goog.string.format])))
 
-(def ^:dynamic *text-source* advenjure.text.en-past/dictionary)
+(if (config :gettext-source)
+  (require [(symbol (namespace (symbol (config :gettext-source))))]))
+(def ^:dynamic *text-source* (eval (symbol (config :gettext-source))))
 
 ;; copypasted from clojure-gettext for now, until I figure out how
 ;; to properly make it work for both clj and cljs
