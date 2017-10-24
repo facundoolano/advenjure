@@ -11,9 +11,14 @@
 (def wsword (make ["sword" "wooden sword"]))
 
 (deftest description-test
+  (testing "nonempty description succeeds"
+    (is (make ["foo"] "a foo!")))
   (testing "empty description fails"
     (is (thrown-with-msg? Exception #"Item description may not be empty"
-          (make ["foo"] "")))))
+          (make ["foo"] ""))))
+  (testing "all-spaces description fails"
+    (is (thrown-with-msg? Exception #"Item description may not be empty"
+          (make ["foo"] "  ")))))
 
 (deftest describe-container-test
   (testing "describe lists items"
