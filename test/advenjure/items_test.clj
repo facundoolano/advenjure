@@ -10,6 +10,11 @@
 (def sword (make ["sword" "silver sword"]))
 (def wsword (make ["sword" "wooden sword"]))
 
+(deftest description-test
+  (testing "empty description fails"
+    (is (thrown-with-msg? Exception #"Item description may not be empty"
+          (make ["foo"] "")))))
+
 (deftest describe-container-test
   (testing "describe lists items"
     (is (= (describe-container sack)
