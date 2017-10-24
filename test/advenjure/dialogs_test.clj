@@ -58,14 +58,14 @@
   (with-redefs [print-line print-mock
                 read-key   (fn [] (go nil))]
     (testing "linear dialog"
-      (let [character (it/make ["character"] "" :dialog `simple)
+      (let [character (it/make ["character"] "you" :dialog `simple)
             new-state (assoc-in game-state
                                 [:room-map :bedroom :items] #{character})]
         (talk new-state "character")
         (is-output @output ["ME —Hi!" "YOU —Hey there!"])))
 
     (testing "compound literal dialog"
-      (let [character (it/make ["character"] "" :dialog `compound)
+      (let [character (it/make ["character"] "you" :dialog `compound)
             new-state (assoc-in game-state
                                 [:room-map :bedroom :items] #{character})]
         (talk new-state "character")
@@ -73,21 +73,21 @@
 
 
     (testing "compound referenced dialog"
-      (let [character (it/make ["character"] "" :dialog `referenced)
+      (let [character (it/make ["character"] "you" :dialog `referenced)
             new-state (assoc-in game-state
                                 [:room-map :bedroom :items] #{character})]
         (talk new-state "character")
         (is-output @output ["ME —Hi!" "YOU —Hey there!" "ME —Bye then"])))
 
     (testing "conditional event"
-      (let [character (it/make ["character"] "" :dialog `cond-event)
+      (let [character (it/make ["character"] "you" :dialog `cond-event)
             new-state (assoc-in game-state
                                 [:room-map :bedroom :items] #{character})]
         (talk new-state "character")
         (is-output @output "ME —I'm full.")))
 
     (testing "conditional item"
-      (let [character (it/make ["character"] "" :dialog `cond-item)
+      (let [character (it/make ["character"] "you" :dialog `cond-item)
             new-state (assoc-in game-state
                                 [:room-map :bedroom :items] #{character})]
         (talk new-state "character")
@@ -97,7 +97,7 @@
   (with-redefs [print-line print-mock
                 read-key   (fn [] (go "1"))]
     (testing "simple choice and go back"
-      (let [character (it/make ["character"] "" :dialog `choice)
+      (let [character (it/make ["character"] "you" :dialog `choice)
             new-state (assoc-in game-state
                                 [:room-map :bedroom :items] #{character})]
         (talk new-state "character")

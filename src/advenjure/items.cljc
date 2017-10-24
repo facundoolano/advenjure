@@ -31,6 +31,10 @@
 
 (defn make
   ([names description & {:as extras}]
+   (when (-> description
+           (clojure.string/replace #"\s" "")
+           empty?)
+     (throw (Exception. "Item description may not be empty")))
    (let [names (if (string? names) [names] names)]
      (map->Item (merge {:names names :description description}
                        (open-defaults extras)
