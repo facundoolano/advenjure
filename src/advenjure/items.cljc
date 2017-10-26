@@ -29,16 +29,25 @@
 
 (defn talk-defaults [item] (if (:dialog item) {:talk true}))
 
+(defn apply-synonyms
+  [item]
+  (let [keys (keys item)]
+    (map (fn [field]
+           (let [[key value] field]
+             (if (> (.indexOf keys value) -1)
+               {key (value item)}
+               field))) item)))
+
 (defn make
   ([names description & {:as extras}]
    (let [names (if (string? names) [names] names)]
-     (map->Item (merge {:names names :description description}
+     (map->Item (apply-synonyms (merge {:names names :description description}
                        (open-defaults extras)
                        (unlock-defaults extras)
                        (talk-defaults extras)
                        (climb-defaults extras)
                        (use-with-defaults extras)
-                       extras))))
+                       extras)))))
   ([names]
    (make names (_ "There was nothing special about it."))))
 
