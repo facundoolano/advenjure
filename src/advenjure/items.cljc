@@ -31,12 +31,9 @@
 
 (defn apply-synonyms
   [item]
-  (let [keys (keys item)]
-    (map (fn [field]
-           (let [[key value] field]
-             (if (> (.indexOf keys value) -1)
-               {key (value item)}
-               field))) item)))
+  (reduce-kv
+    (fn [map key value]
+      (assoc map key (get item value value))) {} item))
 
 (defn make
   ([names description & {:as extras}]

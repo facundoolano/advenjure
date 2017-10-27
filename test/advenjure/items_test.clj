@@ -9,6 +9,7 @@
 (def closed-sack (assoc sack :closed true))
 (def sword (make ["sword" "silver sword"]))
 (def wsword (make ["sword" "wooden sword"]))
+(def book (make "Book" "It's a book" :unlock "It's bound" :open :unlock))
 
 (deftest describe-container-test
   (testing "describe lists items"
@@ -50,3 +51,6 @@
       (is (= (get-from item-set "wooden sword") [wsword]))
       (is (= (into #{} (get-from item-set "sword")) #{wsword sword})))))
 
+(deftest verb-synonym-test
+  (testing "verb synonyms"
+    (is (= (:open book) (:unlock book)))))
