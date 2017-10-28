@@ -31,7 +31,7 @@ Add the following to your project map as a dependency:
 Text adventures consist mainly of moving around rooms and interacting with items
 through verb commands such as GO, LOOK, TAKE, etc.
 
-Items are represented by Clojure records in advenjure. the `advenjure.items/make`
+Items are represented by maps in advenjure. the `advenjure.items/make`
 function takes a name, a description and a set of key-value pairs to customize behavior.
 For example:
 
@@ -74,7 +74,7 @@ object as `:closed` also implies that OPEN and CLOSE verbs can be applied to it
 ### Creating rooms
 
 Once you've created a bunch of items, you'll need to put them in a room (if not directly
-into the player's inventory). Rooms are also records and also have an
+into the player's inventory). Rooms are also maps and also have an
 `advenjure.rooms/make` function to build them:
 
 ```clojure
@@ -106,7 +106,7 @@ to mention the item while describing the room (as opposed of the default `a <ite
 ### Building a room map
 
 Once you have some rooms, you need to connect them to build a room map, which is
-nothing but a plain clojure hash map. First map the room record to some id keyword,
+nothing but a plain clojure hash map. First map the room to some id keyword,
 then connect the rooms using the `advenjure.rooms/connect` function:
 
 ```clojure

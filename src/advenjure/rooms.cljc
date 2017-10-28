@@ -3,12 +3,10 @@
             [clojure.string :as string]
             [advenjure.gettext.core :refer [_]]))
 
-(defrecord Room [name description])
-
 (defn make [name description & {:as extras}]
-  (map->Room (merge {:name name :description description}
-                    {:items #{} :item-descriptions {} :visited false} ;default args, can be overriden by extras
-                    extras)))
+  (merge {:name name :description description}
+         {:items #{} :item-descriptions {} :visited false} ;default args, can be overriden by extras
+         extras))
 
 (defn names
   [room]

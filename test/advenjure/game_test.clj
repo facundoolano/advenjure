@@ -39,8 +39,8 @@
       (is-output new-state
                  ["short description of bedroom"
                   "There was a bed there."
-                  "There was a sock there."
                   "There was a drawer there. The drawer contained a pencil"
+                  "There was a sock there."
                   ""
                   "North: ???"])
       (is-same new-state (update-in game-state [:moves] inc))))

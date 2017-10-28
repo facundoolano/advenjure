@@ -1,13 +1,13 @@
 (ns advenjure.ui.input
   (:require-macros [cljs.core.async.macros :refer [go]])
-  (:require [cljs.reader :refer [read-string register-tag-parser!]]
+  (:require [cljs.reader :refer [read-string]]
             [clojure.string :as string]
             [jquery]
             [jquery.terminal]
             [jquery.mousewheel]
             [advenjure.utils :refer [direction-mappings current-room room-as-item]]
-            [advenjure.items :refer [map->Item all-item-names]]
-            [advenjure.rooms :refer [map->Room visible-name-mappings]]
+            [advenjure.items :refer [all-item-names]]
+            [advenjure.rooms :refer [visible-name-mappings]]
             [cljs.core.async :refer [<! >! chan close!]]))
 
 (def term #(.terminal (js/$ "#terminal")))
@@ -37,10 +37,6 @@
       (read-string (<! key-chan)))))
 
 (def read-key read-value)
-
-; Needed to properly persist in cljs
-(register-tag-parser! "advenjure.items.Item" map->Item)
-(register-tag-parser! "advenjure.rooms.Room" map->Room)
 
 (defn read-file [file]
   (go (read-string (aget js/localStorage file))))

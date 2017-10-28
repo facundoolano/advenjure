@@ -38,8 +38,8 @@
       (is-output (look game-state)
                  ["short description of bedroom"
                   "There was a bed there."
-                  "There was a sock there."
                   "There was a drawer there. The drawer contained a pencil"
+                  "There was a sock there."
                   ""
                   "North: ???"]))))
 
@@ -124,8 +124,8 @@
         (is-output newer-state
                    ["short description of bedroom"
                     "There was a bed there."
-                    "There was a sock there."
-                    "There was a drawer there. The drawer contained a pencil"])
+                    "There was a drawer there. The drawer contained a pencil"
+                    "There was a sock there."])
         (is (= (:current-room newer-state) :bedroom))
         (is (get-in newer-state [:room-map :bedroom :visited]))))
 
@@ -134,8 +134,8 @@
         (is-output newer-state
                    ["short description of bedroom"
                     "There was a bed there."
-                    "There was a sock there."
-                    "There was a drawer there. The drawer contained a pencil"])
+                    "There was a drawer there. The drawer contained a pencil"
+                    "There was a sock there."])
         (is (= (:current-room newer-state) :bedroom))
         (is (get-in newer-state [:room-map :bedroom :visited]))))
 
@@ -201,8 +201,8 @@
                   "There was a sofa there."
                   "short description of bedroom"
                   "There was a bed there."
-                  "There was a sock there."
-                  "There was a drawer there. The drawer contained a pencil"])))
+                  "There was a drawer there. The drawer contained a pencil"
+                  "There was a sock there."])))
 
   (testing "Should say can't go back if not known previous location")
 
@@ -287,8 +287,8 @@
             item-names  (set (map #(first (:names %)) (:inventory new-state)))]
         (is (= item-names #{"magazine" "pencil" "sock"}))
         ;; lousy, assumes some order in items
-        (is-output new-state ["Sock: Taken."
-                              "Shoe: I didn't want that."
+        (is-output new-state ["Shoe: I didn't want that."
+                              "Sock: Taken."
                               "Fridge: I couldn't take that."
                               "Pencil: Taken."])))
 

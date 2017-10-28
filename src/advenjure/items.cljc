@@ -2,8 +2,6 @@
   (:require [clojure.string :as string]
             [advenjure.gettext.core :refer [_ p_]]))
 
-(defrecord Item [names description])
-
 (defn open-defaults
   "If either closed, close or open keywords are in the item, set the defaults
   for an openable item."
@@ -37,14 +35,15 @@
 
 (defn make
   ([names description & {:as extras}]
-   (let [names (if (string? names) [names] names)]
-     (map->Item (apply-synonyms (merge {:names names :description description}
-                       (open-defaults extras)
-                       (unlock-defaults extras)
-                       (talk-defaults extras)
-                       (climb-defaults extras)
-                       (use-with-defaults extras)
-                       extras)))))
+   (let [names  (if (string? names) [names] names)
+         extras (apply-synonyms extras)]
+     (merge {:names names :description description}
+            (open-defaults extras)
+            (unlock-defaults extras)
+            (talk-defaults extras)
+            (climb-defaults extras)
+            (use-with-defaults extras)
+            extras)))
   ([names]
    (make names (_ "There was nothing special about it."))))
 
