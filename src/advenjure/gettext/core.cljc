@@ -1,20 +1,12 @@
 (ns advenjure.gettext.core
   (:require
-   #?(:clj  [carica.core :as carica])
+   [advenjure.text.en-past]
    #?(:cljs [goog.string :refer [format]])
    #?(:cljs [goog.string.format])))
 
-(defmacro resolve-source
-  "In order to make a config symbol available both in clj and cljs, wrap its
-   evaluation in a macro, so it's done at compile time by clojure, when the
-  config is available."
-  []
-  (let [sym    (carica/config :gettext-source)
-        nspace (symbol (namespace sym))]
-    (require nspace)
-    sym))
-
-(def text-source (resolve-source))
+;; TODO the text source is hardcoded since we still need to figure out a way to
+;; statically configure dictionary in clojurescript
+(def text-source advenjure.text.en-past/dictionary)
 
 (defn gettext
   "Look up the given key in the current text source dictionary.

@@ -5,10 +5,10 @@
 Advenjure is a text adventure (or interactive fiction) game engine. I wrote it as an excuse to learn Clojure.
 Some of its distinctive features are:
 
-  * Target the terminal and the browser with the same codebase (powered by ClojureScript).
-  * Unix-like prompt with smart tab completion and command history (powered by [JLine](https://github.com/jline/jline2) and [jQuery Terminal](http://terminal.jcubic.pl/)).
-  * Customizable and localizable texts and commands (powered by [clojure-gettext](https://github.com/facundoolano/clojure-gettext))
-  * A domain specific language for dialog trees.
+  * Target the terminal and the browser with the same codebase.
+  * Unix-like prompt with smart tab completion and command history
+  * Customizable verbs and plugins.
+  * LucasArts inspired dialog trees.
 
 ## Example game
 
